@@ -6,12 +6,13 @@ export interface InteractiveIntroProps {
 }
 
 export function InteractiveIntro({ artistName, onComplete }: InteractiveIntroProps) {
+  const [motionPosition, setMotionPosition] = useState({ x: 0, y: 0 });
   const [isComplete, setIsComplete] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
   const [hasInteracted, setHasInteracted] = useState(false);
-  const [pointer, setPointer] = useState({ x: window.innerWidth / 2, y: window.innerHeight / 2 });
-  const [direction, setDirection] = useState({ x: 1, y: 0 });
-  const lastPointRef = useRef({ x: window.innerWidth / 2, y: window.innerHeight / 2 });
+  const targetRef = useRef({ x: 0, y: 0 });
+  const currentRef = useRef({ x: 0, y: 0 });
+  const rafRef = useRef<number | null>(null);
 
   const finishIntro = useCallback(() => {
     setIsComplete((current) => {
@@ -48,17 +49,38 @@ export function InteractiveIntro({ artistName, onComplete }: InteractiveIntroPro
       finishIntro();
       return;
     }
+
+    const tick = () => {
+      const nextX = currentRef.current.x + (targetRef.current.x - currentRef.current.x) * 0.12;
+      const nextY = currentRef.current.y + (targetRef.current.y - currentRef.current.y) * 0.12;
+
+      currentRef.current = { x: nextX, y: nextY };
+      setMotionPosition({ x: nextX, y: nextY });
+
+      rafRef.current = window.requestAnimationFrame(tick);
+    };
+
+    rafRef.current = window.requestAnimationFrame(tick);
+
+    return () => {
+      if (rafRef.current !== null) {
+        cancelAnimationFrame(rafRef.current);
+      }
+    };
   }, [reducedMotion, finishIntro]);
+
+  const updateTarget = useCallback((clientX: number, clientY: number) => {
+    targetRef.current = {
+      x: clientX,
+      y: clientY,
+    };
+
+    setHasInteracted(true);
+  }, []);
 
   useEffect(() => {
     const handlePointerMove = (event: PointerEvent) => {
-      const dx = event.clientX - lastPointRef.current.x;
-      const dy = event.clientY - lastPointRef.current.y;
-
-      lastPointRef.current = { x: event.clientX, y: event.clientY };
-      setPointer({ x: event.clientX, y: event.clientY });
-      setDirection({ x: dx || 1, y: dy || 0 });
-      setHasInteracted(true);
+      updateTarget(event.clientX, event.clientY);
     };
 
     const handleTouchMove = (event: TouchEvent) => {
@@ -67,13 +89,7 @@ export function InteractiveIntro({ artistName, onComplete }: InteractiveIntroPro
         return;
       }
 
-      const dx = touch.clientX - lastPointRef.current.x;
-      const dy = touch.clientY - lastPointRef.current.y;
-
-      lastPointRef.current = { x: touch.clientX, y: touch.clientY };
-      setPointer({ x: touch.clientX, y: touch.clientY });
-      setDirection({ x: dx || 1, y: dy || 0 });
-      setHasInteracted(true);
+      updateTarget(touch.clientX, touch.clientY);
     };
 
     const handleCommit = () => {
@@ -104,38 +120,24 @@ export function InteractiveIntro({ artistName, onComplete }: InteractiveIntroPro
       window.removeEventListener('touchend', handleCommit);
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [finishIntro, hasInteracted]);
+  }, [finishIntro, hasInteracted, updateTarget]);
 
-  const letters = hasInteracted ? artistName.split('') : [];
-  const length = letters.length;
-  const magnitude = Math.hypot(direction.x, direction.y) || 1;
-  const dirX = direction.x / magnitude;
-  const dirY = direction.y / magnitude;
+  const distance = Math.hypot(motionPosition.x, motionPosition.y);
+  const opacity = hasInteracted ? Math.min(1, 0.2 + distance / 1800) : 0;
+  const scale = hasInteracted ? 1 + Math.min(distance / 2200, 0.16) : 1;
 
   return (
     <div className={isComplete ? 'intro-screen intro-screen--hidden' : 'intro-screen'} aria-hidden={isComplete}>
       {hasInteracted ? (
-        <div className="intro-spray" aria-label={artistName}>
-          {letters.map((letter, index) => {
-            const offset = index - (length - 1) / 2;
-            const x = pointer.x + dirX * offset * 26 + (-dirY * 18 * Math.sin(index * 0.7));
-            const y = pointer.y + dirY * offset * 26 + (dirX * 18 * Math.sin(index * 0.7));
-
-            return (
-              <span
-                key={`${letter}-${index}`}
-                className="intro-letter"
-                style={{
-                  left: `${x}px`,
-                  top: `${y}px`,
-                  opacity: 1,
-                  transform: `translate(-50%, -50%) rotate(${dirX * 10 + index * 1.2}deg)`,
-                }}
-              >
-                {letter === ' ' ? '\u00A0' : letter}
-              </span>
-            );
-          })}
+        <div
+          className="intro-name"
+          aria-label={artistName}
+          style={{
+            opacity,
+            transform: `translate3d(${motionPosition.x}px, ${motionPosition.y}px, 0) translate(-50%, -50%) scale(${scale})`,
+          }}
+        >
+          {artistName}
         </div>
       ) : null}
     </div>
