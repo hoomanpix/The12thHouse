@@ -6,11 +6,12 @@ export interface InteractiveIntroProps {
 }
 
 export function InteractiveIntro({ artistName, onComplete }: InteractiveIntroProps) {
-  const [pointer, setPointer] = useState({ x: 50, y: 50 });
   const [isComplete, setIsComplete] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
   const [hasInteracted, setHasInteracted] = useState(false);
-  const rafRef = useRef<number | null>(null);
+  const [pointer, setPointer] = useState({ x: window.innerWidth / 2, y: window.innerHeight / 2 });
+  const [direction, setDirection] = useState({ x: 1, y: 0 });
+  const lastPointRef = useRef({ x: window.innerWidth / 2, y: window.innerHeight / 2 });
 
   const finishIntro = useCallback(() => {
     setIsComplete((current) => {
@@ -22,10 +23,6 @@ export function InteractiveIntro({ artistName, onComplete }: InteractiveIntroPro
       return true;
     });
   }, [onComplete]);
-
-  const introOpacity = 0.08 + ((pointer.x - 12) / 88) * 0.38 + ((pointer.y - 15) / 85) * 0.18;
-  const introXShift = (pointer.x - 50) * 0.18;
-  const introYShift = (pointer.y - 50) * 0.18;
 
   useEffect(() => {
     const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -51,23 +48,17 @@ export function InteractiveIntro({ artistName, onComplete }: InteractiveIntroPro
       finishIntro();
       return;
     }
+  }, [reducedMotion, finishIntro]);
 
-    const updatePointerFromEvent = (clientX: number, clientY: number) => {
-      const x = (clientX / window.innerWidth) * 100;
-      const y = (clientY / window.innerHeight) * 100;
-
-      if (rafRef.current !== null) {
-        cancelAnimationFrame(rafRef.current);
-      }
-
-      rafRef.current = requestAnimationFrame(() => {
-        setPointer({ x, y });
-        setHasInteracted(true);
-      });
-    };
-
+  useEffect(() => {
     const handlePointerMove = (event: PointerEvent) => {
-      updatePointerFromEvent(event.clientX, event.clientY);
+      const dx = event.clientX - lastPointRef.current.x;
+      const dy = event.clientY - lastPointRef.current.y;
+
+      lastPointRef.current = { x: event.clientX, y: event.clientY };
+      setPointer({ x: event.clientX, y: event.clientY });
+      setDirection({ x: dx || 1, y: dy || 0 });
+      setHasInteracted(true);
     };
 
     const handleTouchMove = (event: TouchEvent) => {
@@ -76,15 +67,17 @@ export function InteractiveIntro({ artistName, onComplete }: InteractiveIntroPro
         return;
       }
 
-      updatePointerFromEvent(touch.clientX, touch.clientY);
+      const dx = touch.clientX - lastPointRef.current.x;
+      const dy = touch.clientY - lastPointRef.current.y;
+
+      lastPointRef.current = { x: touch.clientX, y: touch.clientY };
+      setPointer({ x: touch.clientX, y: touch.clientY });
+      setDirection({ x: dx || 1, y: dy || 0 });
+      setHasInteracted(true);
     };
 
-    const handleAction = (event: Event) => {
-      if (!hasInteracted) {
-        return;
-      }
-
-      if (event.type === 'click' || event.type === 'touchend' || event.type === 'keydown') {
+    const handleCommit = () => {
+      if (hasInteracted) {
         finishIntro();
       }
     };
@@ -100,43 +93,51 @@ export function InteractiveIntro({ artistName, onComplete }: InteractiveIntroPro
 
     window.addEventListener('pointermove', handlePointerMove);
     window.addEventListener('touchmove', handleTouchMove, { passive: true });
-    window.addEventListener('click', handleAction, { passive: true });
-    window.addEventListener('touchend', handleAction, { passive: true });
+    window.addEventListener('click', handleCommit, { passive: true });
+    window.addEventListener('touchend', handleCommit, { passive: true });
     window.addEventListener('keydown', handleKeyDown);
 
     return () => {
       window.removeEventListener('pointermove', handlePointerMove);
       window.removeEventListener('touchmove', handleTouchMove);
-      window.removeEventListener('click', handleAction);
-      window.removeEventListener('touchend', handleAction);
+      window.removeEventListener('click', handleCommit);
+      window.removeEventListener('touchend', handleCommit);
       window.removeEventListener('keydown', handleKeyDown);
-
-      if (rafRef.current !== null) {
-        cancelAnimationFrame(rafRef.current);
-      }
     };
-  }, [finishIntro, hasInteracted, reducedMotion]);
+  }, [finishIntro, hasInteracted]);
+
+  const letters = hasInteracted ? artistName.split('') : [];
+  const length = letters.length;
+  const magnitude = Math.hypot(direction.x, direction.y) || 1;
+  const dirX = direction.x / magnitude;
+  const dirY = direction.y / magnitude;
 
   return (
-    <div
-      className={isComplete ? 'intro-screen intro-screen--hidden' : 'intro-screen'}
-      aria-hidden={isComplete}
-      style={{
-        ['--pointer-x' as string]: `${pointer.x}%`,
-        ['--pointer-y' as string]: `${pointer.y}%`,
-      }}
-    >
-      <div className="intro-veil" aria-hidden="true" />
-      <div
-        className="intro-name"
-        aria-label={artistName}
-        style={{
-          opacity: Math.min(1, Math.max(0.08, introOpacity)),
-          transform: `translate(${introXShift}px, ${introYShift}px) scale(1.04)`,
-        }}
-      >
-        {artistName}
-      </div>
+    <div className={isComplete ? 'intro-screen intro-screen--hidden' : 'intro-screen'} aria-hidden={isComplete}>
+      {hasInteracted ? (
+        <div className="intro-spray" aria-label={artistName}>
+          {letters.map((letter, index) => {
+            const offset = index - (length - 1) / 2;
+            const x = pointer.x + dirX * offset * 26 + (-dirY * 18 * Math.sin(index * 0.7));
+            const y = pointer.y + dirY * offset * 26 + (dirX * 18 * Math.sin(index * 0.7));
+
+            return (
+              <span
+                key={`${letter}-${index}`}
+                className="intro-letter"
+                style={{
+                  left: `${x}px`,
+                  top: `${y}px`,
+                  opacity: 1,
+                  transform: `translate(-50%, -50%) rotate(${dirX * 10 + index * 1.2}deg)`,
+                }}
+              >
+                {letter === ' ' ? '\u00A0' : letter}
+              </span>
+            );
+          })}
+        </div>
+      ) : null}
     </div>
   );
 }
