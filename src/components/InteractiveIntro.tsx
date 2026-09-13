@@ -9,17 +9,19 @@ export function InteractiveIntro({ artistName, onComplete }: InteractiveIntroPro
   const [pointer, setPointer] = useState({ x: 50, y: 50 });
   const [isComplete, setIsComplete] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
+  const [hasInteracted, setHasInteracted] = useState(false);
   const rafRef = useRef<number | null>(null);
-  const completionRef = useRef<number | null>(null);
 
   const finishIntro = useCallback(() => {
-    if (isComplete) {
-      return;
-    }
+    setIsComplete((current) => {
+      if (current) {
+        return current;
+      }
 
-    setIsComplete(true);
-    onComplete?.();
-  }, [isComplete, onComplete]);
+      onComplete?.();
+      return true;
+    });
+  }, [onComplete]);
 
   const introOpacity = 0.08 + ((pointer.x - 12) / 88) * 0.38 + ((pointer.y - 15) / 85) * 0.18;
   const introXShift = (pointer.x - 50) * 0.18;
@@ -60,15 +62,8 @@ export function InteractiveIntro({ artistName, onComplete }: InteractiveIntroPro
 
       rafRef.current = requestAnimationFrame(() => {
         setPointer({ x, y });
+        setHasInteracted(true);
       });
-
-      if (completionRef.current !== null) {
-        window.clearTimeout(completionRef.current);
-      }
-
-      completionRef.current = window.setTimeout(() => {
-        finishIntro();
-      }, 420);
     };
 
     const handlePointerMove = (event: PointerEvent) => {
@@ -84,22 +79,43 @@ export function InteractiveIntro({ artistName, onComplete }: InteractiveIntroPro
       updatePointerFromEvent(touch.clientX, touch.clientY);
     };
 
+    const handleAction = (event: Event) => {
+      if (!hasInteracted) {
+        return;
+      }
+
+      if (event.type === 'click' || event.type === 'touchend' || event.type === 'keydown') {
+        finishIntro();
+      }
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        if (hasInteracted) {
+          finishIntro();
+        }
+      }
+    };
+
     window.addEventListener('pointermove', handlePointerMove);
     window.addEventListener('touchmove', handleTouchMove, { passive: true });
+    window.addEventListener('click', handleAction, { passive: true });
+    window.addEventListener('touchend', handleAction, { passive: true });
+    window.addEventListener('keydown', handleKeyDown);
 
     return () => {
       window.removeEventListener('pointermove', handlePointerMove);
       window.removeEventListener('touchmove', handleTouchMove);
+      window.removeEventListener('click', handleAction);
+      window.removeEventListener('touchend', handleAction);
+      window.removeEventListener('keydown', handleKeyDown);
 
       if (rafRef.current !== null) {
         cancelAnimationFrame(rafRef.current);
       }
-
-      if (completionRef.current !== null) {
-        window.clearTimeout(completionRef.current);
-      }
     };
-  }, [finishIntro, reducedMotion]);
+  }, [finishIntro, hasInteracted, reducedMotion]);
 
   return (
     <div
