@@ -9,6 +9,7 @@ import { AboutPage } from './pages/AboutPage';
 import { AdminPage } from './pages/AdminPage';
 import { AudioPlayerProvider } from './features/audio-player/AudioPlayerProvider';
 import { publicRoutes } from './config/routes';
+import { CatalogProvider } from './features/catalog/CatalogProvider';
 
 export default function App() {
   const [introComplete, setIntroComplete] = useState(false);
@@ -19,17 +20,19 @@ export default function App() {
         <InteractiveIntro artistName="NEW WAVE" onComplete={() => setIntroComplete(true)} />
       )}
 
-      <AudioPlayerProvider>
-        <Layout>
-          <Routes>
-            <Route path={publicRoutes.home} element={<HomePage />} />
-            <Route path={publicRoutes.releases} element={<ReleasesPage />} />
-            <Route path={publicRoutes.releaseDetail} element={<ReleaseDetailPage />} />
-            <Route path={publicRoutes.about} element={<AboutPage />} />
-            <Route path={publicRoutes.admin} element={<AdminPage />} />
-          </Routes>
-        </Layout>
-      </AudioPlayerProvider>
+      <CatalogProvider>
+        <AudioPlayerProvider>
+          <Layout>
+            <Routes>
+              <Route path={publicRoutes.home} element={<HomePage />} />
+              <Route path={publicRoutes.releases} element={<ReleasesPage />} />
+              <Route path={publicRoutes.releaseDetail} element={<ReleaseDetailPage />} />
+              <Route path={publicRoutes.about} element={<AboutPage />} />
+              <Route path={publicRoutes.admin} element={<AdminPage />} />
+            </Routes>
+          </Layout>
+        </AudioPlayerProvider>
+      </CatalogProvider>
     </>
   );
 }

@@ -1,12 +1,14 @@
 import { Link, useParams } from 'react-router-dom';
-import { mockReleases } from '../data/mock';
+import { useCatalog } from '../features/catalog/CatalogProvider';
 import { useAudioPlayer } from '../features/audio-player/AudioPlayerProvider';
 import { publicRoutes } from '../config/routes';
 
 export function ReleaseDetailPage() {
   const { id } = useParams();
-  const release = mockReleases.find((item) => item.slug === id) ?? mockReleases[0];
+  const { releases } = useCatalog();
+  const release = releases.find((item) => item.slug === id) ?? releases[0];
   const { setQueue, playTrack } = useAudioPlayer();
+  const { recordPlay } = useCatalog();
 
   const playableTracks = (release.tracks ?? []).filter((track) => track.published !== false && Boolean(track.audio_url));
   const queue = playableTracks.map((track) => ({
@@ -45,6 +47,7 @@ export function ReleaseDetailPage() {
     }
 
     setQueue(filteredQueue);
+    recordPlay(release.id, activeTrack.trackId);
     playTrack(activeTrack);
   };
 

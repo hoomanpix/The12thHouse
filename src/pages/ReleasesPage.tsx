@@ -1,10 +1,12 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { mockReleases } from '../data/mock';
+import { useCatalog } from '../features/catalog/CatalogProvider';
 import type { ReleaseType } from '../types';
 
 export function ReleasesPage() {
   const [filter, setFilter] = useState<'all' | ReleaseType>('all');
+  const { releases: allReleases } = useCatalog();
+  const mockReleases = allReleases.filter((release) => release.published);
 
   const filteredReleases = useMemo(() => {
     if (filter === 'all') return mockReleases;

@@ -1,15 +1,22 @@
 import { Link } from 'react-router-dom';
-import { mockArtist, mockReleases } from '../data/mock';
+import { useCatalog } from '../features/catalog/CatalogProvider';
 import { publicRoutes } from '../config/routes';
 import { useAudioPlayer } from '../features/audio-player/AudioPlayerProvider';
 
 export function HomePage() {
   const { setQueue, playTrack } = useAudioPlayer();
-  const featuredRelease = mockReleases.find((release) => release.featured) ?? mockReleases[0];
-  const latestRelease = mockReleases[0];
+  const { artist: mockArtist, releases: mockReleases, recordPlay } = useCatalog();
+  const visibleReleases = mockReleases.filter((release) => release.published);
+  const featuredRelease = visibleReleases.find((release) => release.featured) ?? visibleReleases[0];
+  const latestRelease = visibleReleases[0];
+
+  if (!featuredRelease || !latestRelease) {
+    return <div className="page-section"><p className="admin-empty">No releases are published yet.</p></div>;
+  }
 
   const handlePlayFeatured = () => {
-    const firstTrack = featuredRelease.tracks?.[0];
+    const firstTrack = featuredRelease?.tracks?.[0];
+    if (!featuredRelease) return;
     const queue = (featuredRelease.tracks ?? []).map((track) => ({
       id: `${featuredRelease.id}-${track.id}`,
       releaseId: featuredRelease.id,
@@ -23,6 +30,7 @@ export function HomePage() {
 
     setQueue(queue);
     if (firstTrack) {
+      recordPlay(featuredRelease.id, firstTrack.id);
       playTrack(queue[0]);
     }
   };
