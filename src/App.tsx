@@ -16,7 +16,7 @@ export default function App() {
   return (
     <>
       {!introComplete && (
-        <InteractiveIntro artistName="SABLE ARCADE" onComplete={() => setIntroComplete(true)} />
+        <InteractiveIntro artistName="NEW WAVE" onComplete={() => setIntroComplete(true)} />
       )}
 
       <AudioPlayerProvider>

@@ -22,6 +22,7 @@ export interface Track {
   title: string;
   duration: number;
   audio_url: string | null;
+  published?: boolean;
   order: number;
   created_at?: string;
 }

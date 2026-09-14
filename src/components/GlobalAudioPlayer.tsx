@@ -12,7 +12,7 @@ export function GlobalAudioPlayer() {
 
   const progress = state.duration > 0 ? (state.currentTime / state.duration) * 100 : 0;
   const trackTitle = activeTrack?.title ?? 'No track selected';
-  const artistName = activeTrack?.releaseTitle ?? 'Sable Arcade';
+  const artistName = activeTrack?.releaseTitle ?? 'New Wave';
   const remainingTime = Math.max(state.duration - state.currentTime, 0);
 
   useEffect(() => {
@@ -51,7 +51,7 @@ export function GlobalAudioPlayer() {
             }}
             aria-label={state.isPlaying ? 'Pause' : 'Play'}
           >
-            {state.isPlaying ? '❚❚' : '▶'}
+            <PlayerIcon name={state.isPlaying ? 'pause' : 'play'} />
           </button>
 
           <div className="player-strip__meta">
@@ -73,7 +73,7 @@ export function GlobalAudioPlayer() {
               setIsExpanded((current) => !current);
             }}
           >
-            {isExpanded ? '−' : '+'}
+            <PlayerIcon name={isExpanded ? 'minus' : 'plus'} />
           </button>
         </div>
 
@@ -122,7 +122,7 @@ export function GlobalAudioPlayer() {
 
               <div className="player-detail__controls">
                 <button type="button" className="player-button player-button--wide" onClick={playPrevious} aria-label="Previous track">
-                  ⏮
+                  <PlayerIcon name="previous" />
                 </button>
                 <button
                   type="button"
@@ -130,10 +130,10 @@ export function GlobalAudioPlayer() {
                   onClick={togglePlay}
                   aria-label={state.isPlaying ? 'Pause' : 'Play'}
                 >
-                  {state.isPlaying ? '❚❚' : '▶'}
+                  <PlayerIcon name={state.isPlaying ? 'pause' : 'play'} />
                 </button>
                 <button type="button" className="player-button player-button--wide" onClick={playNext} aria-label="Next track">
-                  ⏭
+                  <PlayerIcon name="next" />
                 </button>
               </div>
 
@@ -155,6 +155,50 @@ export function GlobalAudioPlayer() {
         </div>
       </div>
     </div>
+  );
+}
+
+type PlayerIconName = 'play' | 'pause' | 'previous' | 'next' | 'plus' | 'minus';
+
+function PlayerIcon({ name }: { name: PlayerIconName }) {
+  const paths = {
+    play: <path d="M8 5.2v13.6L19 12 8 5.2Z" />,
+    pause: (
+      <>
+        <path d="M7 5.5h3.5v13H7z" />
+        <path d="M13.5 5.5H17v13h-3.5z" />
+      </>
+    ),
+    previous: (
+      <>
+        <path d="M6.5 5.5v13" />
+        <path d="m18 6-8 6 8 6V6Z" />
+      </>
+    ),
+    next: (
+      <>
+        <path d="M17.5 5.5v13" />
+        <path d="m6 6 8 6-8 6V6Z" />
+      </>
+    ),
+    plus: (
+      <>
+        <path d="M12 5v14" />
+        <path d="M5 12h14" />
+      </>
+    ),
+    minus: <path d="M5 12h14" />,
+  };
+
+  return (
+    <svg
+      className={`player-icon player-icon--${name}`}
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+      focusable="false"
+    >
+      {paths[name]}
+    </svg>
   );
 }
 

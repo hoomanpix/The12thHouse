@@ -8,7 +8,8 @@ export function ReleaseDetailPage() {
   const release = mockReleases.find((item) => item.slug === id) ?? mockReleases[0];
   const { setQueue, playTrack } = useAudioPlayer();
 
-  const queue = (release.tracks ?? []).map((track) => ({
+  const playableTracks = (release.tracks ?? []).filter((track) => track.published !== false && Boolean(track.audio_url));
+  const queue = playableTracks.map((track) => ({
     id: `${release.id}-${track.id}`,
     releaseId: release.id,
     trackId: track.id,
@@ -20,8 +21,31 @@ export function ReleaseDetailPage() {
   }));
 
   const handlePlayTrack = (trackIndex: number) => {
-    setQueue(queue);
-    playTrack(queue[trackIndex]);
+    const nextTrack = (release.tracks ?? [])[trackIndex];
+    if (!nextTrack || nextTrack.published === false || !nextTrack.audio_url) {
+      return;
+    }
+
+    const filteredQueue = (release.tracks ?? [])
+      .filter((track) => track.published !== false && Boolean(track.audio_url))
+      .map((track) => ({
+        id: `${release.id}-${track.id}`,
+        releaseId: release.id,
+        trackId: track.id,
+        title: track.title,
+        audioUrl: track.audio_url,
+        artworkUrl: release.artwork_url,
+        releaseTitle: release.title,
+        duration: track.duration,
+      }));
+
+    const activeTrack = filteredQueue.find((item) => item.trackId === nextTrack.id) ?? filteredQueue[0];
+    if (!activeTrack) {
+      return;
+    }
+
+    setQueue(filteredQueue);
+    playTrack(activeTrack);
   };
 
   return (
@@ -40,7 +64,16 @@ export function ReleaseDetailPage() {
           <p>{release.description}</p>
 
           <div className="detail-actions">
-            <button type="button" className="button primary" onClick={() => handlePlayTrack(0)}>
+            <button
+              type="button"
+              className="button primary"
+              onClick={() => {
+                const firstPlayable = (release.tracks ?? []).find((track) => track.published !== false && Boolean(track.audio_url));
+                if (!firstPlayable) return;
+                handlePlayTrack((release.tracks ?? []).findIndex((track) => track.id === firstPlayable.id));
+              }}
+              disabled={(release.tracks ?? []).every((track) => track.published === false || !track.audio_url)}
+            >
               Play album
             </button>
             <Link to={publicRoutes.releases} className="button secondary">
@@ -67,18 +100,28 @@ export function ReleaseDetailPage() {
         </div>
 
         <ol className="tracklist">
-          {(release.tracks ?? []).map((track, index) => (
-            <li key={track.id} className="track-row">
-              <button type="button" className="track-play" onClick={() => handlePlayTrack(index)} aria-label={`Play ${track.title}`}>
-                ▶
-              </button>
-              <div className="track-info">
-                <span className="track-index">{String(index + 1).padStart(2, '0')}</span>
-                <span>{track.title}</span>
-              </div>
-              <span>{formatTime(track.duration)}</span>
-            </li>
-          ))}
+          {(release.tracks ?? []).map((track, index) => {
+            const isPlayable = track.published !== false && Boolean(track.audio_url);
+
+            return (
+              <li key={track.id} className={`track-row ${isPlayable ? '' : 'track-row--disabled'}`}>
+                <button
+                  type="button"
+                  className="track-play"
+                  onClick={() => handlePlayTrack(index)}
+                  aria-label={`Play ${track.title}`}
+                  disabled={!isPlayable}
+                >
+                  {isPlayable ? '▶' : '•'}
+                </button>
+                <div className="track-info">
+                  <span className="track-index">{String(index + 1).padStart(2, '0')}</span>
+                  <span>{track.title}</span>
+                </div>
+                <span>{formatTime(track.duration)}</span>
+              </li>
+            );
+          })}
         </ol>
       </section>
     </div>

@@ -1,13 +1,13 @@
 export const mockArtist = {
   id: 'artist-1',
-  name: 'Sable Arcade',
-  slug: 'sable-arcade',
+  name: 'New Wave',
+  slug: 'new-wave',
   biography:
-    'Sable Arcade is an independent electronic artist writing cinematic minimalist pop shaped by night drives, faded neon, and late-shift introspection. Her work moves between synth textures, intimate songwriting, and disciplined rhythm structures built for the long road.',
+    'New Wave is an independent electronic artist writing cinematic minimalist pop shaped by night drives, faded neon, and late-shift introspection. Her work moves between synth textures, intimate songwriting, and disciplined rhythm structures built for the long road.',
   image_url: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=900&q=80',
   location: 'Brooklyn, NY',
-  email: 'hello@sablearcade.com',
-  website: 'https://sablearcade.com',
+  email: 'hello@newwave.com',
+  website: 'https://newwave.com',
 };
 
 export const mockReleases = [
@@ -24,9 +24,9 @@ export const mockReleases = [
     featured: true,
     published: true,
     tracks: [
-      { id: 'track-1', title: 'Night Signal', audio_url: null, duration: 210, order: 1 },
-      { id: 'track-2', title: 'Afterglow Static', audio_url: null, duration: 238, order: 2 },
-      { id: 'track-3', title: 'Slow Orbit', audio_url: null, duration: 255, order: 3 },
+      { id: 'track-1', title: 'Night Signal', audio_url: null, duration: 210, order: 1, published: true },
+      { id: 'track-2', title: 'Afterglow Static', audio_url: null, duration: 238, order: 2, published: false },
+      { id: 'track-3', title: 'Slow Orbit', audio_url: null, duration: 255, order: 3, published: true },
     ],
     platform_links: [
       { id: 'link-1', platform: 'spotify', label: 'Spotify', url: 'https://open.spotify.com', order: 1 },
@@ -47,7 +47,7 @@ export const mockReleases = [
     featured: false,
     published: true,
     tracks: [
-      { id: 'track-4', title: 'Low Tide Memory', audio_url: null, duration: 197, order: 1 },
+      { id: 'track-4', title: 'Low Tide Memory', audio_url: null, duration: 197, order: 1, published: true },
     ],
     platform_links: [
       { id: 'link-4', platform: 'soundcloud', label: 'SoundCloud', url: 'https://soundcloud.com', order: 1 },

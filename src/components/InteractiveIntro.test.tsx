@@ -23,27 +23,43 @@ describe('InteractiveIntro', () => {
     vi.useRealTimers();
   });
 
-  it('renders individual character spans and waits for the intro to be ready before completing', () => {
+  it('reveals the word along the user motion path and completes when the full name is drawn', () => {
     const onComplete = vi.fn();
 
     act(() => {
       root.render(<InteractiveIntro artistName="NEW WAVE" onComplete={onComplete} />);
     });
 
-    expect(container.querySelectorAll('.intro-character').length).toBeGreaterThan(0);
+    expect(container.querySelectorAll('.intro-character').length).toBe(0);
 
     act(() => {
-      document.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      window.dispatchEvent(
+        new MouseEvent('pointermove', {
+          bubbles: true,
+          clientX: 140,
+          clientY: 180,
+        }),
+      );
     });
 
-    expect(onComplete).not.toHaveBeenCalled();
+    expect(container.querySelectorAll('.intro-character').length).toBe(0);
+
+    for (let i = 0; i < 8; i += 1) {
+      act(() => {
+        window.dispatchEvent(
+          new MouseEvent('pointermove', {
+            bubbles: true,
+            clientX: 180 + i * 90,
+            clientY: 200 + (i % 4) * 26,
+          }),
+        );
+      });
+
+      expect(container.querySelectorAll('.intro-character').length).toBe(i + 1);
+    }
 
     act(() => {
-      vi.advanceTimersByTime(1200);
-    });
-
-    act(() => {
-      document.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      vi.advanceTimersByTime(4000);
     });
 
     expect(onComplete).toHaveBeenCalledTimes(1);
