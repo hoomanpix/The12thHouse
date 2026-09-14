@@ -100,11 +100,7 @@ button {
 }
 
 .intro-assembly--zooming {
-  animation: intro-camera-zoom 3.2s cubic-bezier(0.45, 0, 0.2, 1) forwards;
-  backface-visibility: hidden;
-  perspective: 1000px;
-  transform: translate3d(0, 0, 0) scale(1);
-  will-change: transform;
+  animation: intro-camera-zoom 3.2s linear forwards;
 }
 
 .intro-character {
@@ -126,8 +122,6 @@ button {
   text-shadow: 0 2px 12px rgba(17, 17, 17, 0.05);
   -webkit-font-smoothing: antialiased;
   text-rendering: geometricPrecision;
-  backface-visibility: hidden;
-  will-change: transform, left, top, opacity, filter;
 }
 
 .intro-character--selected {
@@ -151,8 +145,7 @@ button {
 }
 
 @keyframes intro-white-fade {
-  0%,
-  72% {
+  0% {
     opacity: 1;
   }
 
@@ -163,11 +156,11 @@ button {
 
 @keyframes intro-camera-zoom {
   0% {
-    transform: translate3d(0, 0, 0) scale(1);
+    transform: translate(0, 0) scale(1);
   }
 
   100% {
-    transform: translate3d(var(--camera-end-x), var(--camera-end-y), 0) scale(58);
+    transform: translate(var(--camera-end-x), var(--camera-end-y)) scale(58);
     opacity: 0;
   }
 }
