@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 
 export interface InteractiveIntroProps {
   artistName: string;
@@ -29,6 +29,7 @@ export function InteractiveIntro({ artistName, onComplete }: InteractiveIntroPro
   const [isDismissed, setIsDismissed] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
   const [revealedCharacters, setRevealedCharacters] = useState<IntroCharacter[]>([]);
+  const [selectedCharacterId, setSelectedCharacterId] = useState<number | null>(null);
 
   const characters = useMemo(() => artistName.toUpperCase().split(''), [artistName]);
   const pointerRef = useRef<{ x: number; y: number } | null>(null);
@@ -41,6 +42,13 @@ export function InteractiveIntro({ artistName, onComplete }: InteractiveIntroPro
       return;
     }
 
+    const drawableCharacters = characters
+      .map((char, index) => ({ char, index }))
+      .filter(({ char }) => char.trim().length > 0);
+    const randomCharacter =
+      drawableCharacters[Math.floor(Math.random() * drawableCharacters.length)] ?? drawableCharacters[0];
+
+    setSelectedCharacterId(randomCharacter?.index ?? null);
     setIsComplete(true);
   };
 
@@ -53,7 +61,7 @@ export function InteractiveIntro({ artistName, onComplete }: InteractiveIntroPro
       dismissedRef.current = true;
       setIsDismissed(true);
       onComplete?.();
-    }, 4000);
+    }, 1800);
 
     return () => window.clearTimeout(timer);
   }, [isComplete, isDismissed, onComplete]);
@@ -167,13 +175,35 @@ export function InteractiveIntro({ artistName, onComplete }: InteractiveIntroPro
     };
   }, [characters, isDismissed, completeIntro]);
 
+  const selectedCharacter = revealedCharacters.find(({ id }) => id === selectedCharacterId);
+  const screenStyle = {
+    '--reveal-x': `${selectedCharacter?.x ?? window.innerWidth / 2}px`,
+    '--reveal-y': `${selectedCharacter?.y ?? window.innerHeight / 2}px`,
+  } as CSSProperties;
+
   return (
-    <div className={isDismissed ? 'intro-screen intro-screen--hidden' : 'intro-screen'} aria-hidden={isDismissed}>
+    <div
+      className={[
+        'intro-screen',
+        isComplete ? 'intro-screen--revealing' : '',
+        isDismissed ? 'intro-screen--hidden' : '',
+      ]
+        .filter(Boolean)
+        .join(' ')}
+      style={screenStyle}
+      aria-hidden={isDismissed}
+    >
       <div className="intro-assembly" aria-label={artistName}>
         {revealedCharacters.map((character) => (
           <span
             key={`${character.id}-${character.char}`}
-            className={`intro-character${character.char === ' ' ? ' intro-character--space' : ''}`}
+            className={[
+              'intro-character',
+              character.char === ' ' ? 'intro-character--space' : '',
+              character.id === selectedCharacterId ? 'intro-character--selected' : '',
+            ]
+              .filter(Boolean)
+              .join(' ')}
             style={{
               left: `${character.x}px`,
               top: `${character.y}px`,

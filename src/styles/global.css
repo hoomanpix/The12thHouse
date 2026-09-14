@@ -68,6 +68,10 @@ button {
   transition: opacity 0.8s ease, visibility 0.8s ease;
 }
 
+.intro-screen--revealing {
+  animation: intro-screen-reveal 1.8s cubic-bezier(0.76, 0, 0.24, 1) forwards;
+}
+
 .intro-screen--hidden {
   opacity: 0;
   visibility: hidden;
@@ -101,10 +105,43 @@ button {
   will-change: transform, left, top;
 }
 
+.intro-character--selected {
+  z-index: 1;
+  animation: intro-character-zoom 1.8s cubic-bezier(0.76, 0, 0.24, 1) forwards;
+}
+
 .intro-character--space {
   opacity: 0;
   width: 0.4em;
   pointer-events: none;
+}
+
+@keyframes intro-screen-reveal {
+  0%,
+  58% {
+    background: #ffffff;
+  }
+
+  82%,
+  100% {
+    background: transparent;
+  }
+}
+
+@keyframes intro-character-zoom {
+  0% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+
+  65% {
+    opacity: 1;
+  }
+
+  100% {
+    transform: translate(-50%, -50%) scale(52);
+    opacity: 0;
+  }
 }
 
 @media (pointer: coarse) {
