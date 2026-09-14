@@ -65,7 +65,7 @@ button {
   z-index: 200;
   background: #ffffff;
   overflow: hidden;
-  transition: opacity 0.6s ease, visibility 0.6s ease;
+  transition: opacity 0.7s ease, visibility 0.7s ease;
 }
 
 .intro-screen--hidden {
@@ -74,48 +74,74 @@ button {
   pointer-events: none;
 }
 
-.intro-name {
-  position: absolute;
-  left: 0;
-  top: 0;
-  display: inline-block;
-  font-size: clamp(3rem, 7vw, 9rem);
-  font-weight: 500;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  line-height: 0.82;
-  color: rgba(17, 17, 17, 0.96);
-  white-space: nowrap;
-  user-select: none;
+.intro-assembly {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  width: min(72vw, 760px);
+  height: 100%;
+  margin: 0 auto;
+  padding: clamp(12vh, 18vh, 18vh) 0;
   pointer-events: none;
+}
+
+.intro-character {
+  display: inline-block;
+  margin: 0;
+  font-size: clamp(3.6rem, 7vw, 10rem);
+  font-weight: 500;
+  line-height: 0.8;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #111111;
+  opacity: 0;
+  transform: translate3d(0, 28px, 0);
+  transition: transform 0.9s cubic-bezier(0.2, 0.7, 0.2, 1), opacity 0.7s ease;
+  user-select: none;
   will-change: transform, opacity;
 }
 
+.intro-character.is-visible {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+}
+
+.intro-character--space {
+  width: 0.4em;
+  min-width: 0.4em;
+  opacity: 0;
+  pointer-events: none;
+}
+
 @media (pointer: coarse) {
-  .intro-name {
-    letter-spacing: 0.12em;
+  .intro-character {
+    letter-spacing: 0.06em;
   }
 }
 
 @media (max-width: 640px) {
-  .intro-name {
-    letter-spacing: 0.09em;
-    white-space: normal;
-    max-width: 82vw;
-    line-height: 0.9;
+  .intro-assembly {
+    width: min(82vw, 520px);
+    padding: clamp(18vh, 22vh, 22vh) 0;
+  }
+
+  .intro-character {
+    font-size: clamp(2.5rem, 12vw, 5.6rem);
+    letter-spacing: 0.06em;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .intro-screen,
-  .intro-name {
+  .intro-character {
     transition: none;
   }
 
-  .intro-screen {
-    opacity: 0;
-    visibility: hidden;
-    pointer-events: none;
+  .intro-character,
+  .intro-character--space {
+    opacity: 1;
+    transform: none;
   }
 }
 
@@ -698,8 +724,9 @@ input[type='range'] {
 
   .player-strip {
     grid-template-columns: auto minmax(0, 1fr) minmax(60px, 90px) auto;
-    min-height: 62px;
+    min-height: 64px;
     gap: 8px;
+    padding-bottom: 12px;
   }
 
   .player-strip__title {
