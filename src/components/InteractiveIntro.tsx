@@ -61,7 +61,7 @@ export function InteractiveIntro({ artistName, onComplete }: InteractiveIntroPro
       dismissedRef.current = true;
       setIsDismissed(true);
       onComplete?.();
-    }, 1800);
+    }, 2400);
 
     return () => window.clearTimeout(timer);
   }, [isComplete, isDismissed, onComplete]);
