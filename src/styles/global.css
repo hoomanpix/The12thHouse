@@ -96,6 +96,11 @@ button {
   width: 100%;
   height: 100%;
   pointer-events: none;
+  transform-origin: 0 0;
+}
+
+.intro-assembly--zooming {
+  animation: intro-camera-zoom 3.2s cubic-bezier(0.7, 0, 0.2, 1) forwards;
 }
 
 .intro-character {
@@ -122,8 +127,6 @@ button {
 
 .intro-character--selected {
   z-index: 1;
-  animation: intro-character-zoom 3.2s cubic-bezier(0.7, 0, 0.2, 1) forwards;
-  transform-origin: center;
 }
 
 .intro-character--space {
@@ -156,23 +159,27 @@ button {
   }
 }
 
-@keyframes intro-character-zoom {
+@keyframes intro-camera-zoom {
   0% {
-    transform: translate3d(-50%, -50%, 0) scale(1);
-    opacity: 1;
-    filter: contrast(1.04) blur(0);
+    transform: translate3d(0, 0, 0) scale(1);
   }
 
-  88% {
-    transform: translate3d(-50%, -50%, 0) scale(32);
+  18% {
+    transform: translate3d(0, 0, 0) scale(1.08);
+  }
+
+  78% {
+    transform: translate3d(var(--camera-mid-x), var(--camera-mid-y), 0) scale(32);
+  }
+
+  92% {
+    transform: translate3d(var(--camera-end-x), var(--camera-end-y), 0) scale(110);
     opacity: 1;
-    filter: contrast(1.04) blur(0);
   }
 
   100% {
-    transform: translate3d(-50%, -50%, 0) scale(110);
+    transform: translate3d(var(--camera-end-x), var(--camera-end-y), 0) scale(110);
     opacity: 0;
-    filter: contrast(1.04) blur(0.4px);
   }
 }
 

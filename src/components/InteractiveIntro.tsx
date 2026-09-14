@@ -176,9 +176,17 @@ export function InteractiveIntro({ artistName, onComplete }: InteractiveIntroPro
   }, [characters, isDismissed, completeIntro]);
 
   const selectedCharacter = revealedCharacters.find(({ id }) => id === selectedCharacterId);
+  const cameraScale = 32;
+  const finalScale = 110;
+  const centerX = window.innerWidth / 2;
+  const centerY = window.innerHeight / 2;
+  const characterX = selectedCharacter?.x ?? centerX;
+  const characterY = selectedCharacter?.y ?? centerY;
   const screenStyle = {
-    '--reveal-x': `${selectedCharacter?.x ?? window.innerWidth / 2}px`,
-    '--reveal-y': `${selectedCharacter?.y ?? window.innerHeight / 2}px`,
+    '--camera-mid-x': `${centerX - characterX * cameraScale}px`,
+    '--camera-mid-y': `${centerY - characterY * cameraScale}px`,
+    '--camera-end-x': `${centerX - characterX * finalScale}px`,
+    '--camera-end-y': `${centerY - characterY * finalScale}px`,
   } as CSSProperties;
 
   return (
@@ -193,7 +201,7 @@ export function InteractiveIntro({ artistName, onComplete }: InteractiveIntroPro
       style={screenStyle}
       aria-hidden={isDismissed}
     >
-      <div className="intro-assembly" aria-label={artistName}>
+      <div className={`intro-assembly${isComplete ? ' intro-assembly--zooming' : ''}`} aria-label={artistName}>
         {revealedCharacters.map((character) => (
           <span
             key={`${character.id}-${character.char}`}
