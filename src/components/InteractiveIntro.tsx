@@ -176,15 +176,12 @@ export function InteractiveIntro({ artistName, onComplete }: InteractiveIntroPro
   }, [characters, isDismissed, completeIntro]);
 
   const selectedCharacter = revealedCharacters.find(({ id }) => id === selectedCharacterId);
-  const cameraScale = 32;
-  const finalScale = 110;
+  const finalScale = 58;
   const centerX = window.innerWidth / 2;
   const centerY = window.innerHeight / 2;
   const characterX = selectedCharacter?.x ?? centerX;
   const characterY = selectedCharacter?.y ?? centerY;
   const screenStyle = {
-    '--camera-mid-x': `${centerX - characterX * cameraScale}px`,
-    '--camera-mid-y': `${centerY - characterY * cameraScale}px`,
     '--camera-end-x': `${centerX - characterX * finalScale}px`,
     '--camera-end-y': `${centerY - characterY * finalScale}px`,
   } as CSSProperties;

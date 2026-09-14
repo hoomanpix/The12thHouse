@@ -100,7 +100,11 @@ button {
 }
 
 .intro-assembly--zooming {
-  animation: intro-camera-zoom 3.2s cubic-bezier(0.7, 0, 0.2, 1) forwards;
+  animation: intro-camera-zoom 3.2s cubic-bezier(0.45, 0, 0.2, 1) forwards;
+  backface-visibility: hidden;
+  perspective: 1000px;
+  transform: translate3d(0, 0, 0) scale(1);
+  will-change: transform;
 }
 
 .intro-character {
@@ -122,6 +126,7 @@ button {
   text-shadow: 0 2px 12px rgba(17, 17, 17, 0.05);
   -webkit-font-smoothing: antialiased;
   text-rendering: geometricPrecision;
+  backface-visibility: hidden;
   will-change: transform, left, top, opacity, filter;
 }
 
@@ -146,10 +151,7 @@ button {
 }
 
 @keyframes intro-white-fade {
-  0% {
-    opacity: 1;
-  }
-
+  0%,
   72% {
     opacity: 1;
   }
@@ -164,21 +166,8 @@ button {
     transform: translate3d(0, 0, 0) scale(1);
   }
 
-  18% {
-    transform: translate3d(0, 0, 0) scale(1.08);
-  }
-
-  78% {
-    transform: translate3d(var(--camera-mid-x), var(--camera-mid-y), 0) scale(32);
-  }
-
-  92% {
-    transform: translate3d(var(--camera-end-x), var(--camera-end-y), 0) scale(110);
-    opacity: 1;
-  }
-
   100% {
-    transform: translate3d(var(--camera-end-x), var(--camera-end-y), 0) scale(110);
+    transform: translate3d(var(--camera-end-x), var(--camera-end-y), 0) scale(58);
     opacity: 0;
   }
 }
