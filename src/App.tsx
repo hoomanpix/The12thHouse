@@ -86,7 +86,7 @@ export default function App() {
         document.body.style.overflowY = 'auto';
         document.documentElement.style.overflowY = 'auto';
         setBlackoutActive(true);
-      }, 3000);
+      }, 2000);
     };
 
     const handlePointerOut = (event: PointerEvent) => {
