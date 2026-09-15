@@ -12,7 +12,7 @@ type IntroCharacter = {
   y: number;
 };
 
-const CHARACTER_SPACING = 12;
+const CHARACTER_SPACING = 6;
 const BASE_REVEAL_DISTANCE = 72;
 const COMPLETION_PAUSE_DURATION = 4000;
 const FADE_DURATION = 1200;
