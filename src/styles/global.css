@@ -56,13 +56,15 @@ button {
 }
 
 #root {
+  position: relative;
   min-height: 100vh;
+  isolation: isolate;
 }
 
 #root::after {
   position: fixed;
   inset: 0;
-  z-index: 45;
+  z-index: 100;
   content: '';
   pointer-events: none;
   opacity: 0;
@@ -72,19 +74,17 @@ button {
 }
 
 #root:has(.music-cover:hover)::after,
-#root:has(.music-cover:focus-visible)::after,
 #root:has(.music-cover:active)::after {
   opacity: 1;
 }
 
 .music-cover {
   position: relative;
-  z-index: 60;
+  z-index: 110;
   transition: transform 0.28s ease, box-shadow 0.28s ease;
 }
 
 .music-cover:hover,
-.music-cover:focus-visible,
 .music-cover:active {
   transform: scale(1.025);
   box-shadow: 0 24px 56px rgba(0, 0, 0, 0.48);
