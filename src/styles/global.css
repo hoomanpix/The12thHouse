@@ -31,6 +31,19 @@ body {
   overflow-x: hidden;
 }
 
+.auth-page { min-height: 70vh; display: grid; place-items: center; }
+.auth-panel { width: min(100%, 460px); border-top: 1px solid var(--line); padding-top: 24px; }
+.auth-panel h1 { margin: 8px 0 12px; font-size: clamp(2rem, 5vw, 4rem); font-weight: 400; letter-spacing: -0.06em; }
+.auth-intro, .auth-notice, .auth-error { color: var(--muted); max-width: 34rem; }
+.auth-error { color: #ff9f9f; font-size: 0.85rem; }
+.auth-form { display: grid; gap: 18px; margin-top: 30px; }
+.auth-form label { display: grid; gap: 7px; color: var(--muted); font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase; }
+.auth-form input { width: 100%; border: 0; border-bottom: 1px solid var(--line); border-radius: 0; padding: 10px 0; color: var(--ink); background: transparent; outline: none; }
+.auth-form input:focus { border-bottom-color: var(--ink); }
+.auth-form .button { justify-self: start; margin-top: 8px; }
+.auth-loading { min-height: 50vh; display: grid; place-items: center; color: var(--muted); }
+.nav-logout { border: 0; padding: 0; color: inherit; background: transparent; }
+
 body::-webkit-scrollbar {
   display: none;
 }

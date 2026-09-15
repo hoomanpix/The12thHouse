@@ -1,15 +1,17 @@
 import { NavLink } from 'react-router-dom';
 import { GlobalAudioPlayer } from './GlobalAudioPlayer';
 import { publicRoutes } from '../config/routes';
+import { useAuth } from '../features/auth/AuthProvider';
 
 const navItems = [
   { label: 'Home', to: publicRoutes.home },
   { label: 'Releases', to: publicRoutes.releases },
   { label: 'About', to: publicRoutes.about },
-  { label: 'Admin', to: publicRoutes.admin },
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {
+  const { user, role, signOut } = useAuth();
+  const canManage = role === 'artist' || role === 'admin';
   return (
     <div className="site-shell">
       <header className="topbar">
@@ -30,6 +32,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
               {item.label}
             </NavLink>
           ))}
+          {canManage && <NavLink to={publicRoutes.admin} className={({ isActive }) => (isActive ? 'nav-item active' : 'nav-item')}>Admin</NavLink>}
+          {user && <button type="button" className="nav-item nav-logout" onClick={() => void signOut()}>Sign out</button>}
         </nav>
       </header>
 

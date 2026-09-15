@@ -7,9 +7,12 @@ import { ReleasesPage } from './pages/ReleasesPage';
 import { ReleaseDetailPage } from './pages/ReleaseDetailPage';
 import { AboutPage } from './pages/AboutPage';
 import { AdminPage } from './pages/AdminPage';
+import { LoginPage } from './pages/LoginPage';
+import { ProtectedAdminRoute } from './components/ProtectedAdminRoute';
 import { AudioPlayerProvider } from './features/audio-player/AudioPlayerProvider';
 import { publicRoutes } from './config/routes';
 import { CatalogProvider } from './features/catalog/CatalogProvider';
+import { AuthProvider } from './features/auth/AuthProvider';
 
 export default function App() {
   const [introComplete, setIntroComplete] = useState(false);
@@ -147,19 +150,22 @@ export default function App() {
         <InteractiveIntro artistName="THE12THHOUSE" onComplete={() => setIntroComplete(true)} />
       )}
 
-      <CatalogProvider>
-        <AudioPlayerProvider>
-          <Layout>
-            <Routes>
+      <AuthProvider>
+        <CatalogProvider>
+          <AudioPlayerProvider>
+            <Layout>
+              <Routes>
               <Route path={publicRoutes.home} element={<HomePage />} />
               <Route path={publicRoutes.releases} element={<ReleasesPage />} />
               <Route path={publicRoutes.releaseDetail} element={<ReleaseDetailPage />} />
               <Route path={publicRoutes.about} element={<AboutPage />} />
-              <Route path={publicRoutes.admin} element={<AdminPage />} />
-            </Routes>
-          </Layout>
-        </AudioPlayerProvider>
-      </CatalogProvider>
+                <Route path={publicRoutes.login} element={<LoginPage />} />
+                <Route path={publicRoutes.admin} element={<ProtectedAdminRoute><AdminPage /></ProtectedAdminRoute>} />
+              </Routes>
+            </Layout>
+          </AudioPlayerProvider>
+        </CatalogProvider>
+      </AuthProvider>
 
       {blackoutActive && <div className="blackout-layer" aria-hidden="true" />}
     </div>
