@@ -140,17 +140,20 @@ export function GlobalAudioPlayer() {
 
               <div className="player-volume">
                 <label htmlFor="volume-control">Volume</label>
-                <input
-                  id="volume-control"
-                  aria-label="Volume"
-                  type="range"
-                  min={0}
-                  max={1}
-                  step={0.01}
-                  value={state.volume}
-                  style={{ background: '#fff' }}
-                  onChange={(event) => setVolume(Number(event.target.value))}
-                />
+                <div className="volume-track">
+                  <span className="volume-track__line" />
+                  <span className="volume-track__dot" style={{ left: `${state.volume * 100}%` }} />
+                  <input
+                    id="volume-control"
+                    aria-label="Volume"
+                    type="range"
+                    min={0}
+                    max={1}
+                    step={0.01}
+                    value={state.volume}
+                    onChange={(event) => setVolume(Number(event.target.value))}
+                  />
+                </div>
               </div>
             </div>
           </div>
