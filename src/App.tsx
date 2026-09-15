@@ -18,11 +18,14 @@ export default function App() {
   useEffect(() => {
     let timer: number | undefined;
     let activeCover: Element | null = null;
+    let spotlightClone: HTMLElement | null = null;
 
     const clearBlackout = () => {
       if (timer !== undefined) window.clearTimeout(timer);
       timer = undefined;
       activeCover?.classList.remove('cover-spotlight');
+      spotlightClone?.remove();
+      spotlightClone = null;
       setBlackoutActive(false);
     };
 
@@ -33,7 +36,16 @@ export default function App() {
       clearBlackout();
       activeCover = cover;
       timer = window.setTimeout(() => {
-        activeCover?.classList.add('cover-spotlight');
+        if (!activeCover) return;
+        const bounds = activeCover.getBoundingClientRect();
+        spotlightClone = activeCover.cloneNode(true) as HTMLElement;
+        spotlightClone.classList.add('cover-spotlight-clone');
+        spotlightClone.setAttribute('aria-hidden', 'true');
+        spotlightClone.style.left = `${bounds.left}px`;
+        spotlightClone.style.top = `${bounds.top}px`;
+        spotlightClone.style.width = `${bounds.width}px`;
+        spotlightClone.style.height = `${bounds.height}px`;
+        document.body.appendChild(spotlightClone);
         setBlackoutActive(true);
       }, 3000);
     };

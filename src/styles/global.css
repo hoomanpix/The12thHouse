@@ -70,10 +70,26 @@ button {
   .blackout-layer {
     position: fixed;
     inset: 0;
-    z-index: 115;
+    z-index: 9998;
     content: '';
     pointer-events: none;
     background: #000;
+  }
+
+  .cover-spotlight-clone {
+    position: fixed !important;
+    z-index: 9999 !important;
+    display: block !important;
+    pointer-events: none !important;
+    margin: 0 !important;
+    transform: none !important;
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.35), 0 28px 70px rgba(0, 0, 0, 0.8) !important;
+  }
+
+  .cover-spotlight-clone img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
   }
 
   .topbar,
