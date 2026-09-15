@@ -3,7 +3,7 @@ export const mockArtist = {
   name: 'New Wave',
   slug: 'new-wave',
   biography:
-    'New Wave is an independent electronic artist writing cinematic minimalist pop shaped by night drives, faded neon, and late-shift introspection. Her work moves between synth textures, intimate songwriting, and disciplined rhythm structures built for the long road.',
+    'An independent electronic artist writing cinematic minimalist pop shaped by night drives, faded neon, and late-shift introspection. The work moves between synth textures, intimate songwriting, and disciplined rhythm structures built for the long road.',
   image_url: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=900&q=80',
   location: 'Brooklyn, NY',
   email: 'hello@newwave.com',

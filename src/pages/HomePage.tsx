@@ -40,7 +40,7 @@ export function HomePage() {
       <section className="hero-block">
         <div className="hero-copy">
           <p className="eyebrow">Independent electronic artist</p>
-          <h1>{mockArtist.name}</h1>
+          <h1>Independent electronic artist</h1>
           <p className="lede">
             Sculpted atmospheres, slow-burn rhythm, and intimate songs for the edge of the night.
           </p>
@@ -64,7 +64,7 @@ export function HomePage() {
           <p className="eyebrow">Latest release</p>
           <h2>{latestRelease.title}</h2>
         </div>
-        <article className="feature-card">
+        <article className="feature-card new-release-section">
           <div className="feature-artwork music-cover">
             <img src={latestRelease.artwork_url ?? ''} alt={latestRelease.title} />
           </div>

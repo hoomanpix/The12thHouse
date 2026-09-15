@@ -10,7 +10,7 @@ export function AboutPage() {
 
         <div className="about-copy">
           <p className="eyebrow">About</p>
-          <h1>{mockArtist.name}</h1>
+          <h1>About the work</h1>
           <p>{mockArtist.biography}</p>
 
           <div className="social-links">

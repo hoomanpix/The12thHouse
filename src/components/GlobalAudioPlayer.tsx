@@ -12,7 +12,7 @@ export function GlobalAudioPlayer() {
 
   const progress = state.duration > 0 ? (state.currentTime / state.duration) * 100 : 0;
   const trackTitle = activeTrack?.title ?? 'No track selected';
-  const artistName = activeTrack?.releaseTitle ?? 'New Wave';
+  const artistName = activeTrack?.releaseTitle ?? 'Artist';
   const remainingTime = Math.max(state.duration - state.currentTime, 0);
 
   useEffect(() => {
