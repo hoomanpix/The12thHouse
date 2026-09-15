@@ -1239,3 +1239,8 @@ input[type='range'] {
 .release-card {
   border-radius: 0;
 }
+
+.hero-visual.music-cover,
+.new-release-section .feature-artwork.music-cover {
+  border-radius: 0;
+}
