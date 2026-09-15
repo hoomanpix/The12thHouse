@@ -1496,3 +1496,17 @@ input[type='range'] {
   width: 50%;
   justify-self: center;
 }
+
+/* Expanded progress bar: full length, reduced thickness */
+.global-player.is-expanded .player-progress-block input[type='range'] {
+  width: 100%;
+  height: 10px;
+}
+
+.global-player.is-expanded .player-progress-block input[type='range']::-webkit-slider-runnable-track {
+  height: 0.4px;
+}
+
+.global-player.is-expanded .player-progress-block input[type='range']::-moz-range-track {
+  height: 0.4px;
+}
