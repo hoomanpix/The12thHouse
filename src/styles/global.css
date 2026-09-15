@@ -1504,9 +1504,9 @@ input[type='range'] {
 }
 
 .global-player.is-expanded .player-progress-block input[type='range']::-webkit-slider-runnable-track {
-  height: 0.4px;
+  height: 0.2px;
 }
 
 .global-player.is-expanded .player-progress-block input[type='range']::-moz-range-track {
-  height: 0.4px;
+  height: 0.2px;
 }
