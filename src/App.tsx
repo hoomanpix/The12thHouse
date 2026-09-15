@@ -17,6 +17,8 @@ export default function App() {
 
   useEffect(() => {
     if (!introComplete) return;
+    document.body.style.overflow = 'auto';
+    document.documentElement.style.overflow = 'auto';
     document.body.style.overflowY = 'auto';
     document.documentElement.style.overflowY = 'auto';
   }, [introComplete]);
@@ -26,8 +28,6 @@ export default function App() {
     let activeCover: Element | null = null;
     let spotlightClone: HTMLElement | null = null;
     let spotlightInfo: HTMLElement | null = null;
-    const previousBodyOverflowY = document.body.style.overflowY;
-    const previousHtmlOverflowY = document.documentElement.style.overflowY;
 
     const updateSpotlightPosition = () => {
       if (activeCover && !spotlightClone) {
@@ -53,8 +53,10 @@ export default function App() {
       spotlightClone = null;
       spotlightInfo?.remove();
       spotlightInfo = null;
-      document.body.style.overflowY = previousBodyOverflowY;
-      document.documentElement.style.overflowY = previousHtmlOverflowY;
+      document.body.style.overflowY = 'auto';
+      document.documentElement.style.overflowY = 'auto';
+      document.body.style.overflow = 'auto';
+      document.documentElement.style.overflow = 'auto';
       setBlackoutActive(false);
     };
 
@@ -96,6 +98,8 @@ export default function App() {
         document.body.appendChild(spotlightInfo);
         document.body.style.overflowY = 'auto';
         document.documentElement.style.overflowY = 'auto';
+        document.body.style.overflow = 'auto';
+        document.documentElement.style.overflow = 'auto';
         setBlackoutActive(true);
       }, 2000);
     };
