@@ -19,6 +19,7 @@ export default function App() {
     let timer: number | undefined;
     let activeCover: Element | null = null;
     let spotlightClone: HTMLElement | null = null;
+    let spotlightInfo: HTMLElement | null = null;
 
     const clearBlackout = () => {
       if (timer !== undefined) window.clearTimeout(timer);
@@ -26,6 +27,8 @@ export default function App() {
       activeCover?.classList.remove('cover-spotlight');
       spotlightClone?.remove();
       spotlightClone = null;
+      spotlightInfo?.remove();
+      spotlightInfo = null;
       setBlackoutActive(false);
     };
 
@@ -46,6 +49,25 @@ export default function App() {
         spotlightClone.style.width = `${bounds.width}px`;
         spotlightClone.style.height = `${bounds.height}px`;
         document.body.appendChild(spotlightClone);
+
+        const releaseCard = activeCover.closest('.release-card, .release-detail, .feature-card');
+        const title =
+          releaseCard?.querySelector('h1, h2, h3')?.textContent?.trim() ||
+          activeCover.querySelector('img')?.getAttribute('alt') ||
+          'Now playing';
+        const type = releaseCard?.querySelector('.eyebrow, .feature-copy > p')?.textContent?.trim() || 'Release';
+        spotlightInfo = document.createElement('div');
+        spotlightInfo.className = 'spotlight-info';
+        spotlightInfo.style.left = `${Math.max(24, Math.min(bounds.left, window.innerWidth - 280))}px`;
+        spotlightInfo.style.top = `${Math.min(bounds.bottom + 16, window.innerHeight - 96)}px`;
+        const typeElement = document.createElement('span');
+        typeElement.className = 'spotlight-info__type';
+        typeElement.textContent = type;
+        const titleElement = document.createElement('strong');
+        titleElement.className = 'spotlight-info__title';
+        titleElement.textContent = title;
+        spotlightInfo.append(typeElement, titleElement);
+        document.body.appendChild(spotlightInfo);
         setBlackoutActive(true);
       }, 3000);
     };

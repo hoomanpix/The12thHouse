@@ -92,6 +92,38 @@ button {
     object-fit: cover !important;
   }
 
+  .spotlight-info {
+    position: fixed;
+    z-index: 10000;
+    display: grid;
+    gap: 5px;
+    max-width: 256px;
+    padding-left: 12px;
+    border-left: 1px solid rgba(255, 255, 255, 0.55);
+    color: #fff;
+    pointer-events: none;
+    animation: spotlight-info-in 0.4s ease both;
+  }
+
+  .spotlight-info__type {
+    color: rgba(255, 255, 255, 0.55);
+    font-size: 0.62rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+
+  .spotlight-info__title {
+    font-size: clamp(1rem, 1.8vw, 1.35rem);
+    font-weight: 500;
+    letter-spacing: -0.03em;
+    line-height: 1;
+  }
+
+  @keyframes spotlight-info-in {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
   .topbar,
   .global-player {
     z-index: 130;
