@@ -15,7 +15,7 @@ type IntroCharacter = {
 const CHARACTER_SPACING = 4.8;
 const BASE_REVEAL_DISTANCE = 72;
 const COMPLETION_PAUSE_DURATION = 4000;
-const FADE_DURATION = 1200;
+const FADE_DURATION = 1600;
 
 const safeScrollToTop = () => {
   try {

@@ -60,7 +60,7 @@ describe('InteractiveIntro', () => {
     }
 
     act(() => {
-      vi.advanceTimersByTime(5200);
+      vi.advanceTimersByTime(5600);
     });
 
     expect(onComplete).toHaveBeenCalledTimes(1);

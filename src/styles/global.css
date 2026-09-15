@@ -70,7 +70,7 @@ button {
 
 .intro-screen--fading .intro-assembly {
   opacity: 0;
-  transition: opacity 1.2s ease;
+  transition: opacity 1.6s ease;
 }
 
 .intro-screen--hidden {
@@ -94,19 +94,24 @@ button {
   inset: 0;
   z-index: 2;
   pointer-events: none;
-  background: linear-gradient(
-    to top,
-    #050505 0%,
-    #050505 58%,
-    rgba(5, 5, 5, 0.96) 70%,
-    rgba(5, 5, 5, 0.72) 82%,
-    rgba(5, 5, 5, 0.22) 94%,
-    rgba(5, 5, 5, 0) 100%
-  );
+  background:
+    linear-gradient(
+      to top,
+      #050505 0%,
+      #080808 18%,
+      #171717 39%,
+      #3d3d3d 58%,
+      #898989 74%,
+      #d4d4d4 87%,
+      #f6f6f6 96%,
+      #ffffff 100%
+    ),
+    radial-gradient(circle at 50% 72%, rgba(255, 255, 255, 0.08), transparent 48%);
+  background-blend-mode: normal, soft-light;
   opacity: 1;
   transform: scaleY(0);
   transform-origin: bottom;
-  transition: transform 1.2s cubic-bezier(0.65, 0, 0.35, 1);
+  transition: transform 1.6s cubic-bezier(0.65, 0, 0.35, 1);
 }
 
 .intro-screen--fading .intro-black-continuation {
