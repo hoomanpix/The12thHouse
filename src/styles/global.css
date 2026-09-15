@@ -1523,3 +1523,10 @@ input[type='range'] {
   transform: scaleY(0.5);
   transform-origin: center;
 }
+
+/* Match expanded transport progress thickness to the compact player */
+.global-player.is-expanded .player-progress-block input[type='range']::-webkit-slider-runnable-track,
+.global-player.is-expanded .player-progress-block input[type='range']::-moz-range-track {
+  height: 1px;
+  transform: none;
+}
