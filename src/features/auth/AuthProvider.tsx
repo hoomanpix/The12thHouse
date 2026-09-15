@@ -60,7 +60,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const normalizedEmail = email.trim().toLowerCase();
     if (!ADMIN_ALLOWLIST.includes(normalizedEmail)) return { error: new Error('This email is not on the artist access list.') };
     if (!isSupabaseConfigured) return { error: new Error('Supabase is not configured.') };
-    const { error } = await supabase.auth.signInWithOtp({ email: normalizedEmail, options: { emailRedirectTo: `${window.location.origin}${window.location.pathname}` } });
+    const adminRedirect = `${window.location.origin}${window.location.pathname}#/admin`;
+    const { error } = await supabase.auth.signInWithOtp({ email: normalizedEmail, options: { emailRedirectTo: adminRedirect } });
     return { error: error ? new Error(error.message) : null };
   }, []);
 
