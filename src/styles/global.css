@@ -1510,3 +1510,16 @@ input[type='range'] {
 .global-player.is-expanded .player-progress-block input[type='range']::-moz-range-track {
   height: 0.2px;
 }
+
+/* The expanded playback line above transport controls only */
+.global-player.is-expanded .player-progress-block input[type='range']::-webkit-slider-runnable-track {
+  height: 0.4px;
+  transform: scaleY(0.5);
+  transform-origin: center;
+}
+
+.global-player.is-expanded .player-progress-block input[type='range']::-moz-range-track {
+  height: 0.4px;
+  transform: scaleY(0.5);
+  transform-origin: center;
+}
