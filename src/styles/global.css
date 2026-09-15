@@ -67,20 +67,13 @@ button {
 }
 
 @media (min-width: 769px) {
-  #root::after {
+  .blackout-layer {
     position: fixed;
     inset: 0;
     z-index: 100;
     content: '';
     pointer-events: none;
-    opacity: 0;
     background: #000;
-    transition: opacity 0.28s ease 0s;
-  }
-
-  html.blackout-active #root::after {
-    opacity: 1;
-    transition-delay: 0s;
   }
 
   .music-cover {

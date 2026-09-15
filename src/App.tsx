@@ -13,6 +13,7 @@ import { CatalogProvider } from './features/catalog/CatalogProvider';
 
 export default function App() {
   const [introComplete, setIntroComplete] = useState(false);
+  const [blackoutActive, setBlackoutActive] = useState(false);
 
   useEffect(() => {
     let timer: number | undefined;
@@ -21,7 +22,7 @@ export default function App() {
     const clearBlackout = () => {
       if (timer !== undefined) window.clearTimeout(timer);
       timer = undefined;
-      document.documentElement.classList.remove('blackout-active');
+      setBlackoutActive(false);
     };
 
     const handlePointerOver = (event: PointerEvent) => {
@@ -30,7 +31,7 @@ export default function App() {
       if (!cover || cover === activeCover) return;
       clearBlackout();
       activeCover = cover;
-      timer = window.setTimeout(() => document.documentElement.classList.add('blackout-active'), 3000);
+      timer = window.setTimeout(() => setBlackoutActive(true), 3000);
     };
 
     const handlePointerOut = (event: PointerEvent) => {
@@ -60,7 +61,8 @@ export default function App() {
   }, []);
 
   return (
-    <>
+    <div className="app-stage">
+      {blackoutActive && <div className="blackout-layer" aria-hidden="true" />}
       {!introComplete && (
         <InteractiveIntro artistName="THE12THHOUSE" onComplete={() => setIntroComplete(true)} />
       )}
@@ -78,6 +80,6 @@ export default function App() {
           </Layout>
         </AudioPlayerProvider>
       </CatalogProvider>
-    </>
+    </div>
   );
 }
