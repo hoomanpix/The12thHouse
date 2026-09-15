@@ -70,7 +70,7 @@ button {
   .blackout-layer {
     position: fixed;
     inset: 0;
-    z-index: 100;
+    z-index: 115;
     content: '';
     pointer-events: none;
     background: #000;
@@ -89,6 +89,14 @@ button {
     z-index: 120;
     transform: scale(1.025);
     box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.3), 0 28px 70px rgba(0, 0, 0, 0.7);
+  }
+
+  .topbar:has(.cover-spotlight) {
+    z-index: 125;
+  }
+
+  .global-player:has(.cover-spotlight) {
+    z-index: 125;
   }
 }
 
