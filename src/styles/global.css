@@ -102,7 +102,8 @@ button {
     border-left: 1px solid rgba(255, 255, 255, 0.55);
     color: #fff;
     pointer-events: none;
-    animation: spotlight-info-in 0.4s ease both;
+    animation: spotlight-info-in 0.75s cubic-bezier(0.22, 1, 0.36, 1) both;
+    will-change: opacity, transform;
   }
 
   .spotlight-info__type {
@@ -120,7 +121,8 @@ button {
   }
 
   @keyframes spotlight-info-in {
-    from { opacity: 0; transform: translateY(8px); }
+    from { opacity: 0; transform: translateY(12px); }
+    55% { opacity: 0.72; }
     to { opacity: 1; transform: translateY(0); }
   }
 
