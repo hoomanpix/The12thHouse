@@ -106,15 +106,18 @@ export function GlobalAudioPlayer() {
 
               <div className="player-progress-block">
                 <span>{formatTime(state.currentTime)}</span>
-                <input
-                  aria-label="Seek audio"
-                  type="range"
-                  min={0}
-                  max={100}
-                  value={progress}
-                  style={{ background: '#fff' }}
-                  onChange={(event) => seek(Number(event.target.value))}
-                />
+                <div className="expanded-progress-track">
+                  <span className="expanded-progress-track__line" />
+                  <span className="expanded-progress-track__dot" style={{ left: `${Math.min(progress, 100)}%` }} />
+                  <input
+                    aria-label="Seek audio"
+                    type="range"
+                    min={0}
+                    max={100}
+                    value={progress}
+                    onChange={(event) => seek(Number(event.target.value))}
+                  />
+                </div>
                 <span>-{formatTime(remainingTime)}</span>
               </div>
 
