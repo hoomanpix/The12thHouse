@@ -1420,3 +1420,38 @@ input[type='range'] {
   margin-top: -5.25px;
   box-shadow: 0 0 0 2px #050505, 0 0 0 3px #fff;
 }
+
+/* Explicit moving progress indicator */
+.player-strip__progress {
+  position: relative;
+  height: 0.5px;
+  background: #fff;
+}
+
+.player-strip__progress-bar {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 0.5px;
+  background: #fff;
+}
+
+.player-strip__progress-bar::after {
+  display: none;
+}
+
+.player-strip__progress-dot {
+  position: absolute;
+  top: 50%;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 0 2px #050505, 0 0 0 3px #fff;
+  transform: translate(-50%, -50%);
+}
+
+.global-player.is-expanded .player-strip__progress-dot {
+  width: 11px;
+  height: 11px;
+}

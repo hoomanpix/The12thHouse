@@ -60,7 +60,8 @@ export function GlobalAudioPlayer() {
           </div>
 
           <div className="player-strip__progress" aria-hidden="true">
-            <span className="player-strip__progress-bar" style={{ width: `${Math.min(progress, 100)}%` }} />
+            <span className="player-strip__progress-bar" />
+            <span className="player-strip__progress-dot" style={{ left: `${Math.min(progress, 100)}%` }} />
           </div>
 
           <button
