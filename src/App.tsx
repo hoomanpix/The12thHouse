@@ -16,6 +16,12 @@ export default function App() {
   const [blackoutActive, setBlackoutActive] = useState(false);
 
   useEffect(() => {
+    if (!introComplete) return;
+    document.body.style.overflowY = 'auto';
+    document.documentElement.style.overflowY = 'auto';
+  }, [introComplete]);
+
+  useEffect(() => {
     let timer: number | undefined;
     let activeCover: Element | null = null;
     let spotlightClone: HTMLElement | null = null;
@@ -24,6 +30,11 @@ export default function App() {
     const previousHtmlOverflowY = document.documentElement.style.overflowY;
 
     const updateSpotlightPosition = () => {
+      if (activeCover && !spotlightClone) {
+        activeCover = null;
+        clearBlackout();
+        return;
+      }
       if (!activeCover || !spotlightClone) return;
       const bounds = activeCover.getBoundingClientRect();
       spotlightClone.style.left = `${bounds.left}px`;
@@ -104,14 +115,23 @@ export default function App() {
       }
     };
 
+    const handleWheel = () => {
+      if (activeCover && !spotlightClone) {
+        activeCover = null;
+        clearBlackout();
+      }
+    };
+
     document.addEventListener('pointerover', handlePointerOver);
     document.addEventListener('pointerout', handlePointerOut);
+    window.addEventListener('wheel', handleWheel, { passive: true });
     window.addEventListener('scroll', updateSpotlightPosition, { passive: true });
     window.addEventListener('resize', handleViewportChange);
     return () => {
       clearBlackout();
       document.removeEventListener('pointerover', handlePointerOver);
       document.removeEventListener('pointerout', handlePointerOut);
+      window.removeEventListener('wheel', handleWheel);
       window.removeEventListener('scroll', updateSpotlightPosition);
       window.removeEventListener('resize', handleViewportChange);
     };
