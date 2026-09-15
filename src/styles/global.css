@@ -1711,3 +1711,9 @@ input[type='range'] {
   background: transparent !important;
   box-shadow: none !important;
 }
+
+/* Transport controls use the same circular geometry as Play */
+.player-button--wide,
+.player-button--primary.player-button--wide {
+  border-radius: 50% !important;
+}
