@@ -9,6 +9,8 @@ describe('InteractiveIntro', () => {
 
   beforeEach(() => {
     vi.useFakeTimers();
+    vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
+    vi.stubGlobal('scrollTo', vi.fn());
     container = document.createElement('div');
     document.body.appendChild(container);
     root = createRoot(container);
