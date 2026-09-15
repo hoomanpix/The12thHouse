@@ -84,6 +84,12 @@ button {
     transform: scale(1.025);
     box-shadow: 0 24px 56px rgba(0, 0, 0, 0.48);
   }
+
+  .music-cover.cover-spotlight {
+    z-index: 120;
+    transform: scale(1.025);
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.3), 0 28px 70px rgba(0, 0, 0, 0.7);
+  }
 }
 
 .intro-screen {

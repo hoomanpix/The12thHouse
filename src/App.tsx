@@ -22,6 +22,7 @@ export default function App() {
     const clearBlackout = () => {
       if (timer !== undefined) window.clearTimeout(timer);
       timer = undefined;
+      activeCover?.classList.remove('cover-spotlight');
       setBlackoutActive(false);
     };
 
@@ -31,7 +32,10 @@ export default function App() {
       if (!cover || cover === activeCover) return;
       clearBlackout();
       activeCover = cover;
-      timer = window.setTimeout(() => setBlackoutActive(true), 3000);
+      timer = window.setTimeout(() => {
+        activeCover?.classList.add('cover-spotlight');
+        setBlackoutActive(true);
+      }, 3000);
     };
 
     const handlePointerOut = (event: PointerEvent) => {
@@ -62,7 +66,6 @@ export default function App() {
 
   return (
     <div className="app-stage">
-      {blackoutActive && <div className="blackout-layer" aria-hidden="true" />}
       {!introComplete && (
         <InteractiveIntro artistName="THE12THHOUSE" onComplete={() => setIntroComplete(true)} />
       )}
@@ -80,6 +83,8 @@ export default function App() {
           </Layout>
         </AudioPlayerProvider>
       </CatalogProvider>
+
+      {blackoutActive && <div className="blackout-layer" aria-hidden="true" />}
     </div>
   );
 }
