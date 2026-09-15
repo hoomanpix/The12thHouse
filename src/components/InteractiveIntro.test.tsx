@@ -28,7 +28,7 @@ describe('InteractiveIntro', () => {
     const onComplete = vi.fn();
 
     act(() => {
-      root.render(<InteractiveIntro artistName="NEW WAVE" onComplete={onComplete} />);
+      root.render(<InteractiveIntro artistName="THE12THHOUSE" onComplete={onComplete} />);
     });
 
     expect(container.querySelectorAll('.intro-character').length).toBe(0);
@@ -45,7 +45,7 @@ describe('InteractiveIntro', () => {
 
     expect(container.querySelectorAll('.intro-character').length).toBe(0);
 
-    for (let i = 0; i < 8; i += 1) {
+    for (let i = 0; i < 12; i += 1) {
       act(() => {
         window.dispatchEvent(
           new MouseEvent('pointermove', {
@@ -83,7 +83,7 @@ describe('InteractiveIntro', () => {
     );
 
     act(() => {
-      root.render(<InteractiveIntro artistName="NEW WAVE" onComplete={onComplete} />);
+      root.render(<InteractiveIntro artistName="THE12THHOUSE" onComplete={onComplete} />);
     });
 
     act(() => {
@@ -96,7 +96,7 @@ describe('InteractiveIntro', () => {
       );
     });
 
-    for (let i = 0; i < 8; i += 1) {
+    for (let i = 0; i < 12; i += 1) {
       act(() => {
         window.dispatchEvent(
           new MouseEvent('pointermove', {

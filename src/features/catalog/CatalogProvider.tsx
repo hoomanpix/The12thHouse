@@ -2,7 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import { mockArtist, mockReleases } from '../../data/mock';
 import type { Artist, PlatformLink, Release, Track } from '../../types';
 
-const storageKey = 'new-wave-catalog';
+const storageKey = 'the12thhouse-catalog';
 
 interface CatalogContextValue {
   artist: Artist;
