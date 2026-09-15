@@ -15,7 +15,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <header className="topbar">
         <div className="brand-block">
           <NavLink to={publicRoutes.home} className="brand-link" aria-label="The12thHouse home">
-            The12thHouse
+            <span className="brand-line">THE12TH</span>
+            <span className="brand-line">HOUSE</span>
           </NavLink>
         </div>
 
