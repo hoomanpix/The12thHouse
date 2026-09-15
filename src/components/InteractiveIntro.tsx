@@ -13,8 +13,9 @@ type IntroCharacter = {
 };
 
 const CHARACTER_SPACING = 42;
-const BASE_REVEAL_DISTANCE = 42;
-const FADE_DURATION = 900;
+const BASE_REVEAL_DISTANCE = 72;
+const COMPLETION_PAUSE_DURATION = 4000;
+const FADE_DURATION = 1200;
 
 const safeScrollToTop = () => {
   try {
@@ -31,6 +32,7 @@ const safeScrollToTop = () => {
 export function InteractiveIntro({ artistName, onComplete }: InteractiveIntroProps) {
   const [isDismissed, setIsDismissed] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
+  const [isFading, setIsFading] = useState(false);
   const [revealedCharacters, setRevealedCharacters] = useState<IntroCharacter[]>([]);
 
   const characters = useMemo(() => artistName.toUpperCase().split(''), [artistName]);
@@ -72,9 +74,18 @@ export function InteractiveIntro({ artistName, onComplete }: InteractiveIntroPro
       return undefined;
     }
 
-    const duration = prefersReducedMotionRef.current ? 160 : FADE_DURATION;
-    const timer = window.setTimeout(triggerComplete, duration);
-    return () => window.clearTimeout(timer);
+    if (prefersReducedMotionRef.current) {
+      const timer = window.setTimeout(triggerComplete, 160);
+      return () => window.clearTimeout(timer);
+    }
+
+    const fadeTimer = window.setTimeout(() => setIsFading(true), COMPLETION_PAUSE_DURATION);
+    const completionTimer = window.setTimeout(triggerComplete, COMPLETION_PAUSE_DURATION + FADE_DURATION);
+
+    return () => {
+      window.clearTimeout(fadeTimer);
+      window.clearTimeout(completionTimer);
+    };
   }, [isComplete, isDismissed, triggerComplete]);
 
   useEffect(() => {
@@ -101,10 +112,12 @@ export function InteractiveIntro({ artistName, onComplete }: InteractiveIntroPro
         return;
       }
 
-      const safeDeltaX = Number.isFinite(deltaX) ? deltaX : 0;
-      const safeDeltaY = Number.isFinite(deltaY) ? deltaY : 0;
       const lastPoint = pointerRef.current ?? { x: clientX, y: clientY };
-      const distance = Math.hypot(clientX - lastPoint.x, clientY - lastPoint.y) + Math.hypot(safeDeltaX, safeDeltaY);
+      const pointerDeltaX = clientX - lastPoint.x;
+      const pointerDeltaY = clientY - lastPoint.y;
+      const eventDeltaX = Number.isFinite(deltaX) && Math.abs(deltaX) > 0.1 ? deltaX : pointerDeltaX;
+      const eventDeltaY = Number.isFinite(deltaY) && Math.abs(deltaY) > 0.1 ? deltaY : pointerDeltaY;
+      const distance = Math.hypot(eventDeltaX, eventDeltaY);
 
       pointerRef.current = { x: clientX, y: clientY };
 
@@ -112,11 +125,9 @@ export function InteractiveIntro({ artistName, onComplete }: InteractiveIntroPro
         return;
       }
 
-      const revealEnergy = Math.min(distance, 180);
-      const revealDistance = Math.max(18, BASE_REVEAL_DISTANCE - revealEnergy * 0.12);
       accumulatorRef.current += distance;
 
-      if (accumulatorRef.current < revealDistance) {
+      if (accumulatorRef.current < BASE_REVEAL_DISTANCE) {
         return;
       }
 
@@ -126,8 +137,8 @@ export function InteractiveIntro({ artistName, onComplete }: InteractiveIntroPro
         return;
       }
 
-      const directionX = safeDeltaX || (clientX - lastPoint.x) || 1;
-      const directionY = safeDeltaY || (clientY - lastPoint.y) || 0;
+      const directionX = eventDeltaX || 1;
+      const directionY = eventDeltaY || 0;
       const angle = Math.atan2(directionY, directionX);
       const offset = nextIndex * CHARACTER_SPACING;
       const nextCharacter = {
@@ -188,7 +199,7 @@ export function InteractiveIntro({ artistName, onComplete }: InteractiveIntroPro
 
   return (
     <div
-      className={['intro-screen', isComplete ? 'intro-screen--complete' : '', isDismissed ? 'intro-screen--hidden' : '']
+      className={['intro-screen', isFading ? 'intro-screen--fading' : '', isDismissed ? 'intro-screen--hidden' : '']
         .filter(Boolean)
         .join(' ')}
       aria-hidden={isDismissed}

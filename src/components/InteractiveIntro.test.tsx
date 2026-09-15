@@ -24,7 +24,7 @@ describe('InteractiveIntro', () => {
     vi.unstubAllGlobals();
   });
 
-  it('reveals the word along the user motion path and completes when the full name is drawn', () => {
+  it('reveals the word along the user motion path and completes after a four-second pause', () => {
     const onComplete = vi.fn();
 
     act(() => {
@@ -50,7 +50,7 @@ describe('InteractiveIntro', () => {
         window.dispatchEvent(
           new MouseEvent('pointermove', {
             bubbles: true,
-            clientX: 180 + i * 90,
+            clientX: 220 + i * 90,
             clientY: 200 + (i % 4) * 26,
           }),
         );
@@ -60,13 +60,13 @@ describe('InteractiveIntro', () => {
     }
 
     act(() => {
-      vi.advanceTimersByTime(4000);
+      vi.advanceTimersByTime(5200);
     });
 
     expect(onComplete).toHaveBeenCalledTimes(1);
   });
 
-  it('skips the long cinematic transition in reduced-motion mode', () => {
+  it('skips the completion pause and fade in reduced-motion mode', () => {
     const onComplete = vi.fn();
     vi.stubGlobal(
       'matchMedia',
@@ -101,7 +101,7 @@ describe('InteractiveIntro', () => {
         window.dispatchEvent(
           new MouseEvent('pointermove', {
             bubbles: true,
-            clientX: 180 + i * 90,
+            clientX: 220 + i * 90,
             clientY: 200 + (i % 4) * 26,
           }),
         );

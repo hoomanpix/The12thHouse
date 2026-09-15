@@ -68,9 +68,9 @@ button {
   transition: opacity 0.9s ease, visibility 0.9s ease;
 }
 
-.intro-screen--complete .intro-assembly {
+.intro-screen--fading .intro-assembly {
   opacity: 0;
-  transition: opacity 0.9s ease;
+  transition: opacity 1.2s ease;
 }
 
 .intro-screen--hidden {
@@ -94,13 +94,23 @@ button {
   inset: 0;
   z-index: 2;
   pointer-events: none;
-  background: #000000;
-  opacity: 0;
-  transition: opacity 0.9s ease;
+  background: linear-gradient(
+    to top,
+    #050505 0%,
+    #050505 58%,
+    rgba(5, 5, 5, 0.96) 70%,
+    rgba(5, 5, 5, 0.72) 82%,
+    rgba(5, 5, 5, 0.22) 94%,
+    rgba(5, 5, 5, 0) 100%
+  );
+  opacity: 1;
+  transform: scaleY(0);
+  transform-origin: bottom;
+  transition: transform 1.2s cubic-bezier(0.65, 0, 0.35, 1);
 }
 
-.intro-screen--complete .intro-black-continuation {
-  opacity: 1;
+.intro-screen--fading .intro-black-continuation {
+  transform: scaleY(1);
 }
 
 .intro-character {
