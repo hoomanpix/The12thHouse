@@ -38,7 +38,7 @@ export function ReleasesPage() {
       <div className="release-grid">
         {filteredReleases.map((release) => (
           <article key={release.id} className="release-card">
-            <Link to={`/releases/${release.slug}`} className="release-cover">
+            <Link to={`/releases/${release.slug}`} className="release-cover music-cover">
               <img src={release.artwork_url ?? ''} alt={release.title} />
             </Link>
             <div className="release-card-meta">

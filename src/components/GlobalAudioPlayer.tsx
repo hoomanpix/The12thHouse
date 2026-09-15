@@ -92,7 +92,7 @@ export function GlobalAudioPlayer() {
           </div>
 
           <div className="player-detail__content">
-            <div className="player-detail__artwork">
+            <div className="player-detail__artwork music-cover">
               {activeTrack?.artworkUrl ? (
                 <img src={activeTrack.artworkUrl} alt={activeTrack.releaseTitle} />
               ) : (

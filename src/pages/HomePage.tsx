@@ -54,7 +54,7 @@ export function HomePage() {
           </div>
         </div>
 
-        <div className="hero-visual">
+        <div className="hero-visual music-cover">
           <img src={featuredRelease.artwork_url ?? ''} alt={featuredRelease.title} />
         </div>
       </section>
@@ -65,7 +65,7 @@ export function HomePage() {
           <h2>{latestRelease.title}</h2>
         </div>
         <article className="feature-card">
-          <div className="feature-artwork">
+          <div className="feature-artwork music-cover">
             <img src={latestRelease.artwork_url ?? ''} alt={latestRelease.title} />
           </div>
           <div className="feature-copy">
@@ -93,7 +93,7 @@ export function HomePage() {
               Play selection
             </button>
           </div>
-          <div className="feature-artwork">
+          <div className="feature-artwork music-cover">
             <img src={featuredRelease.artwork_url ?? ''} alt={featuredRelease.title} />
           </div>
         </article>

@@ -54,7 +54,7 @@ export function ReleaseDetailPage() {
   return (
     <div className="page-section release-detail">
       <div className="detail-header">
-        <div className="detail-cover">
+        <div className="detail-cover music-cover">
           <img src={release.artwork_url ?? ''} alt={release.title} />
         </div>
 
