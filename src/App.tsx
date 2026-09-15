@@ -17,7 +17,7 @@ export default function App() {
   return (
     <>
       {!introComplete && (
-        <InteractiveIntro artistName="NEW WAVE" onComplete={() => setIntroComplete(true)} />
+        <InteractiveIntro artistName="THE12THHOUSE" onComplete={() => setIntroComplete(true)} />
       )}
 
       <CatalogProvider>

@@ -1,6 +1,6 @@
 export const mockArtist = {
   id: 'artist-1',
-  name: 'New Wave',
+  name: 'The12thHouse',
   slug: 'new-wave',
   biography:
     'An independent electronic artist writing cinematic minimalist pop shaped by night drives, faded neon, and late-shift introspection. The work moves between synth textures, intimate songwriting, and disciplined rhythm structures built for the long road.',
