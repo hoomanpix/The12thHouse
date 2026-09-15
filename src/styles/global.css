@@ -1530,3 +1530,14 @@ input[type='range'] {
   height: 1px;
   transform: none;
 }
+
+/* Final cross-browser override: expanded transport line matches compact line */
+.global-player.is-expanded .player-progress-block input[type='range']::-webkit-slider-runnable-track {
+  height: 1px !important;
+  transform: none !important;
+}
+
+.global-player.is-expanded .player-progress-block input[type='range']::-moz-range-track {
+  height: 1px !important;
+  transform: none !important;
+}
