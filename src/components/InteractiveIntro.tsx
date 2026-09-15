@@ -225,7 +225,6 @@ export function InteractiveIntro({ artistName, onComplete }: InteractiveIntroPro
           );
         })}
       </div>
-      <div className="intro-black-continuation" aria-hidden="true" />
     </div>
   );
 }

@@ -96,12 +96,17 @@ button {
   z-index: 200;
   background: #ffffff;
   overflow: hidden;
-  transition: opacity 0.9s ease, visibility 0.9s ease;
+  transform: translateY(0);
+  transition: opacity 0.9s ease, visibility 0.9s ease, transform 1.6s cubic-bezier(0.65, 0, 0.35, 1);
 }
 
 .intro-screen--fading .intro-assembly {
   opacity: 0;
   transition: opacity 1.6s ease;
+}
+
+.intro-screen--fading {
+  transform: translateY(-100%);
 }
 
 .intro-screen--hidden {
