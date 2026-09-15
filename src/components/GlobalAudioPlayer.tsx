@@ -59,9 +59,14 @@ export function GlobalAudioPlayer() {
             <span className="player-strip__artist">{artistName}</span>
           </div>
 
-          <div className="player-strip__progress" aria-hidden="true">
-            <span className="player-strip__progress-bar" />
-            <span className="player-strip__progress-dot" style={{ left: `${Math.min(progress, 100)}%` }} />
+          <div className={`player-strip__progress ${isExpanded ? 'player-strip__progress--expanded' : ''}`} aria-hidden="true">
+            <span
+              className="player-strip__progress-bar"
+              style={{ width: `${isExpanded ? 100 : Math.min(progress, 100)}%` }}
+            />
+            {isExpanded && (
+              <span className="player-strip__progress-dot" style={{ left: `${Math.min(progress, 100)}%` }} />
+            )}
           </div>
 
           <button

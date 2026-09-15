@@ -1455,3 +1455,38 @@ input[type='range'] {
   width: 11px;
   height: 11px;
 }
+
+/* Closed player keeps the original progress treatment */
+.player-strip__progress:not(.player-strip__progress--expanded) {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.player-strip__progress:not(.player-strip__progress--expanded) .player-strip__progress-bar {
+  height: 1px;
+  background: #fff;
+}
+
+.player-strip__progress:not(.player-strip__progress--expanded) .player-strip__progress-bar::after {
+  display: block;
+  position: absolute;
+  top: 50%;
+  right: -3px;
+  width: 6px;
+  height: 6px;
+  content: '';
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: none;
+  transform: translateY(-50%);
+}
+
+.player-strip__progress.player-strip__progress--expanded {
+  height: 0.5px;
+  background: #fff;
+}
+
+.player-strip__progress.player-strip__progress--expanded .player-strip__progress-bar {
+  height: 0.5px;
+  background: #fff;
+}
