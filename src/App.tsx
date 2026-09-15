@@ -21,6 +21,17 @@ export default function App() {
     let spotlightClone: HTMLElement | null = null;
     let spotlightInfo: HTMLElement | null = null;
 
+    const updateSpotlightPosition = () => {
+      if (!activeCover || !spotlightClone) return;
+      const bounds = activeCover.getBoundingClientRect();
+      spotlightClone.style.left = `${bounds.left}px`;
+      spotlightClone.style.top = `${bounds.top}px`;
+      if (spotlightInfo) {
+        spotlightInfo.style.left = `${Math.max(24, Math.min(bounds.left, window.innerWidth - 280))}px`;
+        spotlightInfo.style.top = `${Math.min(bounds.bottom + 16, window.innerHeight - 96)}px`;
+      }
+    };
+
     const clearBlackout = () => {
       if (timer !== undefined) window.clearTimeout(timer);
       timer = undefined;
@@ -89,11 +100,13 @@ export default function App() {
 
     document.addEventListener('pointerover', handlePointerOver);
     document.addEventListener('pointerout', handlePointerOut);
+    window.addEventListener('scroll', updateSpotlightPosition, { passive: true });
     window.addEventListener('resize', handleViewportChange);
     return () => {
       clearBlackout();
       document.removeEventListener('pointerover', handlePointerOver);
       document.removeEventListener('pointerout', handlePointerOut);
+      window.removeEventListener('scroll', updateSpotlightPosition);
       window.removeEventListener('resize', handleViewportChange);
     };
   }, []);
