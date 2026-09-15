@@ -76,6 +76,11 @@ button {
     background: #000;
   }
 
+  .topbar,
+  .global-player {
+    z-index: 130;
+  }
+
   .music-cover {
     z-index: 110;
   }
@@ -91,13 +96,6 @@ button {
     box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.3), 0 28px 70px rgba(0, 0, 0, 0.7);
   }
 
-  .topbar:has(.cover-spotlight) {
-    z-index: 125;
-  }
-
-  .global-player:has(.cover-spotlight) {
-    z-index: 125;
-  }
 }
 
 .intro-screen {
