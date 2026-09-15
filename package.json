@@ -8,7 +8,7 @@
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "test": "vitest run",
-    "deploy": "vite build && gh-pages -d dist"
+    "deploy": "VITE_BASE_PATH=/new-wave/ vite build && gh-pages -d dist"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.55.0",
