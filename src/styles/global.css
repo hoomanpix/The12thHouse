@@ -73,6 +73,7 @@ button {
     z-index: 9998;
     content: '';
     pointer-events: none;
+    overflow: visible;
     background: #000;
   }
 
@@ -81,6 +82,7 @@ button {
     z-index: 9999 !important;
     display: block !important;
     pointer-events: none !important;
+    user-select: none !important;
     margin: 0 !important;
     transform: none !important;
     box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.35), 0 28px 70px rgba(0, 0, 0, 0.8) !important;

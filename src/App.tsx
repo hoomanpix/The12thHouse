@@ -20,6 +20,8 @@ export default function App() {
     let activeCover: Element | null = null;
     let spotlightClone: HTMLElement | null = null;
     let spotlightInfo: HTMLElement | null = null;
+    const previousBodyOverflowY = document.body.style.overflowY;
+    const previousHtmlOverflowY = document.documentElement.style.overflowY;
 
     const updateSpotlightPosition = () => {
       if (!activeCover || !spotlightClone) return;
@@ -40,6 +42,8 @@ export default function App() {
       spotlightClone = null;
       spotlightInfo?.remove();
       spotlightInfo = null;
+      document.body.style.overflowY = previousBodyOverflowY;
+      document.documentElement.style.overflowY = previousHtmlOverflowY;
       setBlackoutActive(false);
     };
 
@@ -79,6 +83,8 @@ export default function App() {
         titleElement.textContent = title;
         spotlightInfo.append(typeElement, titleElement);
         document.body.appendChild(spotlightInfo);
+        document.body.style.overflowY = 'auto';
+        document.documentElement.style.overflowY = 'auto';
         setBlackoutActive(true);
       }, 3000);
     };
