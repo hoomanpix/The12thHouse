@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 export interface InteractiveIntroProps {
   artistName: string;
@@ -12,10 +12,11 @@ type IntroCharacter = {
   y: number;
 };
 
-type CameraState = {
+type CameraViewport = {
   x: number;
   y: number;
-  scale: number;
+  width: number;
+  height: number;
 };
 
 const CHARACTER_SPACING = 42;
@@ -49,7 +50,7 @@ export function InteractiveIntro({ artistName, onComplete }: InteractiveIntroPro
   const [isComplete, setIsComplete] = useState(false);
   const [revealedCharacters, setRevealedCharacters] = useState<IntroCharacter[]>([]);
   const [selectedCharacterId, setSelectedCharacterId] = useState<number | null>(null);
-  const [camera, setCamera] = useState<CameraState>({ x: 0, y: 0, scale: 1 });
+  const [camera, setCamera] = useState<CameraViewport | null>(null);
   const [transitionProgress, setTransitionProgress] = useState(0);
 
   const characters = useMemo(() => artistName.toUpperCase().split(''), [artistName]);
@@ -58,7 +59,6 @@ export function InteractiveIntro({ artistName, onComplete }: InteractiveIntroPro
   const revealedCountRef = useRef(0);
   const dismissedRef = useRef(false);
   const animationFrameRef = useRef<number | null>(null);
-  const characterRefs = useRef<Record<number, HTMLSpanElement | null>>({});
   const prefersReducedMotionRef = useRef(false);
 
   const selectRandomCharacter = useCallback((nextCharacters: IntroCharacter[]) => {
@@ -244,19 +244,26 @@ export function InteractiveIntro({ artistName, onComplete }: InteractiveIntroPro
       return undefined;
     }
 
-    const selectedElement = selectedCharacterId !== null ? characterRefs.current[selectedCharacterId] : null;
+    const selectedCharacter = revealedCharacters.find(({ id }) => id === selectedCharacterId) ?? null;
 
-    if (!selectedElement) {
+    if (!selectedCharacter) {
       triggerComplete();
       return undefined;
     }
 
     const viewportWidth = window.innerWidth || 1;
     const viewportHeight = window.innerHeight || 1;
-    const selectedRect = selectedElement.getBoundingClientRect();
-    const centerX = selectedRect.left + selectedRect.width / 2;
-    const centerY = selectedRect.top + selectedRect.height / 2;
-    const targetScale = Math.min(120, Math.max(52, viewportWidth / Math.max(selectedRect.width * 0.82, 1)));
+    const aspectRatio = viewportHeight / viewportWidth;
+    const letterSize = Math.min(Math.max(viewportWidth * 0.07, 52), 144);
+    // Animating SVG's viewBox keeps the typography vector-sharp throughout the dive.
+    const targetWidth = Math.max(letterSize * 0.035, 3);
+    const initialCamera: CameraViewport = { x: 0, y: 0, width: viewportWidth, height: viewportHeight };
+    const targetCamera: CameraViewport = {
+      x: selectedCharacter.x - targetWidth / 2,
+      y: selectedCharacter.y - (targetWidth * aspectRatio) / 2,
+      width: targetWidth,
+      height: targetWidth * aspectRatio,
+    };
 
     const startTime = performance.now() + INTRO_PAUSE_DURATION;
 
@@ -264,12 +271,13 @@ export function InteractiveIntro({ artistName, onComplete }: InteractiveIntroPro
       const elapsed = Math.max(0, now - startTime);
       const progress = Math.min(elapsed / INTRO_CAMERA_DURATION, 1);
       const eased = easeCinematic(progress);
-      const nextScale = 1 + (targetScale - 1) * eased;
-      const nextX = viewportWidth / 2 - centerX * nextScale;
-      const nextY = viewportHeight / 2 - centerY * nextScale;
-
       setTransitionProgress(progress);
-      setCamera({ x: nextX, y: nextY, scale: nextScale });
+      setCamera({
+        x: initialCamera.x + (targetCamera.x - initialCamera.x) * eased,
+        y: initialCamera.y + (targetCamera.y - initialCamera.y) * eased,
+        width: initialCamera.width + (targetCamera.width - initialCamera.width) * eased,
+        height: initialCamera.height + (targetCamera.height - initialCamera.height) * eased,
+      });
 
       if (progress < 1) {
         animationFrameRef.current = requestAnimationFrame(frame);
@@ -295,31 +303,28 @@ export function InteractiveIntro({ artistName, onComplete }: InteractiveIntroPro
       }
       window.clearTimeout(completionTimer);
     };
-  }, [isComplete, isDismissed, selectedCharacterId, triggerComplete]);
+  }, [isComplete, isDismissed, revealedCharacters, selectedCharacterId, triggerComplete]);
 
   const selectedCharacter = revealedCharacters.find(({ id }) => id === selectedCharacterId) ?? null;
-  const assemblyStyle: CSSProperties = {
-    transform: `translate(${camera.x}px, ${camera.y}px) scale(${camera.scale})`,
-    transformOrigin: '0 0',
-  };
-  const introScreenStyle: CSSProperties = { background: '#ffffff' };
-  const blackContinuationOpacity = Math.max(0, Math.min(1, (transitionProgress - 0.72) / 0.28));
+  const viewportWidth = typeof window === 'undefined' ? 1 : window.innerWidth || 1;
+  const viewportHeight = typeof window === 'undefined' ? 1 : window.innerHeight || 1;
+  const letterSize = Math.min(Math.max(viewportWidth * 0.07, 52), 144);
+  const viewBox = camera
+    ? `${camera.x} ${camera.y} ${camera.width} ${camera.height}`
+    : `0 0 ${viewportWidth} ${viewportHeight}`;
+  const blackContinuationOpacity = Math.max(0, Math.min(1, (transitionProgress - 0.78) / 0.22));
 
   return (
     <div
       className={['intro-screen', isComplete ? 'intro-screen--revealing' : '', isDismissed ? 'intro-screen--hidden' : '']
         .filter(Boolean)
         .join(' ')}
-      style={introScreenStyle}
       aria-hidden={isDismissed}
     >
-      <div className="intro-assembly" style={assemblyStyle} aria-label={artistName}>
+      <svg className="intro-assembly" viewBox={viewBox} aria-label={artistName} role="img">
         {revealedCharacters.map((character) => (
-          <span
+          <text
             key={`${character.id}-${character.char}`}
-            ref={(node) => {
-              characterRefs.current[character.id] = node;
-            }}
             className={[
               'intro-character',
               character.char === ' ' ? 'intro-character--space' : '',
@@ -327,28 +332,26 @@ export function InteractiveIntro({ artistName, onComplete }: InteractiveIntroPro
             ]
               .filter(Boolean)
               .join(' ')}
-            style={{
-              left: `${character.x}px`,
-              top: `${character.y}px`,
-            }}
+            x={character.x}
+            y={character.y}
+            fontSize={letterSize}
             aria-hidden={character.char === ' '}
           >
             {character.char}
-          </span>
+          </text>
         ))}
-      </div>
+      </svg>
       {selectedCharacter && (
-        <div className="intro-dive-silhouette" style={assemblyStyle} aria-hidden="true">
-          <span
+        <svg className="intro-dive-silhouette" viewBox={viewBox} aria-hidden="true">
+          <text
             className="intro-dive-character"
-            style={{
-              left: `${selectedCharacter.x}px`,
-              top: `${selectedCharacter.y}px`,
-            }}
+            x={selectedCharacter.x}
+            y={selectedCharacter.y}
+            fontSize={letterSize}
           >
             {selectedCharacter.char}
-          </span>
-        </div>
+          </text>
+        </svg>
       )}
       <div className="intro-black-continuation" style={{ opacity: blackContinuationOpacity }} aria-hidden="true" />
     </div>
