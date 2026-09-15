@@ -41,12 +41,21 @@ export default function App() {
       clearBlackout();
     };
 
+    const handleViewportChange = () => {
+      if (window.matchMedia('(max-width: 768px)').matches) {
+        activeCover = null;
+        clearBlackout();
+      }
+    };
+
     document.addEventListener('pointerover', handlePointerOver);
     document.addEventListener('pointerout', handlePointerOut);
+    window.addEventListener('resize', handleViewportChange);
     return () => {
       clearBlackout();
       document.removeEventListener('pointerover', handlePointerOver);
       document.removeEventListener('pointerout', handlePointerOut);
+      window.removeEventListener('resize', handleViewportChange);
     };
   }, []);
 
