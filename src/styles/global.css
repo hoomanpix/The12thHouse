@@ -65,11 +65,12 @@ button {
   z-index: 200;
   background: #ffffff;
   overflow: hidden;
-  transition: opacity 0.8s ease, visibility 0.8s ease;
+  transition: opacity 0.9s ease, visibility 0.9s ease;
 }
 
-.intro-screen--revealing {
-  background: #ffffff;
+.intro-screen--complete .intro-assembly {
+  opacity: 0;
+  transition: opacity 0.9s ease;
 }
 
 .intro-screen--hidden {
@@ -84,26 +85,22 @@ button {
   width: 100%;
   height: 100%;
   pointer-events: none;
-  transform-origin: 0 0;
-  will-change: transform;
-}
-
-.intro-dive-silhouette {
-  position: absolute;
-  inset: 0;
-  z-index: 2;
-  pointer-events: none;
-  transform-origin: 0 0;
-  will-change: transform;
+  opacity: 1;
+  transition: opacity 0.25s ease;
 }
 
 .intro-black-continuation {
   position: absolute;
   inset: 0;
-  z-index: 3;
+  z-index: 2;
   pointer-events: none;
   background: #000000;
-  will-change: opacity;
+  opacity: 0;
+  transition: opacity 0.9s ease;
+}
+
+.intro-screen--complete .intro-black-continuation {
+  opacity: 1;
 }
 
 .intro-character {
@@ -123,33 +120,6 @@ button {
   user-select: none;
   filter: contrast(1.04);
   text-shadow: 0 2px 12px rgba(17, 17, 17, 0.05);
-  -webkit-font-smoothing: antialiased;
-  text-rendering: geometricPrecision;
-}
-
-.intro-character--selected {
-  z-index: 1;
-  filter: contrast(1.14) brightness(0);
-  transition: filter 0.18s ease;
-}
-
-.intro-dive-character {
-  position: absolute;
-  left: 0;
-  top: 0;
-  display: inline-block;
-  margin: 0;
-  font-size: clamp(3.2rem, 7vw, 9rem);
-  line-height: 0.8;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  white-space: pre;
-  transform: translate(-50%, -50%);
-  color: #000000;
-  filter: none;
-  text-shadow: none;
-  user-select: none;
   -webkit-font-smoothing: antialiased;
   text-rendering: geometricPrecision;
 }
