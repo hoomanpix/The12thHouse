@@ -269,6 +269,10 @@ button {
   display: block;
 }
 
+.brand-line--bottom {
+  letter-spacing: 0.08em;
+}
+
 .main-nav {
   display: flex;
   align-items: center;

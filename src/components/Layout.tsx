@@ -15,10 +15,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <header className="topbar">
         <div className="brand-block">
           <NavLink to={publicRoutes.home} className="brand-link" aria-label="The12thHouse home">
-            <span className="brand-line" aria-hidden="true">
+            <span className="brand-line brand-line--top" aria-hidden="true">
               {'THE12TH'.split('').map((character) => <span key={character}>{character}</span>)}
             </span>
-            <span className="brand-line" aria-hidden="true">
+            <span className="brand-line brand-line--bottom" aria-hidden="true">
               {'HOUSE'.split('').map((character) => <span key={character}>{character}</span>)}
             </span>
           </NavLink>
