@@ -1373,3 +1373,50 @@ input[type='range'] {
   height: 9px;
   box-shadow: 0 0 0 1px #fff;
 }
+
+/* Ultra-thin player lines with clearly visible white indicators */
+.player-strip__progress,
+.player-strip__progress-bar {
+  height: 0.5px;
+}
+
+.player-strip__progress-bar::after {
+  right: -5px;
+  width: 10px;
+  height: 10px;
+  box-shadow: 0 0 0 2px #050505, 0 0 0 3px #fff;
+}
+
+.player-progress-block input[type='range']::-webkit-slider-runnable-track,
+.player-volume input[type='range']::-webkit-slider-runnable-track,
+.player-progress-block input[type='range']::-moz-range-track,
+.player-volume input[type='range']::-moz-range-track {
+  height: 0.5px;
+}
+
+.player-progress-block input[type='range']::-webkit-slider-thumb,
+.player-volume input[type='range']::-webkit-slider-thumb,
+.player-progress-block input[type='range']::-moz-range-thumb,
+.player-volume input[type='range']::-moz-range-thumb {
+  width: 10px;
+  height: 10px;
+  margin-top: -4.75px;
+  box-shadow: 0 0 0 2px #050505, 0 0 0 3px #fff;
+}
+
+.global-player.is-expanded .player-progress-block input[type='range']::-webkit-slider-runnable-track,
+.global-player.is-expanded .player-volume input[type='range']::-webkit-slider-runnable-track,
+.global-player.is-expanded .player-progress-block input[type='range']::-moz-range-track,
+.global-player.is-expanded .player-volume input[type='range']::-moz-range-track {
+  height: 0.4px;
+}
+
+.global-player.is-expanded .player-progress-block input[type='range']::-webkit-slider-thumb,
+.global-player.is-expanded .player-volume input[type='range']::-webkit-slider-thumb,
+.global-player.is-expanded .player-progress-block input[type='range']::-moz-range-thumb,
+.global-player.is-expanded .player-volume input[type='range']::-moz-range-thumb {
+  width: 11px;
+  height: 11px;
+  margin-top: -5.25px;
+  box-shadow: 0 0 0 2px #050505, 0 0 0 3px #fff;
+}
