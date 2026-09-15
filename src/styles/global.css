@@ -61,33 +61,36 @@ button {
   isolation: isolate;
 }
 
-#root::after {
-  position: fixed;
-  inset: 0;
-  z-index: 100;
-  content: '';
-  pointer-events: none;
-  opacity: 0;
-  background: rgba(5, 5, 5, 0.08);
-  backdrop-filter: blur(10px);
-  transition: opacity 0.28s ease;
-}
-
-#root:has(.music-cover:hover)::after,
-#root:has(.music-cover:active)::after {
-  opacity: 1;
-}
-
 .music-cover {
   position: relative;
-  z-index: 110;
   transition: transform 0.28s ease, box-shadow 0.28s ease;
 }
 
-.music-cover:hover,
-.music-cover:active {
-  transform: scale(1.025);
-  box-shadow: 0 24px 56px rgba(0, 0, 0, 0.48);
+@media (min-width: 769px) {
+  #root::after {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    content: '';
+    pointer-events: none;
+    opacity: 0;
+    background: #000;
+    transition: opacity 0.28s ease 0s;
+  }
+
+  #root:has(.music-cover:hover)::after {
+    opacity: 1;
+    transition-delay: 3s;
+  }
+
+  .music-cover {
+    z-index: 110;
+  }
+
+  .music-cover:hover {
+    transform: scale(1.025);
+    box-shadow: 0 24px 56px rgba(0, 0, 0, 0.48);
+  }
 }
 
 .intro-screen {
