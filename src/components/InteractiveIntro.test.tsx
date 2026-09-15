@@ -21,6 +21,7 @@ describe('InteractiveIntro', () => {
     container.remove();
     vi.runOnlyPendingTimers();
     vi.useRealTimers();
+    vi.unstubAllGlobals();
   });
 
   it('reveals the word along the user motion path and completes when the full name is drawn', () => {
@@ -60,6 +61,55 @@ describe('InteractiveIntro', () => {
 
     act(() => {
       vi.advanceTimersByTime(4000);
+    });
+
+    expect(onComplete).toHaveBeenCalledTimes(1);
+  });
+
+  it('skips the long cinematic transition in reduced-motion mode', () => {
+    const onComplete = vi.fn();
+    vi.stubGlobal(
+      'matchMedia',
+      vi.fn().mockImplementation((query: string) => ({
+        matches: query === '(prefers-reduced-motion: reduce)',
+        media: query,
+        onchange: null,
+        addListener: vi.fn(),
+        removeListener: vi.fn(),
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+        dispatchEvent: vi.fn(),
+      })),
+    );
+
+    act(() => {
+      root.render(<InteractiveIntro artistName="NEW WAVE" onComplete={onComplete} />);
+    });
+
+    act(() => {
+      window.dispatchEvent(
+        new MouseEvent('pointermove', {
+          bubbles: true,
+          clientX: 140,
+          clientY: 180,
+        }),
+      );
+    });
+
+    for (let i = 0; i < 8; i += 1) {
+      act(() => {
+        window.dispatchEvent(
+          new MouseEvent('pointermove', {
+            bubbles: true,
+            clientX: 180 + i * 90,
+            clientY: 200 + (i % 4) * 26,
+          }),
+        );
+      });
+    }
+
+    act(() => {
+      vi.runAllTimers();
     });
 
     expect(onComplete).toHaveBeenCalledTimes(1);

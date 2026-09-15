@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 
 export interface InteractiveIntroProps {
   artistName: string;
@@ -12,17 +12,36 @@ type IntroCharacter = {
   y: number;
 };
 
+type CameraState = {
+  x: number;
+  y: number;
+  scale: number;
+};
+
 const CHARACTER_SPACING = 42;
 const BASE_REVEAL_DISTANCE = 42;
+const INTRO_PAUSE_DURATION = 800;
+const INTRO_CAMERA_DURATION = 2600;
 
 const safeScrollToTop = () => {
   try {
-    if (typeof window !== 'undefined' && typeof window.scrollTo === 'function') {
-      window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+    if (typeof window === 'undefined' || typeof window.scrollTo !== 'function') {
+      return;
     }
+
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
   } catch {
     // ignore unsupported browser scroll implementations during tests or restricted environments
   }
+};
+
+const easeCinematic = (progress: number) => {
+  if (progress < 0.32) {
+    return 0.5 * (progress / 0.32) ** 2;
+  }
+
+  const remainingProgress = (progress - 0.32) / 0.68;
+  return 0.5 + 0.5 * (1 - (1 - remainingProgress) ** 3);
 };
 
 export function InteractiveIntro({ artistName, onComplete }: InteractiveIntroProps) {
@@ -30,41 +49,76 @@ export function InteractiveIntro({ artistName, onComplete }: InteractiveIntroPro
   const [isComplete, setIsComplete] = useState(false);
   const [revealedCharacters, setRevealedCharacters] = useState<IntroCharacter[]>([]);
   const [selectedCharacterId, setSelectedCharacterId] = useState<number | null>(null);
+  const [camera, setCamera] = useState<CameraState>({ x: 0, y: 0, scale: 1 });
+  const [transitionProgress, setTransitionProgress] = useState(0);
 
   const characters = useMemo(() => artistName.toUpperCase().split(''), [artistName]);
   const pointerRef = useRef<{ x: number; y: number } | null>(null);
   const accumulatorRef = useRef(0);
   const revealedCountRef = useRef(0);
   const dismissedRef = useRef(false);
+  const animationFrameRef = useRef<number | null>(null);
+  const characterRefs = useRef<Record<number, HTMLSpanElement | null>>({});
+  const prefersReducedMotionRef = useRef(false);
 
-  const completeIntro = () => {
-    if (dismissedRef.current || isComplete) {
+  const selectRandomCharacter = useCallback((nextCharacters: IntroCharacter[]) => {
+    const drawableCharacters = nextCharacters.filter(({ char }) => char.trim().length > 0);
+
+    if (!drawableCharacters.length) {
+      setSelectedCharacterId(null);
+      return null;
+    }
+
+    const randomCharacter = drawableCharacters[Math.floor(Math.random() * drawableCharacters.length)] ?? drawableCharacters[0];
+    setSelectedCharacterId(randomCharacter.id);
+    return randomCharacter;
+  }, []);
+
+  const completeIntro = useCallback(
+    (nextCharacters: IntroCharacter[] = revealedCharacters) => {
+      if (dismissedRef.current || isComplete) {
+        return;
+      }
+
+      selectRandomCharacter(nextCharacters);
+      setIsComplete(true);
+    },
+    [isComplete, revealedCharacters, selectRandomCharacter],
+  );
+
+  const triggerComplete = useCallback(() => {
+    if (dismissedRef.current || isDismissed) {
       return;
     }
 
-    const drawableCharacters = characters
-      .map((char, index) => ({ char, index }))
-      .filter(({ char }) => char.trim().length > 0);
-    const randomCharacter =
-      drawableCharacters[Math.floor(Math.random() * drawableCharacters.length)] ?? drawableCharacters[0];
-
-    setSelectedCharacterId(randomCharacter?.index ?? null);
-    setIsComplete(true);
-  };
+    dismissedRef.current = true;
+    setIsDismissed(true);
+    onComplete?.();
+  }, [isDismissed, onComplete]);
 
   useEffect(() => {
     if (!isComplete || isDismissed) {
       return undefined;
     }
 
-    const timer = window.setTimeout(() => {
-      dismissedRef.current = true;
-      setIsDismissed(true);
-      onComplete?.();
-    }, 3200);
+    if (prefersReducedMotionRef.current) {
+      const reducedMotionTimer = window.setTimeout(triggerComplete, 160);
+      return () => window.clearTimeout(reducedMotionTimer);
+    }
 
-    return () => window.clearTimeout(timer);
-  }, [isComplete, isDismissed, onComplete]);
+    const completionTimer = window.setTimeout(() => {
+      setTransitionProgress(0);
+    }, INTRO_PAUSE_DURATION);
+
+    return () => window.clearTimeout(completionTimer);
+  }, [isComplete, isDismissed, triggerComplete]);
+
+  useEffect(() => {
+    prefersReducedMotionRef.current =
+      typeof window !== 'undefined' && typeof window.matchMedia === 'function'
+        ? window.matchMedia('(prefers-reduced-motion: reduce)').matches
+        : false;
+  }, []);
 
   useEffect(() => {
     const previousOverflow = document.body.style.overflow;
@@ -76,12 +130,15 @@ export function InteractiveIntro({ artistName, onComplete }: InteractiveIntroPro
     return () => {
       document.body.style.overflow = previousOverflow;
       document.documentElement.style.overflow = previousHtmlOverflow;
+      if (animationFrameRef.current !== null) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
       safeScrollToTop();
     };
   }, []);
 
   useEffect(() => {
-    if (isDismissed) {
+    if (isDismissed || isComplete) {
       return undefined;
     }
 
@@ -112,7 +169,7 @@ export function InteractiveIntro({ artistName, onComplete }: InteractiveIntroPro
       const nextIndex = revealedCountRef.current;
 
       if (nextIndex >= characters.length) {
-        completeIntro();
+        completeIntro(revealedCharacters);
         return;
       }
 
@@ -123,12 +180,15 @@ export function InteractiveIntro({ artistName, onComplete }: InteractiveIntroPro
       const x = clientX + Math.cos(angle) * offset;
       const y = clientY + Math.sin(angle) * offset;
 
-      setRevealedCharacters((previous) => [...previous, { id: nextIndex, char: characters[nextIndex], x, y }]);
+      const nextCharacter = { id: nextIndex, char: characters[nextIndex], x, y };
+      const nextCharacters = [...revealedCharacters, nextCharacter];
+
+      setRevealedCharacters(nextCharacters);
       revealedCountRef.current += 1;
       accumulatorRef.current = 0;
 
       if (revealedCountRef.current >= characters.length) {
-        completeIntro();
+        completeIntro(nextCharacters);
       }
     };
 
@@ -173,35 +233,93 @@ export function InteractiveIntro({ artistName, onComplete }: InteractiveIntroPro
       window.removeEventListener('touchmove', handleTouchMove);
       window.removeEventListener('scroll', handleScroll);
     };
-  }, [characters, isDismissed, completeIntro]);
+  }, [characters, completeIntro, isDismissed]);
 
-  const selectedCharacter = revealedCharacters.find(({ id }) => id === selectedCharacterId);
-  const finalScale = 58;
-  const centerX = window.innerWidth / 2;
-  const centerY = window.innerHeight / 2;
-  const characterX = selectedCharacter?.x ?? centerX;
-  const characterY = selectedCharacter?.y ?? centerY;
-  const screenStyle = {
-    '--camera-end-x': `${centerX - characterX * finalScale}px`,
-    '--camera-end-y': `${centerY - characterY * finalScale}px`,
-  } as CSSProperties;
+  useEffect(() => {
+    if (!isComplete || isDismissed) {
+      return undefined;
+    }
+
+    if (prefersReducedMotionRef.current) {
+      return undefined;
+    }
+
+    const selectedElement = selectedCharacterId !== null ? characterRefs.current[selectedCharacterId] : null;
+
+    if (!selectedElement) {
+      triggerComplete();
+      return undefined;
+    }
+
+    const viewportWidth = window.innerWidth || 1;
+    const viewportHeight = window.innerHeight || 1;
+    const selectedRect = selectedElement.getBoundingClientRect();
+    const centerX = selectedRect.left + selectedRect.width / 2;
+    const centerY = selectedRect.top + selectedRect.height / 2;
+    const targetScale = Math.min(120, Math.max(52, viewportWidth / Math.max(selectedRect.width * 0.82, 1)));
+
+    const startTime = performance.now() + INTRO_PAUSE_DURATION;
+
+    const frame = (now: number) => {
+      const elapsed = Math.max(0, now - startTime);
+      const progress = Math.min(elapsed / INTRO_CAMERA_DURATION, 1);
+      const eased = easeCinematic(progress);
+      const nextScale = 1 + (targetScale - 1) * eased;
+      const nextX = viewportWidth / 2 - centerX * nextScale;
+      const nextY = viewportHeight / 2 - centerY * nextScale;
+
+      setTransitionProgress(progress);
+      setCamera({ x: nextX, y: nextY, scale: nextScale });
+
+      if (progress < 1) {
+        animationFrameRef.current = requestAnimationFrame(frame);
+        return;
+      }
+
+      if (!dismissedRef.current) {
+        triggerComplete();
+      }
+    };
+
+    animationFrameRef.current = requestAnimationFrame(frame);
+
+    const completionTimer = window.setTimeout(() => {
+      if (!dismissedRef.current) {
+        triggerComplete();
+      }
+    }, INTRO_PAUSE_DURATION + INTRO_CAMERA_DURATION + 40);
+
+    return () => {
+      if (animationFrameRef.current !== null) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+      window.clearTimeout(completionTimer);
+    };
+  }, [isComplete, isDismissed, selectedCharacterId, triggerComplete]);
+
+  const selectedCharacter = revealedCharacters.find(({ id }) => id === selectedCharacterId) ?? null;
+  const assemblyStyle: CSSProperties = {
+    transform: `translate(${camera.x}px, ${camera.y}px) scale(${camera.scale})`,
+    transformOrigin: '0 0',
+  };
+  const introScreenStyle: CSSProperties = { background: '#ffffff' };
+  const blackContinuationOpacity = Math.max(0, Math.min(1, (transitionProgress - 0.72) / 0.28));
 
   return (
     <div
-      className={[
-        'intro-screen',
-        isComplete ? 'intro-screen--revealing' : '',
-        isDismissed ? 'intro-screen--hidden' : '',
-      ]
+      className={['intro-screen', isComplete ? 'intro-screen--revealing' : '', isDismissed ? 'intro-screen--hidden' : '']
         .filter(Boolean)
         .join(' ')}
-      style={screenStyle}
+      style={introScreenStyle}
       aria-hidden={isDismissed}
     >
-      <div className={`intro-assembly${isComplete ? ' intro-assembly--zooming' : ''}`} aria-label={artistName}>
+      <div className="intro-assembly" style={assemblyStyle} aria-label={artistName}>
         {revealedCharacters.map((character) => (
           <span
             key={`${character.id}-${character.char}`}
+            ref={(node) => {
+              characterRefs.current[character.id] = node;
+            }}
             className={[
               'intro-character',
               character.char === ' ' ? 'intro-character--space' : '',
@@ -219,6 +337,20 @@ export function InteractiveIntro({ artistName, onComplete }: InteractiveIntroPro
           </span>
         ))}
       </div>
+      {selectedCharacter && (
+        <div className="intro-dive-silhouette" style={assemblyStyle} aria-hidden="true">
+          <span
+            className="intro-dive-character"
+            style={{
+              left: `${selectedCharacter.x}px`,
+              top: `${selectedCharacter.y}px`,
+            }}
+          >
+            {selectedCharacter.char}
+          </span>
+        </div>
+      )}
+      <div className="intro-black-continuation" style={{ opacity: blackContinuationOpacity }} aria-hidden="true" />
     </div>
   );
 }

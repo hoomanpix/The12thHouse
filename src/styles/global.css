@@ -63,25 +63,13 @@ button {
   position: fixed;
   inset: 0;
   z-index: 200;
-  background: transparent;
+  background: #ffffff;
   overflow: hidden;
   transition: opacity 0.8s ease, visibility 0.8s ease;
 }
 
 .intro-screen--revealing {
-  animation: intro-screen-reveal 3.2s linear forwards;
-}
-
-.intro-screen::before {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
   background: #ffffff;
-  content: '';
-}
-
-.intro-screen--revealing::before {
-  animation: intro-white-fade 3.2s cubic-bezier(0.76, 0, 0.24, 1) forwards;
 }
 
 .intro-screen--hidden {
@@ -97,10 +85,25 @@ button {
   height: 100%;
   pointer-events: none;
   transform-origin: 0 0;
+  will-change: transform;
 }
 
-.intro-assembly--zooming {
-  animation: intro-camera-zoom 3.2s linear forwards;
+.intro-dive-silhouette {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  transform-origin: 0 0;
+  will-change: transform;
+}
+
+.intro-black-continuation {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  background: #000000;
+  will-change: opacity;
 }
 
 .intro-character {
@@ -126,43 +129,35 @@ button {
 
 .intro-character--selected {
   z-index: 1;
+  filter: contrast(1.14) brightness(0);
+  transition: filter 0.18s ease;
+}
+
+.intro-dive-character {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: inline-block;
+  margin: 0;
+  font-size: clamp(3.2rem, 7vw, 9rem);
+  line-height: 0.8;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: pre;
+  transform: translate(-50%, -50%);
+  color: #000000;
+  filter: none;
+  text-shadow: none;
+  user-select: none;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: geometricPrecision;
 }
 
 .intro-character--space {
   opacity: 0;
   width: 0.4em;
   pointer-events: none;
-}
-
-@keyframes intro-screen-reveal {
-  from {
-    opacity: 1;
-  }
-
-  to {
-    opacity: 1;
-  }
-}
-
-@keyframes intro-white-fade {
-  0% {
-    opacity: 1;
-  }
-
-  100% {
-    opacity: 0;
-  }
-}
-
-@keyframes intro-camera-zoom {
-  0% {
-    transform: translate(0, 0) scale(1);
-  }
-
-  100% {
-    transform: translate(var(--camera-end-x), var(--camera-end-y)) scale(58);
-    opacity: 0;
-  }
 }
 
 @media (pointer: coarse) {
