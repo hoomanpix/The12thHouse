@@ -65,7 +65,7 @@ export default function App() {
   }, []);
 
   return (
-    <div className="app-stage">
+    <div className={`app-stage${blackoutActive ? ' blackout-active' : ''}`}>
       {!introComplete && (
         <InteractiveIntro artistName="THE12THHOUSE" onComplete={() => setIntroComplete(true)} />
       )}

@@ -81,6 +81,16 @@ button {
     z-index: 130;
   }
 
+  .app-stage.blackout-active .topbar .music-cover:not(.cover-spotlight),
+  .app-stage.blackout-active .global-player .music-cover:not(.cover-spotlight) {
+    visibility: hidden;
+  }
+
+  .app-stage.blackout-active .topbar .music-cover.cover-spotlight,
+  .app-stage.blackout-active .global-player .music-cover.cover-spotlight {
+    visibility: visible;
+  }
+
   .music-cover {
     z-index: 110;
   }
