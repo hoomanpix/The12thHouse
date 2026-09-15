@@ -80,15 +80,6 @@ export function GlobalAudioPlayer() {
         <div className="player-detail" aria-hidden={!isExpanded}>
           <div className="player-detail__topbar">
             <span className="eyebrow">Now playing</span>
-            <button
-              type="button"
-              className="player-button player-button--ghost"
-              aria-label="Collapse player"
-              aria-expanded={isExpanded}
-              onClick={() => setIsExpanded(false)}
-            >
-              Close
-            </button>
           </div>
 
           <div className="player-detail__content">

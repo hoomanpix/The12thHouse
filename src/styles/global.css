@@ -1244,3 +1244,34 @@ input[type='range'] {
 .new-release-section .feature-artwork.music-cover {
   border-radius: 0;
 }
+
+/* Sharp player treatment */
+.player-shell,
+.player-strip,
+.player-detail,
+.player-detail__artwork,
+.player-detail__content,
+.player-detail__topbar,
+.player-detail__controls,
+.player-volume,
+.player-progress-block {
+  border-radius: 0;
+}
+
+.player-strip__progress,
+.player-strip__progress-bar,
+.player-button,
+.player-detail__artwork {
+  border-radius: 0;
+}
+
+.player-shell {
+  background: #0a0a0a;
+  border-top-color: rgba(255, 255, 255, 0.28);
+}
+
+.player-detail__topbar {
+  justify-content: flex-start;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line);
+}
