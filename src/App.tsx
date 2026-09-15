@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { Layout } from './components/Layout';
 import { InteractiveIntro } from './components/InteractiveIntro';
@@ -13,6 +13,42 @@ import { CatalogProvider } from './features/catalog/CatalogProvider';
 
 export default function App() {
   const [introComplete, setIntroComplete] = useState(false);
+
+  useEffect(() => {
+    let timer: number | undefined;
+    let activeCover: Element | null = null;
+
+    const clearBlackout = () => {
+      if (timer !== undefined) window.clearTimeout(timer);
+      timer = undefined;
+      document.documentElement.classList.remove('blackout-active');
+    };
+
+    const handlePointerOver = (event: PointerEvent) => {
+      if (event.pointerType === 'touch' || window.matchMedia('(max-width: 768px)').matches) return;
+      const cover = (event.target as Element | null)?.closest('.music-cover');
+      if (!cover || cover === activeCover) return;
+      clearBlackout();
+      activeCover = cover;
+      timer = window.setTimeout(() => document.documentElement.classList.add('blackout-active'), 3000);
+    };
+
+    const handlePointerOut = (event: PointerEvent) => {
+      if (!activeCover) return;
+      const nextTarget = event.relatedTarget as Node | null;
+      if (nextTarget && activeCover.contains(nextTarget)) return;
+      activeCover = null;
+      clearBlackout();
+    };
+
+    document.addEventListener('pointerover', handlePointerOver);
+    document.addEventListener('pointerout', handlePointerOut);
+    return () => {
+      clearBlackout();
+      document.removeEventListener('pointerover', handlePointerOver);
+      document.removeEventListener('pointerout', handlePointerOut);
+    };
+  }, []);
 
   return (
     <>

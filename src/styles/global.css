@@ -78,9 +78,9 @@ button {
     transition: opacity 0.28s ease 0s;
   }
 
-  #root:has(.music-cover:hover)::after {
+  html.blackout-active #root::after {
     opacity: 1;
-    transition-delay: 3s;
+    transition-delay: 0s;
   }
 
   .music-cover {
