@@ -5,50 +5,35 @@ import type { ReleaseType } from '../types';
 
 export function ReleasesPage() {
   const [filter, setFilter] = useState<'all' | ReleaseType>('all');
-  const { releases: allReleases } = useCatalog();
-  const mockReleases = allReleases.filter((release) => release.published);
-
-  const filteredReleases = useMemo(() => {
-    if (filter === 'all') return mockReleases;
-    return mockReleases.filter((release) => release.type === filter);
-  }, [filter]);
+  const { releases } = useCatalog();
+  const visibleReleases = releases.filter((release) => release.published);
+  const filteredReleases = useMemo(
+    () => filter === 'all' ? visibleReleases : visibleReleases.filter((release) => release.type === filter),
+    [filter, visibleReleases],
+  );
 
   return (
-    <div className="page-section">
-      <div className="section-heading split">
-        <div>
-          <p className="eyebrow">Releases</p>
-          <h1>Selected work</h1>
-        </div>
-
+    <div className="page-section archive-page">
+      <header className="archive-header">
+        <div><p className="eyebrow">The12thHouse / archive</p><h1>Selected work</h1></div>
+        <p className="archive-header__note">Releases, studies, and songs from the house.</p>
+      </header>
+      <div className="archive-toolbar">
+        <span className="eyebrow">Filter</span>
         <div className="filter-bar" aria-label="Release filters">
-          {(['all', 'single', 'album'] as const).map((option) => (
-            <button
-              key={option}
-              type="button"
-              className={filter === option ? 'filter-pill active' : 'filter-pill'}
-              onClick={() => setFilter(option)}
-            >
-              {option === 'all' ? 'All' : option}
-            </button>
-          ))}
+          {(['all', 'single', 'album'] as const).map((option) => <button key={option} type="button" className={filter === option ? 'filter-pill active' : 'filter-pill'} onClick={() => setFilter(option)}>{option}</button>)}
         </div>
+        <span className="archive-count">{String(filteredReleases.length).padStart(2, '0')} works</span>
       </div>
-
-      <div className="release-grid">
-        {filteredReleases.map((release) => (
-          <article key={release.id} className="release-card">
-            <Link to={`/releases/${release.slug}`} className="release-cover music-cover">
-              <img src={release.artwork_url ?? ''} alt={release.title} />
-            </Link>
-            <div className="release-card-meta">
-              <div>
-                <p className="eyebrow subtle">{release.type}</p>
-                <h3>{release.title}</h3>
-              </div>
-              <span>{new Date(release.release_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
-            </div>
-          </article>
+      <div className="archive-list">
+        {filteredReleases.map((release, index) => (
+          <Link className="archive-item" to={`/releases/${release.slug}`} key={release.id}>
+            <span className="archive-item__number">{String(index + 1).padStart(2, '0')}</span>
+            <span className="archive-item__image music-cover"><img src={release.artwork_url ?? ''} alt="" /></span>
+            <span className="archive-item__title">{release.title}</span>
+            <span className="archive-item__type">{release.type}</span>
+            <span className="archive-item__date">{release.release_date.slice(0, 4)}</span>
+          </Link>
         ))}
       </div>
     </div>
