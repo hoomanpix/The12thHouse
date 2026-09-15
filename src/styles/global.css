@@ -1490,3 +1490,9 @@ input[type='range'] {
   height: 0.5px;
   background: #fff;
 }
+
+/* Expanded player only: compact the progress bar above transport controls */
+.global-player.is-expanded .player-progress-block input[type='range'] {
+  width: 50%;
+  justify-self: center;
+}
