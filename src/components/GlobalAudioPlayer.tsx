@@ -106,7 +106,7 @@ export function GlobalAudioPlayer() {
                   min={0}
                   max={100}
                   value={progress}
-                  style={{ background: `linear-gradient(to right, #fff ${progress}%, rgba(255, 255, 255, 0.22) ${progress}%)` }}
+                  style={{ background: '#fff' }}
                   onChange={(event) => seek(Number(event.target.value))}
                 />
                 <span>-{formatTime(remainingTime)}</span>
@@ -139,7 +139,7 @@ export function GlobalAudioPlayer() {
                   max={1}
                   step={0.01}
                   value={state.volume}
-                  style={{ background: `linear-gradient(to right, #fff ${state.volume * 100}%, rgba(255, 255, 255, 0.22) ${state.volume * 100}%)` }}
+                  style={{ background: '#fff' }}
                   onChange={(event) => setVolume(Number(event.target.value))}
                 />
               </div>
