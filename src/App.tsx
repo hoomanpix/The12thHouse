@@ -147,7 +147,7 @@ export default function App() {
   return (
     <div className={`app-stage${blackoutActive ? ' blackout-active' : ''}`}>
       {!introComplete && (
-        <InteractiveIntro artistName="THE12THHOUSE" onComplete={() => setIntroComplete(true)} />
+        <InteractiveIntro artistName="The12thHouse" onComplete={() => setIntroComplete(true)} />
       )}
 
       <AuthProvider>

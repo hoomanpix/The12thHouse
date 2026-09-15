@@ -35,7 +35,11 @@ export function InteractiveIntro({ artistName, onComplete }: InteractiveIntroPro
   const [isFading, setIsFading] = useState(false);
   const [revealedCharacters, setRevealedCharacters] = useState<IntroCharacter[]>([]);
 
-  const characters = useMemo(() => artistName.toUpperCase().split(''), [artistName]);
+  const displayName = useMemo(
+    () => artistName.trim().split(/\s+/).map((word) => `${word.charAt(0).toUpperCase()}${word.slice(1).toLowerCase()}`).join(' '),
+    [artistName],
+  );
+  const characters = useMemo(() => displayName.split(''), [displayName]);
   const pointerRef = useRef<{ x: number; y: number } | null>(null);
   const accumulatorRef = useRef(0);
   const revealedCountRef = useRef(0);
@@ -204,7 +208,7 @@ export function InteractiveIntro({ artistName, onComplete }: InteractiveIntroPro
         .join(' ')}
       aria-hidden={isDismissed}
     >
-      <div className="intro-assembly" aria-label={artistName}>
+      <div className="intro-assembly" aria-label={displayName}>
         {revealedCharacters.map((character) => {
           const characterStyle: CSSProperties = {
             left: `${character.x}px`,
