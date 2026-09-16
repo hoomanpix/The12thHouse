@@ -51,8 +51,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signIn = useCallback(async (email: string, password: string) => {
+    const normalizedEmail = email.trim().toLowerCase();
+    if (!ADMIN_ALLOWLIST.includes(normalizedEmail)) return { error: new Error('This email is not authorized for The12thHouse admin.') };
     if (!isSupabaseConfigured) return { error: new Error('Supabase is not configured.') };
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { error } = await supabase.auth.signInWithPassword({ email: normalizedEmail, password });
     return { error: error ? new Error(error.message) : null };
   }, []);
 
