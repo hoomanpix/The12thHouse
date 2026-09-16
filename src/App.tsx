@@ -14,6 +14,8 @@ import { publicRoutes } from './config/routes';
 import { CatalogProvider } from './features/catalog/CatalogProvider';
 import { AuthProvider } from './features/auth/AuthProvider';
 
+export const COVER_FOCUS_DELAY_MS = 1500;
+
 export default function App() {
   const [introComplete, setIntroComplete] = useState(false);
   const [blackoutActive, setBlackoutActive] = useState(false);
@@ -104,7 +106,7 @@ export default function App() {
         document.body.style.overflow = 'auto';
         document.documentElement.style.overflow = 'auto';
         setBlackoutActive(true);
-      }, 2000);
+      }, COVER_FOCUS_DELAY_MS);
     };
 
     const handlePointerOut = (event: PointerEvent) => {
