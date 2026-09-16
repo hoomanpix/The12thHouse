@@ -8,11 +8,17 @@ export function HomePage() {
   const { releases, recordPlay } = useCatalog();
   const visibleReleases = releases.filter((release) => release.published);
   const featuredRelease = visibleReleases.find((release) => release.featured) ?? visibleReleases[0];
+  const latestRelease = visibleReleases[0];
+  const playableTracks = (featuredRelease?.tracks ?? []).filter(
+    (track) => track.published !== false && Boolean(track.audio_url),
+  );
 
-  if (!featuredRelease) return <div className="page-section"><p className="admin-empty">No releases are published yet.</p></div>;
+  if (!featuredRelease || !latestRelease) {
+    return <div className="page-section"><p className="admin-empty">No releases are published yet.</p></div>;
+  }
 
   const handlePlay = (release: typeof featuredRelease) => {
-    const queue = (release.tracks ?? []).map((track) => ({
+    const queue = (release.tracks ?? []).filter((track) => track.published !== false && Boolean(track.audio_url)).map((track) => ({
       id: `${release.id}-${track.id}`,
       releaseId: release.id,
       trackId: track.id,
@@ -24,52 +30,79 @@ export function HomePage() {
     }));
     setQueue(queue);
     if (queue[0]) {
-      recordPlay(release.id, release.tracks?.[0]?.id ?? '');
+      recordPlay(release.id, queue[0].trackId);
       playTrack(queue[0]);
     }
   };
 
   return (
     <div className="page-section home-page">
-      <section className="home-intro">
-        <div>
-          <p className="eyebrow">The12thHouse / independent artist</p>
-          <h1>Sound in<br />slow motion.</h1>
-        </div>
-        <p className="home-intro__note">Cinematic electronic music, intimate songs, and nocturnal spaces.</p>
-      </section>
-
-      <section className="home-feature" aria-labelledby="featured-title">
-        <div className="home-feature__art music-cover">
-          <img src={featuredRelease.artwork_url ?? ''} alt={featuredRelease.title} />
-        </div>
-        <div className="home-feature__copy">
-          <p className="eyebrow">New release / {featuredRelease.type}</p>
-          <h2 id="featured-title">{featuredRelease.title}</h2>
-          <p>{featuredRelease.description}</p>
-          <div className="home-feature__actions">
-            <button type="button" className="button primary" onClick={() => handlePlay(featuredRelease)}>Play release</button>
-            <Link to={`/releases/${featuredRelease.slug}`} className="text-link">View release</Link>
+      <section className="hero-block">
+        <div className="hero-copy">
+          <p className="eyebrow">Independent electronic artist</p>
+          <h1>Independent electronic artist</h1>
+          <p className="lede">
+            Sculpted atmospheres, slow-burn rhythm, and intimate songs for the edge of the night.
+          </p>
+          <div className="hero-actions">
+            <button
+              type="button"
+              className="button primary"
+              onClick={() => handlePlay(featuredRelease)}
+              disabled={playableTracks.length === 0}
+            >
+              {playableTracks.length === 0 ? 'Audio coming soon' : 'Play latest'}
+            </button>
+            <Link to={publicRoutes.releases} className="button secondary">Browse releases</Link>
           </div>
         </div>
+
+        <div className="hero-visual music-cover">
+          <img src={featuredRelease.artwork_url ?? ''} alt={featuredRelease.title} />
+        </div>
       </section>
 
-      <section className="home-catalog" aria-labelledby="catalog-title">
-        <div className="home-catalog__heading">
-          <p className="eyebrow">Selected releases</p>
-          <h2 id="catalog-title">All work</h2>
-          <Link to={publicRoutes.releases} className="text-link">Archive</Link>
+      <section className="release-overview">
+        <div className="section-heading">
+          <p className="eyebrow">Latest release</p>
+          <h2>{latestRelease.title}</h2>
         </div>
-        <div className="home-release-list">
-          {visibleReleases.map((release, index) => (
-            <Link className="home-release-row" to={`/releases/${release.slug}`} key={release.id}>
-              <span className="home-release-row__index">0{index + 1}</span>
-              <span className="home-release-row__title">{release.title}</span>
-              <span className="home-release-row__type">{release.type}</span>
-              <span className="home-release-row__year">{release.release_date.slice(0, 4)}</span>
-            </Link>
-          ))}
+        <article className="feature-card new-release-section">
+          <div className="feature-artwork music-cover">
+            <img src={latestRelease.artwork_url ?? ''} alt={latestRelease.title} />
+          </div>
+          <div className="feature-copy">
+            <p>{latestRelease.type}</p>
+            <h3>{latestRelease.title}</h3>
+            <p>{latestRelease.description}</p>
+            <Link to={`/releases/${latestRelease.slug}`} className="text-link">View release</Link>
+          </div>
+        </article>
+      </section>
+
+      <section className="release-overview">
+        <div className="section-heading">
+          <p className="eyebrow">Featured release</p>
+          <h2>{featuredRelease.title}</h2>
         </div>
+        <article className="feature-card muted">
+          <div className="feature-copy">
+            <p>{featuredRelease.type}</p>
+            <h3>{featuredRelease.title}</h3>
+            <p>{featuredRelease.description}</p>
+            <button
+              type="button"
+              className="button secondary"
+              onClick={() => handlePlay(featuredRelease)}
+              disabled={playableTracks.length === 0}
+            >
+              {playableTracks.length === 0 ? 'Audio coming soon' : 'Play selection'}
+            </button>
+          </div>
+          <div className="feature-artwork music-cover">
+            <img src={featuredRelease.artwork_url ?? ''} alt={featuredRelease.title} />
+          </div>
+        </article>
       </section>
     </div>
   );

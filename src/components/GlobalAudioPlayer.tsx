@@ -14,6 +14,7 @@ export function GlobalAudioPlayer() {
   const trackTitle = activeTrack?.title ?? 'No track selected';
   const artistName = activeTrack?.releaseTitle ?? 'Artist';
   const remainingTime = Math.max(state.duration - state.currentTime, 0);
+  const canPlay = Boolean(activeTrack?.audioUrl);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -45,6 +46,7 @@ export function GlobalAudioPlayer() {
           <button
             type="button"
             className="player-button player-button--primary"
+            disabled={!canPlay && !state.isPlaying}
             onClick={(event) => {
               event.stopPropagation();
               togglePlay();
@@ -56,7 +58,7 @@ export function GlobalAudioPlayer() {
 
           <div className="player-strip__meta">
             <span className="player-strip__title">{trackTitle}</span>
-            <span className="player-strip__artist">{artistName}</span>
+            <span className="player-strip__artist">{state.error ?? artistName}</span>
           </div>
 
           <div className={`player-strip__progress ${isExpanded ? 'player-strip__progress--expanded' : ''}`} aria-hidden="true">

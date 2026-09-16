@@ -14,7 +14,7 @@ type IntroCharacter = {
 
 const CHARACTER_SPACING = 0.24;
 const BASE_REVEAL_DISTANCE = 72;
-const COMPLETION_PAUSE_DURATION = 4000;
+const COMPLETION_PAUSE_DURATION = 3000;
 const FADE_DURATION = 1600;
 
 const safeScrollToTop = () => {
@@ -65,6 +65,33 @@ export function InteractiveIntro({ artistName, onComplete }: InteractiveIntroPro
     completionStartedRef.current = true;
     setIsComplete(true);
   }, []);
+
+  const revealCharacter = useCallback(
+    (clientX: number, clientY: number, angle = 0) => {
+      if (dismissedRef.current || revealedCountRef.current >= characters.length) {
+        completeIntro();
+        return;
+      }
+
+      const nextIndex = revealedCountRef.current;
+      const offset = nextIndex * CHARACTER_SPACING;
+      setRevealedCharacters((previous) => [
+        ...previous,
+        {
+          id: nextIndex,
+          char: characters[nextIndex],
+          x: clientX + Math.cos(angle) * offset,
+          y: clientY + Math.sin(angle) * offset,
+        },
+      ]);
+      revealedCountRef.current += 1;
+
+      if (revealedCountRef.current >= characters.length) {
+        completeIntro();
+      }
+    },
+    [characters, completeIntro],
+  );
 
   useEffect(() => {
     prefersReducedMotionRef.current =
@@ -135,33 +162,18 @@ export function InteractiveIntro({ artistName, onComplete }: InteractiveIntroPro
         return;
       }
 
-      const nextIndex = revealedCountRef.current;
-      if (nextIndex >= characters.length) {
-        completeIntro();
-        return;
-      }
-
       const directionX = eventDeltaX || 1;
       const directionY = eventDeltaY || 0;
       const angle = Math.atan2(directionY, directionX);
-      const offset = nextIndex * CHARACTER_SPACING;
-      const nextCharacter = {
-        id: nextIndex,
-        char: characters[nextIndex],
-        x: clientX + Math.cos(angle) * offset,
-        y: clientY + Math.sin(angle) * offset,
-      };
-
-      setRevealedCharacters((previous) => [...previous, nextCharacter]);
-      revealedCountRef.current += 1;
+      revealCharacter(clientX, clientY, angle);
       accumulatorRef.current = 0;
-
-      if (revealedCountRef.current >= characters.length) {
-        completeIntro();
-      }
     };
 
     const handlePointerMove = (event: PointerEvent) => {
+      handleMotion(event.clientX, event.clientY, event.movementX, event.movementY);
+    };
+
+    const handleMouseMove = (event: MouseEvent) => {
       handleMotion(event.clientX, event.clientY, event.movementX, event.movementY);
     };
 
@@ -189,17 +201,19 @@ export function InteractiveIntro({ artistName, onComplete }: InteractiveIntroPro
     };
 
     window.addEventListener('pointermove', handlePointerMove);
+    window.addEventListener('mousemove', handleMouseMove);
     window.addEventListener('wheel', handleWheel, { passive: false });
     window.addEventListener('touchmove', handleTouchMove, { passive: false });
     window.addEventListener('scroll', handleScroll, { passive: false });
 
     return () => {
       window.removeEventListener('pointermove', handlePointerMove);
+      window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('wheel', handleWheel);
       window.removeEventListener('touchmove', handleTouchMove);
       window.removeEventListener('scroll', handleScroll);
     };
-  }, [characters, completeIntro, isComplete, isDismissed]);
+  }, [completeIntro, isComplete, isDismissed, revealCharacter]);
 
   return (
     <div

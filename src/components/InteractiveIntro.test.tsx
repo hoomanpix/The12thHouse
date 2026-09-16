@@ -114,4 +114,23 @@ describe('InteractiveIntro', () => {
 
     expect(onComplete).toHaveBeenCalledTimes(1);
   });
+
+  it('reveals characters along a touch path', () => {
+    act(() => {
+      root.render(<InteractiveIntro artistName="THE12THHOUSE" />);
+    });
+
+    act(() => {
+      window.dispatchEvent(new TouchEvent('touchmove', {
+        bubbles: true,
+        touches: [{ clientX: 100, clientY: 100 } as Touch],
+      }));
+      window.dispatchEvent(new TouchEvent('touchmove', {
+        bubbles: true,
+        touches: [{ clientX: 700, clientY: 100 } as Touch],
+      }));
+    });
+
+    expect(container.querySelectorAll('.intro-character').length).toBeGreaterThan(0);
+  });
 });

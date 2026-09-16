@@ -322,8 +322,10 @@ button {
 }
 
 .topbar {
-  position: sticky;
+  position: fixed;
   top: 0;
+  left: 50%;
+  width: min(calc(100% - 48px), calc(var(--max-width) - 48px));
   z-index: 50;
   display: flex;
   align-items: center;
@@ -332,6 +334,7 @@ button {
   padding: 18px 0 26px;
   border-bottom: 1px solid var(--line);
   background: rgba(5, 5, 5, 0.92);
+  transform: translateX(-50%);
 }
 
 .brand-link {
@@ -396,7 +399,7 @@ button {
 }
 
 .page-shell {
-  padding-top: 42px;
+  padding-top: 108px;
 }
 
 .page-section {
@@ -1186,8 +1189,7 @@ input[type='range'] {
   }
 
   .topbar {
-    position: sticky;
-    top: 0;
+    width: calc(100% - 32px);
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
@@ -1195,6 +1197,10 @@ input[type='range'] {
     padding-top: 12px;
     padding-bottom: 12px;
     z-index: 60;
+  }
+
+  .page-shell {
+    padding-top: 82px;
   }
 
   .main-nav {
@@ -1730,38 +1736,6 @@ input[type='range'] {
 .player-button--wide,
 .player-button--primary.player-button--wide {
   border-radius: 50% !important;
-}
-
-/* Editorial home: quiet, image-led, and deliberately sparse. */
-.home-page { gap: clamp(88px, 14vw, 180px); }
-.home-intro { min-height: 58vh; display: grid; grid-template-columns: minmax(0, 1fr) minmax(180px, 260px); align-items: end; gap: 32px; padding-bottom: clamp(40px, 8vw, 110px); border-bottom: 1px solid var(--line); }
-.home-intro h1 { margin-top: 22px; max-width: 760px; font-size: clamp(3.4rem, 9vw, 9rem); font-weight: 400; letter-spacing: -0.085em; line-height: 0.86; }
-.home-intro__note { align-self: end; margin: 0 0 5px; color: var(--muted); font-size: 0.82rem; line-height: 1.5; }
-.home-feature { display: grid; grid-template-columns: minmax(220px, 0.82fr) minmax(260px, 1fr); align-items: end; gap: clamp(32px, 8vw, 140px); }
-.home-feature__art { width: min(100%, 430px); justify-self: center; overflow: hidden; background: var(--panel-alt); }
-.home-feature__art img { aspect-ratio: 1; object-fit: cover; }
-.home-feature__copy { max-width: 430px; padding-bottom: 8px; }
-.home-feature__copy h2 { margin: 14px 0 18px; font-size: clamp(2.4rem, 5vw, 5.2rem); font-weight: 400; }
-.home-feature__copy > p:not(.eyebrow) { max-width: 34rem; margin: 0; color: var(--muted); font-size: 0.92rem; }
-.home-feature__actions { display: flex; align-items: center; gap: 22px; margin-top: 30px; }
-.home-feature__actions .button { min-height: 36px; padding-inline: 14px; border-radius: 0; font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase; }
-.home-catalog { display: grid; grid-template-columns: minmax(170px, 0.35fr) minmax(0, 1fr); gap: clamp(28px, 8vw, 140px); padding-bottom: 90px; }
-.home-catalog__heading { align-self: start; display: grid; gap: 12px; position: sticky; top: 120px; }
-.home-catalog__heading h2 { font-size: clamp(2rem, 4vw, 3.7rem); font-weight: 400; }
-.home-catalog__heading .text-link { width: max-content; margin-top: 14px; font-size: 0.76rem; }
-.home-release-list { border-top: 1px solid var(--line); }
-.home-release-row { display: grid; grid-template-columns: 42px minmax(0, 1fr) 100px 60px; align-items: baseline; gap: 16px; padding: 18px 0; border-bottom: 1px solid var(--line); transition: padding 0.25s ease, color 0.25s ease; }
-.home-release-row:hover { padding-inline: 10px; color: var(--ink); }
-.home-release-row__index, .home-release-row__type, .home-release-row__year { color: var(--muted); font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase; }
-.home-release-row__title { font-size: clamp(1rem, 1.8vw, 1.35rem); letter-spacing: -0.035em; }
-@media (max-width: 700px) {
-  .home-intro { min-height: 62vh; grid-template-columns: 1fr; align-content: end; gap: 26px; }
-  .home-intro__note { max-width: 240px; }
-  .home-feature, .home-catalog { grid-template-columns: 1fr; gap: 34px; }
-  .home-feature__art { width: min(72vw, 300px); justify-self: start; }
-  .home-catalog__heading { position: static; }
-  .home-release-row { grid-template-columns: 30px minmax(0, 1fr) 52px; }
-  .home-release-row__type { display: none; }
 }
 
 /* Final geometry pass: the site stays sharp-edged; only transport controls remain circular. */
