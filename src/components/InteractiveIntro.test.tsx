@@ -56,7 +56,7 @@ describe('InteractiveIntro', () => {
         );
       });
 
-      expect(container.querySelectorAll('.intro-character').length).toBe(i + 1);
+      expect(container.querySelectorAll('.intro-character').length).toBeGreaterThanOrEqual(i + 1);
     }
 
     act(() => {
@@ -64,6 +64,16 @@ describe('InteractiveIntro', () => {
     });
 
     expect(onComplete).toHaveBeenCalledTimes(1);
+  });
+
+  it('completes from one long pointer path without requiring many tiny moves', () => {
+    const onComplete = vi.fn();
+    act(() => { root.render(<InteractiveIntro artistName="THE12THHOUSE" onComplete={onComplete} />); });
+    act(() => {
+      window.dispatchEvent(new MouseEvent('pointermove', { bubbles: true, clientX: 20, clientY: 120 }));
+      window.dispatchEvent(new MouseEvent('pointermove', { bubbles: true, clientX: 900, clientY: 120 }));
+    });
+    expect(container.querySelectorAll('.intro-character').length).toBeGreaterThan(1);
   });
 
   it('skips the completion pause and fade in reduced-motion mode', () => {
