@@ -2442,3 +2442,41 @@ body { font-family: Arial, Helvetica, sans-serif; }
   .player-shell { width: calc(100% - 20px); }
   .player-strip { grid-template-columns: auto minmax(0, 1fr) minmax(60px, 1fr) auto; gap: 8px; min-height: 58px; padding: 8px 10px 10px; }
 }
+
+
+/* Releases filter: one clean divider between options, not boxed pills. */
+.archive-toolbar {
+  display: grid;
+  grid-template-columns: 90px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 18px;
+  padding: 14px 0;
+  border-top: 1px solid var(--line-strong);
+  border-bottom: 1px solid var(--line-strong);
+  background: transparent;
+}
+.archive-toolbar .filter-bar { display: flex; align-items: center; gap: 0; }
+.archive-toolbar .filter-pill {
+  min-height: 32px;
+  padding: 0 14px;
+  border: 0 !important;
+  border-right: 1px solid var(--line) !important;
+  border-radius: 0 !important;
+  color: var(--muted);
+  background: transparent;
+  font-size: .68rem;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+.archive-toolbar .filter-pill:first-child { padding-left: 0; }
+.archive-toolbar .filter-pill:last-child { border-right: 0 !important; }
+.archive-toolbar .filter-pill.active { color: var(--bg); background: var(--ink); }
+.archive-count { color: var(--muted); font-size: .68rem; letter-spacing: .12em; text-transform: uppercase; }
+@media (max-width: 640px) {
+  .archive-toolbar { grid-template-columns: 1fr auto; gap: 10px; }
+  .archive-toolbar > .eyebrow { grid-column: 1 / -1; }
+  .archive-toolbar .filter-bar { min-width: 0; overflow-x: auto; padding-bottom: 2px; scrollbar-width: none; }
+  .archive-toolbar .filter-bar::-webkit-scrollbar { display: none; }
+  .archive-toolbar .filter-pill { flex: 0 0 auto; padding-inline: 12px; }
+  .archive-toolbar .filter-pill:first-child { padding-left: 0; }
+}
