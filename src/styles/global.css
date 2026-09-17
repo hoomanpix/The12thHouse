@@ -1920,3 +1920,67 @@ html { scroll-padding-top: 112px; }
 .range-fill {
   border-radius: 0 !important;
 }
+
+
+/* Gallery artwork treatment: a quiet inset frame gives covers presence without visual noise. */
+.hero-visual.music-cover,
+.feature-artwork.music-cover,
+.release-cover.music-cover,
+.detail-cover.music-cover {
+  padding: 8px;
+  background: #111;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.24);
+}
+
+.hero-visual.music-cover img,
+.feature-artwork.music-cover img,
+.release-cover.music-cover img,
+.detail-cover.music-cover img {
+  aspect-ratio: 1;
+  object-fit: cover;
+  background: #1a1a1a;
+}
+
+.release-cover.music-cover {
+  padding: 6px;
+  align-self: start;
+}
+
+.new-release-section .feature-artwork.music-cover {
+  padding: 10px;
+}
+
+.editorial-detail .detail-header {
+  grid-template-columns: minmax(240px, 340px) minmax(0, 1fr);
+  gap: clamp(42px, 9vw, 128px);
+  align-items: end;
+}
+
+.editorial-detail .detail-cover.music-cover {
+  width: min(100%, 320px);
+  justify-self: start;
+  margin-bottom: 8px;
+}
+
+.editorial-detail .detail-copy {
+  max-width: 520px;
+  padding-bottom: 0;
+}
+
+.editorial-detail .detail-copy h1 {
+  max-width: 8ch;
+}
+
+@media (max-width: 700px) {
+  .editorial-detail .detail-header {
+    grid-template-columns: 1fr;
+    gap: 30px;
+  }
+
+  .editorial-detail .detail-cover.music-cover {
+    width: min(68vw, 280px);
+    justify-self: start;
+    margin-bottom: 0;
+  }
+}
