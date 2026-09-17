@@ -1922,33 +1922,84 @@ html { scroll-padding-top: 112px; }
 }
 
 
-/* Gallery artwork treatment: a quiet inset frame gives covers presence without visual noise. */
+/* Gallery artwork treatment: borderless, layered objects instead of framed cards. */
 .hero-visual.music-cover,
 .feature-artwork.music-cover,
 .release-cover.music-cover,
 .detail-cover.music-cover {
-  padding: 8px;
-  background: #111;
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.24);
+  position: relative;
+  isolation: isolate;
+  padding: 0;
+  overflow: visible;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+
+.hero-visual.music-cover::before,
+.feature-artwork.music-cover::before,
+.release-cover.music-cover::before,
+.detail-cover.music-cover::before {
+  position: absolute;
+  inset: 10px -10px -10px 10px;
+  z-index: -1;
+  content: '';
+  background: #181818;
+  opacity: 0.82;
+  transform: translate(0, 0);
+  transition: transform 240ms cubic-bezier(0.23, 1, 0.32, 1), opacity 240ms ease;
 }
 
 .hero-visual.music-cover img,
 .feature-artwork.music-cover img,
 .release-cover.music-cover img,
 .detail-cover.music-cover img {
+  position: relative;
+  display: block;
   aspect-ratio: 1;
   object-fit: cover;
   background: #1a1a1a;
+  box-shadow: 0 22px 44px rgba(0, 0, 0, 0.28);
+  transform: translate(0, 0);
+  transition: transform 240ms cubic-bezier(0.23, 1, 0.32, 1), box-shadow 240ms ease, filter 240ms ease;
 }
 
 .release-cover.music-cover {
-  padding: 6px;
   align-self: start;
 }
 
 .new-release-section .feature-artwork.music-cover {
-  padding: 10px;
+  margin-bottom: 10px;
+}
+
+.hero-visual.music-cover:hover::before,
+.feature-artwork.music-cover:hover::before,
+.release-cover.music-cover:hover::before,
+.detail-cover.music-cover:hover::before {
+  opacity: 1;
+  transform: translate(4px, 4px);
+}
+
+.hero-visual.music-cover:hover img,
+.feature-artwork.music-cover:hover img,
+.release-cover.music-cover:hover img,
+.detail-cover.music-cover:hover img {
+  box-shadow: 0 28px 54px rgba(0, 0, 0, 0.4);
+  transform: translate(-4px, -4px);
+  filter: saturate(1.04) contrast(1.02);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-visual.music-cover::before,
+  .feature-artwork.music-cover::before,
+  .release-cover.music-cover::before,
+  .detail-cover.music-cover::before,
+  .hero-visual.music-cover img,
+  .feature-artwork.music-cover img,
+  .release-cover.music-cover img,
+  .detail-cover.music-cover img {
+    transition: none;
+  }
 }
 
 .editorial-detail .detail-header {
