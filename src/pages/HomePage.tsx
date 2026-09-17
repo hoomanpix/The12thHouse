@@ -39,6 +39,26 @@ export function HomePage() {
         </div>
         <p className="home-intro__note">Cinematic electronic music, intimate songs, and nocturnal spaces.</p>
       </section>
+      <section className="home-practices" aria-labelledby="practices-title">
+        <div className="home-practices__heading">
+          <p className="eyebrow">01 / The house</p>
+          <h2 id="practices-title">A collective<br />in three rooms.</h2>
+        </div>
+        <div className="home-practices__list">
+          <article className="home-practice">
+            <span className="home-practice__index">01</span>
+            <div><h3>Sound</h3><p>Electronic music, intimate songs, and the spaces between them.</p></div>
+          </article>
+          <article className="home-practice">
+            <span className="home-practice__index">02</span>
+            <div><h3>Image</h3><p>Visual worlds, motion, and a language for what cannot be said.</p></div>
+          </article>
+          <article className="home-practice">
+            <span className="home-practice__index">03</span>
+            <div><h3>Code</h3><p>Digital spaces where the work can be entered, explored, and remembered.</p></div>
+          </article>
+        </div>
+      </section>
       <section className="home-feature" aria-labelledby="featured-title">
         <div className="home-feature__art music-cover">
           <img src={featuredRelease.artwork_url ?? ''} alt={featuredRelease.title} />
