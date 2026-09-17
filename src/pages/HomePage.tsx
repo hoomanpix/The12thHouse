@@ -33,16 +33,18 @@ export function HomePage() {
   return (
     <div className="page-section home-page">
       <section className="home-intro">
-        <div>
+        <div className="home-intro__main">
           <p className="eyebrow">The12thHouse / independent collective</p>
-          <h1>Sound in<br />slow motion.</h1>
+          <div className="home-intro__title-row">
+            <h1>Sound in<br />slow motion.</h1>
+            <div className="home-intro__art music-cover">
+              <img src={featuredRelease.artwork_url ?? ''} alt={featuredRelease.title} />
+            </div>
+          </div>
         </div>
         <p className="home-intro__note">Cinematic electronic music, intimate songs, and nocturnal spaces.</p>
       </section>
       <section className="home-feature" aria-labelledby="featured-title">
-        <div className="home-feature__art music-cover">
-          <img src={featuredRelease.artwork_url ?? ''} alt={featuredRelease.title} />
-        </div>
         <div className="home-feature__copy">
           <p className="eyebrow">New release / {featuredRelease.type}</p>
           <h2 id="featured-title">{featuredRelease.title}</h2>
