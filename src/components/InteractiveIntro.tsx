@@ -3,8 +3,8 @@ import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties }
 export interface InteractiveIntroProps { artistName: string; onComplete?: () => void; }
 type IntroCharacter = { id: number; char: string; x: number; y: number };
 const MIN_PLACEMENT_DISTANCE = 32;
-const COMPLETION_PAUSE_DURATION = 4000;
-const FADE_DURATION = 1600;
+const COMPLETION_PAUSE_DURATION = 2667;
+const FADE_DURATION = 1067;
 
 export function InteractiveIntro({ artistName, onComplete }: InteractiveIntroProps) {
   const [isDismissed, setIsDismissed] = useState(false);
