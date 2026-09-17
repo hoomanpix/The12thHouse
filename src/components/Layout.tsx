@@ -14,7 +14,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const canManage = role === 'artist' || role === 'admin';
   return (
     <div className="site-shell">
-      <a className="skip-link" href="#main-content">Skip to content</a>
       <header className="topbar">
         <div className="brand-block">
           <NavLink to={publicRoutes.home} className="brand-link" aria-label="The12thHouse home">
@@ -38,7 +37,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         </nav>
       </header>
 
-      <main className="page-shell" id="main-content">{children}</main>
+      <main className="page-shell">{children}</main>
 
       <GlobalAudioPlayer />
     </div>
