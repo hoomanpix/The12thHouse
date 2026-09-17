@@ -5,6 +5,7 @@ type IntroCharacter = { id: number; char: string; x: number; y: number };
 const MIN_PLACEMENT_DISTANCE = 32;
 const COMPLETION_PAUSE_DURATION = 4000;
 const FADE_DURATION = 1600;
+const AUTO_DISMISS_DELAY = 1400;
 
 export function InteractiveIntro({ artistName, onComplete }: InteractiveIntroProps) {
   const [isDismissed, setIsDismissed] = useState(false);
@@ -38,6 +39,13 @@ export function InteractiveIntro({ artistName, onComplete }: InteractiveIntroPro
       ? window.matchMedia('(prefers-reduced-motion: reduce)').matches
       : false;
   }, []);
+
+  useEffect(() => {
+    // The intro is a visual invitation, never a gate: keyboard, touch, and
+    // users who do not move a pointer should still reach the site quickly.
+    const timer = window.setTimeout(triggerComplete, AUTO_DISMISS_DELAY);
+    return () => window.clearTimeout(timer);
+  }, [triggerComplete]);
 
   useEffect(() => {
     if (!isComplete || isDismissed) return undefined;
