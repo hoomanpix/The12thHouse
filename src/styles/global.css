@@ -2484,15 +2484,15 @@ body { font-family: Arial, Helvetica, sans-serif; }
 
 /* Home feature relocation: keep the cover beside the statement, not above the release copy. */
 .home-intro__main { min-width: 0; }
-.home-intro__title-row { display: flex; align-items: flex-end; gap: clamp(24px, 5vw, 72px); }
+.home-intro__title-row { display: flex; align-items: center; gap: clamp(24px, 5vw, 72px); }
 .home-intro__title-row h1 { flex: 1 1 auto; min-width: 0; }
-.home-intro__art { flex: 0 0 clamp(132px, 15vw, 190px); width: clamp(132px, 15vw, 190px); aspect-ratio: 1; overflow: hidden; border: 1px solid var(--line); border-radius: 0 !important; background: var(--panel); }
+.home-intro__art { flex: 0 0 clamp(170px, 18vw, 240px); width: clamp(170px, 18vw, 240px); aspect-ratio: 1; overflow: hidden; border: 1px solid var(--line); border-radius: 0 !important; background: var(--panel); }
 .home-intro__art img { display: block; width: 100%; height: 100%; object-fit: cover; }
 .home-feature { display: block; }
 .home-feature__copy { max-width: 720px; }
 @media (max-width: 640px) {
-  .home-intro__title-row { align-items: flex-end; gap: 14px; }
+  .home-intro__title-row { align-items: center; gap: 16px; }
   .home-intro__title-row h1 { font-size: clamp(3.35rem, 15vw, 5.8rem); }
-  .home-intro__art { flex-basis: clamp(92px, 25vw, 132px); width: clamp(92px, 25vw, 132px); }
+  .home-intro__art { flex-basis: clamp(120px, 30vw, 160px); width: clamp(120px, 30vw, 160px); }
   .home-feature__copy { max-width: none; }
 }
