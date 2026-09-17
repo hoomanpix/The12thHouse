@@ -80,30 +80,25 @@ export function HomePage() {
         </article>
       </section>
 
-      <section className="release-overview">
-        <div className="section-heading">
-          <p className="eyebrow">Featured release</p>
-          <h2>{featuredRelease.title}</h2>
-        </div>
-        <article className="feature-card muted">
-          <div className="feature-copy">
-            <p>{featuredRelease.type}</p>
-            <h3>{featuredRelease.title}</h3>
-            <p>{featuredRelease.description}</p>
-            <button
-              type="button"
-              className="button secondary"
-              onClick={() => handlePlay(featuredRelease)}
-              disabled={playableTracks.length === 0}
-            >
-              {playableTracks.length === 0 ? 'Audio coming soon' : 'Play selection'}
-            </button>
+      {featuredRelease.id !== latestRelease.id && (
+        <section className="release-overview">
+          <div className="section-heading">
+            <p className="eyebrow">Featured release</p>
+            <h2>{featuredRelease.title}</h2>
           </div>
-          <div className="feature-artwork music-cover">
-            <img src={featuredRelease.artwork_url ?? ''} alt={featuredRelease.title} />
-          </div>
-        </article>
-      </section>
+          <article className="feature-card muted">
+            <div className="feature-copy">
+              <p>{featuredRelease.type}</p>
+              <h3>{featuredRelease.title}</h3>
+              <p>{featuredRelease.description}</p>
+              <button type="button" className="button secondary" onClick={() => handlePlay(featuredRelease)} disabled={playableTracks.length === 0}>
+                {playableTracks.length === 0 ? 'Audio coming soon' : 'Play selection'}
+              </button>
+            </div>
+            <div className="feature-artwork music-cover"><img src={featuredRelease.artwork_url ?? ''} alt={featuredRelease.title} /></div>
+          </article>
+        </section>
+      )}
     </div>
   );
 }
