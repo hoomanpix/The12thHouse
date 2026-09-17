@@ -1,45 +1,82 @@
-type HouseTheme = {
+import { useState } from 'react';
+
+type CollectiveMember = {
   id: string;
-  label: string;
-  title: string;
+  index: string;
+  name: string;
+  role: string;
   statement: string;
   about: string;
+  focus: string;
 };
 
-const houseThemes: HouseTheme[] = [
+const members: CollectiveMember[] = [
   {
-    id: 'unseen', label: '01 / The unseen', title: 'A room for what is still becoming.',
-    statement: 'The twelfth house belongs to the quiet spaces.',
-    about: 'It is a symbol of the unseen: intuition, memory, dreams, and the ideas that take shape before they have a name.',
+    id: 'member-01', index: '01', name: '[Name to be added]', role: 'Sound / Music',
+    statement: 'The first room: where the house begins to speak.',
+    about: 'Shapes the sonic language of The12thHouse through rhythm, atmosphere, voice, and the spaces between them.',
+    focus: 'Composition, production, recording',
   },
   {
-    id: 'threshold', label: '02 / The threshold', title: 'Between one state and another.',
-    statement: 'The house is a threshold, not a destination.',
-    about: 'It holds the pause between endings and beginnings—a place to look inward, dissolve old forms, and make room for a different way of seeing.',
+    id: 'member-02', index: '02', name: '[Name to be added]', role: 'Visual / Motion',
+    statement: 'Images that carry the feeling of a place.',
+    about: 'Builds the visual worlds and moving forms that give each release, idea, and gathering its own atmosphere.',
+    focus: 'Visual identity, image-making, animation',
   },
   {
-    id: 'collective', label: '03 / The collective', title: 'Many perspectives, one shared space.',
-    statement: 'The12thHouse is open by design.',
-    about: 'The name describes the space we are building: a house for different voices, practices, and sensibilities to meet without losing their individuality.',
+    id: 'member-03', index: '03', name: '[Name to be added]', role: 'Digital / Web',
+    statement: 'A house needs a way to be entered.',
+    about: 'Designs the digital spaces through which the collective’s work can be encountered, explored, and remembered.',
+    focus: 'Interaction, web design, digital systems',
   },
 ];
 
 export function AboutPage() {
+  const [activeMember, setActiveMember] = useState<string | null>(null);
+
+  const toggleMember = (memberId: string) => {
+    setActiveMember((current) => current === memberId ? null : memberId);
+  };
+
   return (
     <div className="page-section about-page editorial-about">
       <header className="about-intro">
-        <p className="eyebrow">The12thHouse / meaning</p>
+        <p className="eyebrow">The12thHouse / collective</p>
         <h1>A house for<br />the unseen.</h1>
         <p className="about-intro__note">The name points to a space beyond the visible: a place for intuition, transition, and the forms that are still taking shape.</p>
       </header>
-      <section className="member-list" aria-label="The meaning of The12thHouse">
-        {houseThemes.map((theme) => (
-          <article className="member-entry" key={theme.id}>
-            <div className="member-entry__index">{theme.label.split(' / ')[0]}</div>
-            <div className="member-entry__identity"><p className="eyebrow">{theme.label.split(' / ')[1]}</p><h2>{theme.title}</h2></div>
-            <div className="member-entry__copy"><p className="member-entry__statement">{theme.statement}</p><p>{theme.about}</p></div>
-          </article>
-        ))}
+      <section className="profile-list" aria-label="The12thHouse collective profiles">
+        <div className="profile-list__heading">
+          <span className="eyebrow">The people inside</span>
+          <span className="profile-list__hint">Select a profile</span>
+        </div>
+        {members.map((member) => {
+          const isActive = activeMember === member.id;
+          return (
+            <article className={`profile-entry${isActive ? ' profile-entry--active' : ''}`} key={member.id}>
+              <button
+                className="profile-entry__trigger"
+                type="button"
+                aria-expanded={isActive}
+                aria-controls={`${member.id}-details`}
+                onClick={() => toggleMember(member.id)}
+              >
+                <span className="profile-entry__index">{member.index}</span>
+                <span className="profile-entry__identity"><span className="eyebrow">{member.role}</span><strong>{member.name}</strong></span>
+                <span className="profile-entry__action">{isActive ? 'Close' : 'View profile'} <span aria-hidden="true">{isActive ? '−' : '+'}</span></span>
+              </button>
+              {isActive && (
+                <div className="profile-entry__details" id={`${member.id}-details`}>
+                  <div>
+                    <p className="profile-entry__statement">{member.statement}</p>
+                    <p>{member.about}</p>
+                  </div>
+                  <div className="profile-entry__focus"><span className="eyebrow">Focus</span><p>{member.focus}</p></div>
+                </div>
+              )}
+            </article>
+          );
+        })}
       </section>
       <footer className="about-footer"><span>A shared space for what comes next.</span><span>12 → ∞</span></footer>
     </div>
