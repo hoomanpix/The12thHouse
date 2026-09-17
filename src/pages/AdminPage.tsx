@@ -10,6 +10,10 @@ const platformOptions: Array<{ value: PlatformType; label: string }> = [
   { value: 'tidal', label: 'Tidal' },
   { value: 'deezer', label: 'Deezer' },
   { value: 'bandcamp', label: 'Bandcamp' },
+  { value: 'amazon_music', label: 'Amazon Music' },
+  { value: 'beatport', label: 'Beatport' },
+  { value: 'audiomack', label: 'Audiomack' },
+  { value: 'mixcloud', label: 'Mixcloud' },
   { value: 'custom', label: 'Custom link' },
 ];
 

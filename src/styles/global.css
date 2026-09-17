@@ -1834,3 +1834,43 @@ html { scroll-padding-top: 112px; }
   .topbar { width: min(calc(100% - 40px), calc(var(--max-width) - 40px)); }
   .site-shell { padding-inline: 20px; }
 }
+
+/* The12thHouse gallery pass: restrained scale and catalogue typography. */
+.listen-carefully {
+  display: inline-block;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 400;
+  letter-spacing: 0.18em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.release-card--upcoming,
+.archive-item--future {
+  border-color: var(--line);
+}
+
+.release-card--upcoming .release-cover,
+.archive-item--future .archive-item__image {
+  opacity: 0.52;
+}
+
+.release-card--upcoming .release-card__meta,
+.archive-item--future .archive-item__meta,
+.archive-item--future .archive-item__type {
+  color: var(--muted);
+}
+
+@media (min-width: 901px) {
+  .intro-character { font-size: clamp(1.5rem, calc(3vw + 2px), calc(3.6rem + 2px)); }
+  :root {
+    --cover-size-home: 180px;
+    --cover-size-list: 76px;
+    --cover-size-detail: 240px;
+  }
+  .new-release-section .feature-artwork.music-cover { width: min(100%, var(--cover-size-home)); }
+  .release-cover.music-cover { width: min(100%, var(--cover-size-list)); }
+  .detail-cover.music-cover { width: min(100%, var(--cover-size-detail)); }
+  .archive-item__image.music-cover { width: var(--cover-size-list); height: var(--cover-size-list); }
+}

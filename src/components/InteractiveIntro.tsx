@@ -55,34 +55,35 @@ export function InteractiveIntro({ artistName, onComplete }: InteractiveIntroPro
 
     const handleMotion = (clientX: number, clientY: number, deltaX: number, deltaY: number) => {
       if (dismissedRef.current || revealedCountRef.current >= characters.length) return;
-      const lastPoint = pointerRef.current ?? { x: clientX, y: clientY };
-      const pointerDeltaX = clientX - lastPoint.x;
-      const pointerDeltaY = clientY - lastPoint.y;
-      const eventDeltaX = Number.isFinite(deltaX) && Math.abs(deltaX) > 0.1 ? deltaX : pointerDeltaX;
-      const eventDeltaY = Number.isFinite(deltaY) && Math.abs(deltaY) > 0.1 ? deltaY : pointerDeltaY;
-      const distance = Math.hypot(eventDeltaX, eventDeltaY);
-      pointerRef.current = { x: clientX, y: clientY };
-      if (distance <= 0.1) return;
-
-      pathDistanceRef.current += distance;
-      if (pathDistanceRef.current < MIN_PLACEMENT_DISTANCE) return;
-      const angle = Math.atan2(eventDeltaY || 0, eventDeltaX || 1);
-      const newCharacters: IntroCharacter[] = [];
-
-      while (pathDistanceRef.current >= MIN_PLACEMENT_DISTANCE && revealedCountRef.current < characters.length) {
-        const placementDistance = pathDistanceRef.current - MIN_PLACEMENT_DISTANCE / 2;
-        newCharacters.push({
-          id: revealedCountRef.current,
-          char: characters[revealedCountRef.current],
-          x: clientX - Math.cos(angle) * placementDistance,
-          y: clientY - Math.sin(angle) * placementDistance,
-        });
-        revealedCountRef.current += 1;
-        pathDistanceRef.current -= MIN_PLACEMENT_DISTANCE;
+      const previous = pointerRef.current;
+      if (!previous) {
+        pointerRef.current = { x: clientX, y: clientY };
+        return;
       }
 
-      if (newCharacters.length > 0) setRevealedCharacters((previous) => [...previous, ...newCharacters]);
+      const segmentX = Number.isFinite(deltaX) && Math.abs(deltaX) > 0.1 ? deltaX : clientX - previous.x;
+      const segmentY = Number.isFinite(deltaY) && Math.abs(deltaY) > 0.1 ? deltaY : clientY - previous.y;
+      const segmentDistance = Math.hypot(segmentX, segmentY);
+      pointerRef.current = { x: clientX, y: clientY };
+      if (segmentDistance <= 0.1) return;
+
+      const angle = Math.atan2(segmentY, segmentX);
+      const newCharacters: IntroCharacter[] = [];
+      let consumed = 0;
+      while (pathDistanceRef.current + segmentDistance - consumed >= MIN_PLACEMENT_DISTANCE && revealedCountRef.current < characters.length) {
+        const distanceToPlacement = MIN_PLACEMENT_DISTANCE - pathDistanceRef.current;
+        consumed += distanceToPlacement;
+        const ratio = Math.min(1, consumed / segmentDistance);
+        const x = previous.x + segmentX * ratio;
+        const y = previous.y + segmentY * ratio;
+        newCharacters.push({ id: revealedCountRef.current, char: characters[revealedCountRef.current], x, y });
+        revealedCountRef.current += 1;
+        pathDistanceRef.current = 0;
+      }
+      pathDistanceRef.current += segmentDistance - consumed;
+      if (newCharacters.length > 0) setRevealedCharacters((current) => [...current, ...newCharacters]);
       if (revealedCountRef.current >= characters.length) completeIntro();
+      void angle;
     };
 
     const handlePointerMove = (event: PointerEvent) => handleMotion(event.clientX, event.clientY, event.movementX, event.movementY);
