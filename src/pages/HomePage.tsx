@@ -11,7 +11,9 @@ export function HomePage() {
 
   if (!featuredRelease) return <div className="page-section"><p className="admin-empty">No releases are published yet.</p></div>;
 
-  const playableTracks = (featuredRelease.tracks ?? []).filter((track) => track.published !== false && Boolean(track.audio_url));
+  const playableTracks = featuredRelease.status === 'upcoming'
+    ? []
+    : (featuredRelease.tracks ?? []).filter((track) => track.published !== false && Boolean(track.audio_url));
   const handlePlay = (release: typeof featuredRelease) => {
     const queue = (release.tracks ?? []).filter((track) => track.published !== false && Boolean(track.audio_url)).map((track) => ({
       id: `${release.id}-${track.id}`,
@@ -38,7 +40,7 @@ export function HomePage() {
           <div className="home-intro__title-row">
             <h1>Sound in<br />slow motion.</h1>
             <div className="home-intro__art music-cover">
-              <img src={featuredRelease.artwork_url ?? ''} alt={featuredRelease.title} />
+              <img src={featuredRelease.artwork_url ?? ''} alt={featuredRelease.title} width="240" height="240" fetchPriority="high" decoding="async" />
             </div>
           </div>
         </div>

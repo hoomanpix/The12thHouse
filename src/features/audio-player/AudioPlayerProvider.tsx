@@ -37,6 +37,7 @@ const AudioPlayerContext = createContext<AudioPlayerContextValue | null>(null);
 
 export function AudioPlayerProvider({ children }: { children: React.ReactNode }) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const playNextRef = useRef<() => void>(() => undefined);
   const [state, setState] = useState<PlayerState>(initialState);
 
   const ensureAudio = useCallback(() => {
@@ -74,7 +75,7 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
           currentTime: 0,
           status: 'ready',
         }));
-        playNext();
+        playNextRef.current();
       });
 
       audio.addEventListener('error', () => {
@@ -204,6 +205,10 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
 
     if (previousTrack) playTrack(previousTrack);
   }, [playTrack, state.activeTrackId, state.queue]);
+
+  useEffect(() => {
+    playNextRef.current = playNext;
+  }, [playNext]);
 
   useEffect(() => {
     const audio = ensureAudio();

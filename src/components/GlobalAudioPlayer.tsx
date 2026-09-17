@@ -27,22 +27,12 @@ export function GlobalAudioPlayer() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isExpanded]);
 
+  if (!activeTrack) return null;
+
   return (
     <div className={`global-player ${isExpanded ? 'is-expanded' : ''}`} aria-live="polite">
       <div className="player-shell">
-        <div
-          className="player-strip"
-          aria-label={isExpanded ? 'Collapse audio player' : 'Expand audio player'}
-          onClick={() => setIsExpanded((current) => (current ? current : true))}
-          role="button"
-          tabIndex={0}
-          onKeyDown={(event) => {
-            if (event.key === 'Enter' || event.key === ' ') {
-              event.preventDefault();
-              setIsExpanded((current) => !current);
-            }
-          }}
-        >
+        <div className="player-strip">
           <button
             type="button"
             className="player-button player-button--primary"
@@ -85,7 +75,7 @@ export function GlobalAudioPlayer() {
           </button>
         </div>
 
-        <div className="player-detail" aria-hidden={!isExpanded}>
+        {isExpanded && <div className="player-detail">
           <div className="player-detail__topbar">
             <span className="eyebrow">Now playing</span>
           </div>
@@ -159,7 +149,7 @@ export function GlobalAudioPlayer() {
               </div>
             </div>
           </div>
-        </div>
+        </div>}
       </div>
     </div>
   );

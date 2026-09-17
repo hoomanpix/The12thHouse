@@ -19,6 +19,7 @@ export function InteractiveIntro({ artistName, onComplete }: InteractiveIntroPro
   const dismissedRef = useRef(false);
   const completionStartedRef = useRef(false);
   const prefersReducedMotionRef = useRef(false);
+  const skipButtonRef = useRef<HTMLButtonElement | null>(null);
 
   const triggerComplete = useCallback(() => {
     if (dismissedRef.current) return;
@@ -107,5 +108,12 @@ export function InteractiveIntro({ artistName, onComplete }: InteractiveIntroPro
     };
   }, [characters, completeIntro, isComplete, isDismissed]);
 
-  return <div className={['intro-screen', isFading ? 'intro-screen--fading' : '', isDismissed ? 'intro-screen--hidden' : ''].filter(Boolean).join(' ')} aria-hidden={isDismissed}><div className="intro-assembly" aria-label={displayName}>{revealedCharacters.map((character) => { const characterStyle: CSSProperties = { left: `${character.x}px`, top: `${character.y}px` }; return <span key={`${character.id}-${character.char}`} className={['intro-character', character.char === ' ' ? 'intro-character--space' : ''].filter(Boolean).join(' ')} style={characterStyle} aria-hidden={character.char === ' '}>{character.char}</span>; })}</div></div>;
+  useEffect(() => {
+    if (!isDismissed) skipButtonRef.current?.focus();
+  }, [isDismissed]);
+
+  return <div className={['intro-screen', isFading ? 'intro-screen--fading' : '', isDismissed ? 'intro-screen--hidden' : ''].filter(Boolean).join(' ')} role="dialog" aria-modal="true" aria-label={`${displayName} intro`} aria-hidden={isDismissed}>
+    <div className="intro-assembly" aria-hidden="true">{revealedCharacters.map((character) => { const characterStyle: CSSProperties = { left: `${character.x}px`, top: `${character.y}px` }; return <span key={`${character.id}-${character.char}`} className={['intro-character', character.char === ' ' ? 'intro-character--space' : ''].filter(Boolean).join(' ')} style={characterStyle}>{character.char}</span>; })}</div>
+    {!isDismissed && <button ref={skipButtonRef} type="button" className="intro-skip" onClick={triggerComplete}>Skip intro <span aria-hidden="true">↗</span></button>}
+  </div>;
 }
