@@ -8,7 +8,8 @@
   --shadow: rgba(0, 0, 0, 0.35);
   --accent: #ffffff;
   --accent-soft: #2b2b2b;
-  --radius: 0px;
+  --radius: 8px;
+  --radius-control: 5px;
   --max-width: 1200px;
 }
 
@@ -482,7 +483,7 @@ h3 {
 
 .hero-visual.music-cover {
   width: min(100%, 252px);
-  border-radius: 14px;
+  border-radius: var(--radius);
   box-shadow: 0 14px 28px rgba(0, 0, 0, 0.24);
 }
 
@@ -492,7 +493,7 @@ h3 {
 
 .new-release-section .feature-artwork.music-cover {
   width: min(100%, 260px);
-  border-radius: 14px;
+  border-radius: var(--radius);
   box-shadow: 0 14px 28px rgba(0, 0, 0, 0.24);
 }
 
@@ -1678,12 +1679,14 @@ input[type='range'] {
   border-radius: 50% !important;
 }
 
-/* Final geometry pass: the site stays sharp-edged; only transport controls remain circular. */
-.button, .filter-pill, .feature-card, .admin-panel, .admin-stat, .admin-release-picker select, .admin-inline-form input, .admin-inline-form select, .admin-link-row input, .admin-link-row select { border-radius: 0; }
+/* Final geometry pass: restrained radius keeps the gallery soft without becoming rounded. */
+.button, .filter-pill, .feature-card, .admin-panel, .admin-stat, .admin-release-picker select, .admin-inline-form input, .admin-inline-form select, .admin-link-row input, .admin-link-row select { border-radius: var(--radius-control); }
 .feature-card, .admin-panel, .admin-card, .admin-stat { background: transparent; }
 .feature-card { border: 0; padding: 0; }
 .hero-visual, .feature-artwork, .detail-cover, .about-image, .release-cover { box-shadow: none; }
-.new-release-section .feature-artwork.music-cover, .hero-visual.music-cover { border-radius: 0; box-shadow: none; }
+.hero-visual, .feature-artwork, .detail-cover, .about-image, .release-cover, .archive-item__image, .player-detail__artwork { border-radius: var(--radius); }
+.new-release-section .feature-artwork.music-cover, .hero-visual.music-cover { border-radius: var(--radius); box-shadow: none; }
+.player-button--compact, .player-button--ghost { border-radius: var(--radius-control); }
 
 /* Shared archive language for Releases, detail, and profile pages. */
 .archive-page, .editorial-detail, .editorial-about { gap: clamp(60px, 10vw, 130px); }
