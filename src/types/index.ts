@@ -9,6 +9,10 @@ export type PlatformType =
   | 'tidal'
   | 'deezer'
   | 'bandcamp'
+  | 'amazon_music'
+  | 'beatport'
+  | 'audiomack'
+  | 'mixcloud'
   | 'custom';
 
 export interface PlatformLink {
