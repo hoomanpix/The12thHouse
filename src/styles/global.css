@@ -1877,3 +1877,46 @@ html { scroll-padding-top: 112px; }
   .detail-cover.music-cover { width: min(100%, var(--cover-size-detail)); }
   .archive-item__image.music-cover { width: var(--cover-size-list); height: var(--cover-size-list); }
 }
+
+
+/* Final sharp geometry override: all interface surfaces use exact corners. */
+:root {
+  --radius: 0px;
+  --radius-control: 0px;
+}
+
+.hero-visual,
+.feature-artwork,
+.detail-cover,
+.about-image,
+.release-cover,
+.archive-item__image,
+.player-detail__artwork,
+.hero-visual.music-cover,
+.new-release-section .feature-artwork.music-cover,
+.button,
+.filter-pill,
+.feature-card,
+.admin-panel,
+.admin-stat,
+.admin-release-picker select,
+.admin-inline-form input,
+.admin-inline-form select,
+.admin-link-row input,
+.admin-link-row select,
+.player-button--compact,
+.player-button--ghost,
+.player-button--wide,
+.player-button--primary.player-button--wide {
+  border-radius: 0 !important;
+}
+
+.player-strip__progress,
+.expanded-progress-track,
+.volume-track,
+.progress-track,
+.volume-control,
+.range-track,
+.range-fill {
+  border-radius: 0 !important;
+}
