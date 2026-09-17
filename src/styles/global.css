@@ -215,6 +215,63 @@ button {
   transition: opacity 0.25s ease;
 }
 
+.intro-landing {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 14px;
+  padding: 24px;
+  color: #111111;
+  text-align: center;
+  pointer-events: none;
+}
+
+.intro-landing__index,
+.intro-landing__prompt,
+.intro-landing__skip {
+  font-size: 0.68rem;
+  letter-spacing: 0.16em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.intro-landing__index,
+.intro-landing__prompt {
+  color: rgba(17, 17, 17, 0.58);
+}
+
+.intro-landing__title {
+  font-size: clamp(2.8rem, 10vw, 8rem);
+  font-weight: 400;
+  letter-spacing: -0.075em;
+  line-height: 0.86;
+}
+
+.intro-landing__skip {
+  min-height: 40px;
+  margin-top: 10px;
+  padding: 0 16px;
+  border: 1px solid rgba(17, 17, 17, 0.38);
+  color: #111111;
+  background: transparent;
+  pointer-events: auto;
+  transition: color 180ms ease, background 180ms ease;
+}
+
+.intro-landing__skip:hover,
+.intro-landing__skip:focus-visible {
+  color: #ffffff;
+  background: #111111;
+}
+
+.intro-screen--fading .intro-landing {
+  opacity: 0;
+  transition: opacity 500ms ease;
+}
+
 
 .intro-character {
   position: absolute;
@@ -250,6 +307,14 @@ button {
 }
 
 @media (max-width: 640px) {
+  .intro-landing {
+    gap: 12px;
+  }
+
+  .intro-landing__title {
+    font-size: clamp(2.4rem, 13vw, 4.8rem);
+  }
+
   .intro-character {
     font-size: clamp(1.2rem, 5.5vw, 2.6rem);
     letter-spacing: -0.045em;
