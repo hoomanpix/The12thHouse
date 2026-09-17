@@ -2335,3 +2335,49 @@ h1, h2, h3 { margin: 0; color: var(--ink); font-weight: 400; letter-spacing: -0.
   html { scroll-behavior: auto; }
   *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
 }
+
+
+/* Reverted sharp black gallery theme: presentation-only override. */
+:root {
+  --bg: #050505;
+  --panel: #101010;
+  --panel-alt: #1a1a1a;
+  --ink: #fff;
+  --muted: rgba(255,255,255,.66);
+  --line: rgba(255,255,255,.18);
+  --line-strong: rgba(255,255,255,.72);
+  --surface: #101010;
+  --surface-strong: #1a1a1a;
+  --accent: #fff;
+  --accent-soft: #2b2b2b;
+  --radius: 0px;
+  --radius-control: 0px;
+  --max-width: 1200px;
+  --page-pad: clamp(16px, 4vw, 48px);
+}
+html, body { background: var(--bg); color: var(--ink); }
+body { font-family: Arial, Helvetica, sans-serif; }
+.site-shell { width: min(100%, var(--max-width)); padding-inline: var(--page-pad); }
+.topbar { inset-inline: var(--page-pad); max-width: var(--max-width); background: rgba(5,5,5,.96); border-color: var(--line); border-radius: 0; }
+.brand-link, .nav-item, .button, .filter-pill, .feature-card, .admin-panel, .admin-stat, .music-cover, .hero-visual, .feature-artwork, .detail-cover, .release-cover, .archive-item__image, .player-strip, .player-detail, .player-button, .player-detail__artwork, .profile-entry__trigger { border-radius: 0 !important; }
+.hero-visual.music-cover, .feature-artwork.music-cover, .release-cover.music-cover, .detail-cover.music-cover { border: 1px solid var(--line); background: var(--panel); box-shadow: none; }
+.music-cover img { border-radius: 0; }
+.home-intro, .archive-header, .about-intro { border-color: var(--line-strong); }
+.home-practices, .home-feature, .home-catalog { color: var(--ink); }
+.home-practice:hover, .home-release-row:hover, .archive-item:hover, .profile-entry__trigger:hover, .profile-entry--active .profile-entry__trigger { background: var(--panel-alt); }
+.home-practice, .home-release-row, .archive-item, .profile-entry, .profile-list, .home-release-list, .archive-list { border-color: var(--line); }
+.home-practice p, .home-intro__note, .archive-header__note, .about-intro__note, .home-feature__copy > p:not(.eyebrow), .profile-entry__details p { color: var(--muted); }
+.button.primary, .filter-pill.active { color: var(--bg); background: var(--ink); border-color: var(--ink); }
+.button.secondary, .filter-pill { color: var(--ink); background: transparent; border-color: var(--line); }
+.text-link { color: var(--ink); border-color: var(--ink); }
+.archive-toolbar { border-color: var(--line-strong); background: transparent; }
+.global-player, .player-shell, .player-strip, .player-detail { color: var(--ink); background: rgba(5,5,5,.98) !important; border-color: var(--line-strong); }
+.player-button { color: var(--ink); border-color: var(--line); background: transparent; }
+.player-button--primary { color: var(--bg); background: var(--ink); }
+.intro-screen { background: #fff; }
+.intro-character { color: #111; }
+.skip-link { color: #111; background: #fff; }
+*:focus-visible { outline-color: #fff; }
+@media (max-width: 760px) {
+  .home-practice:hover { background: transparent; }
+}
