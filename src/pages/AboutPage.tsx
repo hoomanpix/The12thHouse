@@ -1,30 +1,26 @@
-type CollectiveMember = {
+type HouseTheme = {
   id: string;
-  name: string;
-  role: string;
+  label: string;
+  title: string;
   statement: string;
   about: string;
-  links: Array<{ label: string; url: string }>;
 };
 
-const members: CollectiveMember[] = [
+const houseThemes: HouseTheme[] = [
   {
-    id: 'musician-producer', name: '[Name to be added]', role: 'Musician / Producer',
-    statement: 'Sound as a place to enter.',
-    about: 'Creates the musical language of The12thHouse: rhythm, atmosphere, voice, and the spaces between them.',
-    links: [],
+    id: 'unseen', label: '01 / The unseen', title: 'A room for what is still becoming.',
+    statement: 'The twelfth house belongs to the quiet spaces.',
+    about: 'It is a symbol of the unseen: intuition, memory, dreams, and the ideas that take shape before they have a name.',
   },
   {
-    id: 'visual-artist', name: '[Name to be added]', role: 'Designer / Visual Artist / Animator',
-    statement: 'Images that move like memory.',
-    about: 'Builds the visual worlds, motion studies, and visual identities that give each release its own room.',
-    links: [],
+    id: 'threshold', label: '02 / The threshold', title: 'Between one state and another.',
+    statement: 'The house is a threshold, not a destination.',
+    about: 'It holds the pause between endings and beginnings—a place to look inward, dissolve old forms, and make room for a different way of seeing.',
   },
   {
-    id: 'web-developer', name: '[Name to be added]', role: 'Web & Application Designer / Developer',
-    statement: 'Interfaces as exhibition space.',
-    about: 'Designs and develops the digital architecture through which the collective’s work can be encountered.',
-    links: [],
+    id: 'collective', label: '03 / The collective', title: 'Many perspectives, one shared space.',
+    statement: 'The12thHouse is open by design.',
+    about: 'The name describes the space we are building: a house for different voices, practices, and sensibilities to meet without losing their individuality.',
   },
 ];
 
@@ -32,20 +28,20 @@ export function AboutPage() {
   return (
     <div className="page-section about-page editorial-about">
       <header className="about-intro">
-        <p className="eyebrow">The12thHouse / collective</p>
-        <h1>Three practices.<br />One house.</h1>
-        <p className="about-intro__note">A virtual gallery for sound, image, motion, and code—structured around cycles, harmony, and the twelve.</p>
+        <p className="eyebrow">The12thHouse / meaning</p>
+        <h1>A house for<br />the unseen.</h1>
+        <p className="about-intro__note">The name points to a space beyond the visible: a place for intuition, transition, and the forms that are still taking shape.</p>
       </header>
-      <section className="member-list" aria-label="The12thHouse collective members">
-        {members.map((member, index) => (
-          <article className="member-entry" key={member.id}>
-            <div className="member-entry__index">0{index + 1}</div>
-            <div className="member-entry__identity"><p className="eyebrow">{member.role}</p><h2>{member.name}</h2></div>
-            <div className="member-entry__copy"><p className="member-entry__statement">{member.statement}</p><p>{member.about}</p>{member.links.length > 0 && <nav className="social-links" aria-label={`${member.name} links`}>{member.links.map((link) => <a key={link.label} href={link.url} target="_blank" rel="noreferrer">{link.label}</a>)}</nav>}</div>
+      <section className="member-list" aria-label="The meaning of The12thHouse">
+        {houseThemes.map((theme) => (
+          <article className="member-entry" key={theme.id}>
+            <div className="member-entry__index">{theme.label.split(' / ')[0]}</div>
+            <div className="member-entry__identity"><p className="eyebrow">{theme.label.split(' / ')[1]}</p><h2>{theme.title}</h2></div>
+            <div className="member-entry__copy"><p className="member-entry__statement">{theme.statement}</p><p>{theme.about}</p></div>
           </article>
         ))}
       </section>
-      <footer className="about-footer"><span>Sound / Image / Code</span><span>12 → ∞</span></footer>
+      <footer className="about-footer"><span>A shared space for what comes next.</span><span>12 → ∞</span></footer>
     </div>
   );
 }
