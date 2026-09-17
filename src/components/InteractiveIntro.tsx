@@ -5,7 +5,6 @@ type IntroCharacter = { id: number; char: string; x: number; y: number };
 const MIN_PLACEMENT_DISTANCE = 32;
 const COMPLETION_PAUSE_DURATION = 4000;
 const FADE_DURATION = 1600;
-const AUTO_DISMISS_DELAY = 4200;
 
 export function InteractiveIntro({ artistName, onComplete }: InteractiveIntroProps) {
   const [isDismissed, setIsDismissed] = useState(false);
@@ -39,13 +38,6 @@ export function InteractiveIntro({ artistName, onComplete }: InteractiveIntroPro
       ? window.matchMedia('(prefers-reduced-motion: reduce)').matches
       : false;
   }, []);
-
-  useEffect(() => {
-    // The intro is a visual invitation, never a gate: keyboard, touch, and
-    // users who do not move a pointer should still reach the site quickly.
-    const timer = window.setTimeout(triggerComplete, AUTO_DISMISS_DELAY);
-    return () => window.clearTimeout(timer);
-  }, [triggerComplete]);
 
   useEffect(() => {
     if (!isComplete || isDismissed) return undefined;
@@ -115,15 +107,5 @@ export function InteractiveIntro({ artistName, onComplete }: InteractiveIntroPro
     };
   }, [characters, completeIntro, isComplete, isDismissed]);
 
-  return (
-    <div className={['intro-screen', isFading ? 'intro-screen--fading' : '', isDismissed ? 'intro-screen--hidden' : ''].filter(Boolean).join(' ')} aria-hidden={isDismissed}>
-      <div className="intro-landing" aria-label={`${displayName} introduction`}>
-        <span className="intro-landing__index">00 / 12</span>
-        <strong className="intro-landing__title">{displayName}</strong>
-        <span className="intro-landing__prompt">Move to reveal / Enter to continue</span>
-        <button className="intro-landing__skip" type="button" onClick={triggerComplete}>Enter site</button>
-      </div>
-      <div className="intro-assembly" aria-label={displayName}>{revealedCharacters.map((character) => { const characterStyle: CSSProperties = { left: `${character.x}px`, top: `${character.y}px` }; return <span key={`${character.id}-${character.char}`} className={['intro-character', character.char === ' ' ? 'intro-character--space' : ''].filter(Boolean).join(' ')} style={characterStyle} aria-hidden={character.char === ' '}>{character.char}</span>; })}</div>
-    </div>
-  );
+  return <div className={['intro-screen', isFading ? 'intro-screen--fading' : '', isDismissed ? 'intro-screen--hidden' : ''].filter(Boolean).join(' ')} aria-hidden={isDismissed}><div className="intro-assembly" aria-label={displayName}>{revealedCharacters.map((character) => { const characterStyle: CSSProperties = { left: `${character.x}px`, top: `${character.y}px` }; return <span key={`${character.id}-${character.char}`} className={['intro-character', character.char === ' ' ? 'intro-character--space' : ''].filter(Boolean).join(' ')} style={characterStyle} aria-hidden={character.char === ' '}>{character.char}</span>; })}</div></div>;
 }
