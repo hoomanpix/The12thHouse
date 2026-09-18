@@ -2048,3 +2048,31 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible { 
   .home-release-row__meta { display:none; }
   .featured-release__artwork { width:min(72vw,300px); }
 }
+
+
+/* Archive filters: ALL uses the exact same control geometry as every peer option. */
+.archive-toolbar .filter-bar { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.archive-toolbar .filter-pill,
+.archive-toolbar .filter-pill.active {
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:30px;
+  height:30px;
+  padding:0 12px;
+  border:1px solid var(--line);
+  border-radius:0;
+  font-size:.68rem;
+  line-height:1;
+  letter-spacing:.12em;
+  font-weight:400;
+  text-transform:uppercase;
+  white-space:nowrap;
+}
+.archive-toolbar .filter-pill.active { background:var(--ink); border-color:var(--ink); color:var(--bg); }
+@media (max-width:700px) {
+  .archive-toolbar .filter-bar { flex-wrap:nowrap; overflow-x:auto; padding-bottom:4px; scrollbar-width:none; }
+  .archive-toolbar .filter-bar::-webkit-scrollbar { display:none; }
+  .archive-toolbar .filter-pill,
+  .archive-toolbar .filter-pill.active { flex:0 0 auto; }
+}
