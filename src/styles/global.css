@@ -1984,3 +1984,67 @@ html { scroll-padding-top: 112px; }
     margin-bottom: 0;
   }
 }
+
+
+/* Active The12thHouse editorial gallery system. */
+:root { --bg:#050505; --panel:#0d0d0d; --panel-alt:#151515; --ink:#f5f5f5; --muted:rgba(245,245,245,.62); --line:rgba(245,245,245,.18); --radius:8px; --radius-control:0px; --shadow:rgba(0,0,0,.28); }
+body { background:var(--bg); color:var(--ink); }
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible { outline:1px solid var(--ink); outline-offset:4px; }
+.menu-trigger { display:none; appearance:none; border:0; padding:0; background:transparent; color:var(--ink); font-size:.68rem; letter-spacing:.12em; text-transform:uppercase; }
+.editorial-home { gap:clamp(96px,14vw,190px); }
+.home-hero { display:grid; grid-template-columns:minmax(0,.9fr) minmax(320px,.8fr); gap:clamp(48px,11vw,180px); align-items:end; min-height:76vh; padding:clamp(38px,8vw,120px) 0 clamp(60px,10vw,130px); border-bottom:1px solid var(--line); }
+.home-hero__copy { max-width:560px; display:grid; gap:22px; }
+.home-hero__copy h1 { font-size:clamp(4rem,9vw,9.5rem); font-weight:400; line-height:.82; letter-spacing:-.085em; }
+.home-hero__copy .lede { max-width:31rem; font-size:clamp(1rem,1.4vw,1.2rem); color:var(--muted); }
+.section-number { margin:0; color:var(--muted); font-size:.66rem; letter-spacing:.16em; text-transform:uppercase; }
+.text-link--button { appearance:none; border:0; padding:0; background:transparent; color:var(--ink); }
+.home-hero__artwork { justify-self:end; width:min(100%,460px); }
+.home-hero__artwork img { aspect-ratio:.92; object-fit:cover; }
+.artwork-caption { display:block; margin-top:10px; color:var(--muted); font-size:.66rem; letter-spacing:.12em; text-transform:uppercase; }
+.music-cover { border-radius:var(--radius)!important; overflow:hidden; }
+.hero-visual.music-cover,.feature-artwork.music-cover,.release-cover.music-cover,.detail-cover.music-cover,.home-hero__artwork,.featured-release__artwork { padding:0; border:0; background:var(--panel); box-shadow:0 18px 40px var(--shadow); transition:transform 260ms ease,box-shadow 260ms ease; }
+.hero-visual.music-cover:hover,.feature-artwork.music-cover:hover,.release-cover.music-cover:hover,.detail-cover.music-cover:hover,.home-hero__artwork:hover,.featured-release__artwork:hover { transform:translateY(-3px); box-shadow:0 22px 46px var(--shadow); }
+.discipline-section,.latest-section { display:grid; grid-template-columns:minmax(180px,.6fr) minmax(0,1.4fr); gap:clamp(32px,9vw,140px); }
+.section-intro { display:grid; align-content:start; gap:20px; }
+.section-intro h2,.latest-section h2 { font-size:clamp(2.5rem,5vw,5.4rem); font-weight:400; line-height:.88; }
+.discipline-list { border-top:1px solid var(--line); }
+.discipline-entry { display:grid; grid-template-columns:48px minmax(0,1fr) 24px; gap:22px; align-items:start; padding:24px 0; border-bottom:1px solid var(--line); transition:padding 220ms ease,background 220ms ease; }
+.discipline-entry:hover { padding-inline:12px; background:rgba(255,255,255,.035); }
+.discipline-entry__number,.discipline-entry__arrow { color:var(--muted); font-size:.7rem; letter-spacing:.12em; }
+.discipline-entry h3 { font-size:clamp(1.35rem,2.4vw,2.2rem); font-weight:400; text-transform:uppercase; }
+.discipline-entry p { max-width:28rem; margin:9px 0 0; color:var(--muted); font-size:.9rem; }
+.latest-section { align-items:start; }
+.latest-section .section-heading { gap:20px; }
+.home-release-list { border-top:1px solid var(--line); }
+.home-release-row { display:grid; grid-template-columns:34px 62px minmax(0,1fr) 120px 20px; align-items:center; gap:16px; min-height:82px; border-bottom:1px solid var(--line); transition:padding 220ms ease,background 220ms ease; }
+.home-release-row:hover { padding-inline:10px; background:rgba(255,255,255,.035); }
+.home-release-row__index,.home-release-row__meta { color:var(--muted); font-size:.66rem; letter-spacing:.1em; text-transform:uppercase; }
+.home-release-row__image { width:52px; height:52px; }
+.home-release-row__image img { width:100%; height:100%; object-fit:cover; }
+.home-release-row__title { font-size:1rem; }
+.featured-release-section { display:grid; grid-template-columns:minmax(260px,.8fr) minmax(0,1fr); gap:clamp(40px,11vw,170px); align-items:end; padding-top:20px; }
+.featured-release__artwork { width:min(100%,380px); }
+.featured-release__artwork img { aspect-ratio:1; object-fit:cover; }
+.featured-release__copy { max-width:500px; display:grid; gap:18px; padding-bottom:8px; }
+.featured-release__copy h2 { font-size:clamp(3rem,7vw,7rem); font-weight:400; line-height:.85; }
+.featured-release__copy>p:not(.section-number):not(.eyebrow) { color:var(--muted); font-size:.94rem; }
+.archive-page .archive-header,.editorial-about .about-intro { min-height:56vh; }
+.archive-page .archive-header h1,.editorial-about .about-intro h1 { font-weight:400; }
+.archive-item:hover { background:rgba(255,255,255,.035); }
+.archive-item__image { border-radius:var(--radius)!important; }
+.global-player { background:rgba(5,5,5,.98); border-top:1px solid var(--line); box-shadow:none; }
+@media (max-width:700px) {
+  .topbar { position:sticky; }
+  .menu-trigger { display:inline-flex; align-items:center; gap:8px; }
+  .main-nav { display:none; position:absolute; top:100%; left:0; right:0; padding:18px 0 22px; background:var(--bg); border-bottom:1px solid var(--line); }
+  .main-nav.is-open { display:grid; gap:16px; }
+  .home-hero { grid-template-columns:1fr; min-height:auto; gap:54px; padding-top:58px; }
+  .home-hero__copy h1 { font-size:clamp(3.7rem,18vw,6.2rem); }
+  .home-hero__artwork { width:min(82vw,360px); justify-self:start; }
+  .discipline-section,.latest-section,.featured-release-section { grid-template-columns:1fr; gap:38px; }
+  .discipline-entry { grid-template-columns:38px minmax(0,1fr) 20px; padding:22px 0; }
+  .home-release-row { grid-template-columns:24px 48px minmax(0,1fr) 18px; gap:9px; min-height:72px; }
+  .home-release-row__image { width:44px; height:44px; }
+  .home-release-row__meta { display:none; }
+  .featured-release__artwork { width:min(72vw,300px); }
+}

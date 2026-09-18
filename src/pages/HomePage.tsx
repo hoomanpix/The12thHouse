@@ -3,15 +3,19 @@ import { useCatalog } from '../features/catalog/CatalogProvider';
 import { publicRoutes } from '../config/routes';
 import { useAudioPlayer } from '../features/audio-player/AudioPlayerProvider';
 
+const disciplines = [
+  { number: '01', label: 'Music', description: 'Sound, rhythm, atmosphere, and the spaces between them.' },
+  { number: '02', label: 'Visuals', description: 'Image, motion, and visual worlds shaped around each work.' },
+  { number: '03', label: 'Digital', description: 'Interactive architecture for encountering the collective’s work.' },
+];
+
 export function HomePage() {
   const { setQueue, playTrack } = useAudioPlayer();
   const { releases, recordPlay } = useCatalog();
   const visibleReleases = releases.filter((release) => release.published);
   const featuredRelease = visibleReleases.find((release) => release.featured) ?? visibleReleases[0];
   const latestRelease = visibleReleases[0];
-  const playableTracks = (featuredRelease?.tracks ?? []).filter(
-    (track) => track.published !== false && Boolean(track.audio_url),
-  );
+  const playableTracks = (featuredRelease?.tracks ?? []).filter((track) => track.published !== false && Boolean(track.audio_url));
 
   if (!featuredRelease || !latestRelease) {
     return <div className="page-section"><p className="admin-empty">No releases are published yet.</p></div>;
@@ -36,69 +40,41 @@ export function HomePage() {
   };
 
   return (
-    <div className="page-section home-page">
-      <section className="hero-block">
-        <div className="hero-copy">
-          <p className="eyebrow">Independent electronic artist</p>
-          <h1>Independent electronic artist</h1>
-          <p className="lede">
-            Sculpted atmospheres, slow-burn rhythm, and intimate songs for the edge of the night.
-          </p>
+    <div className="page-section home-page editorial-home">
+      <section className="home-hero" aria-labelledby="home-heading">
+        <div className="home-hero__copy">
+          <p className="section-number">01 / The house</p>
+          <p className="eyebrow">Multidisciplinary creative collective</p>
+          <h1 id="home-heading">Sound.<br />Image.<br />Digital.</h1>
+          <p className="lede">The12thHouse connects sound, visual work, and digital experiences in one evolving creative space.</p>
           <div className="hero-actions">
-            <button
-              type="button"
-              className="button primary"
-              onClick={() => handlePlay(featuredRelease)}
-              disabled={playableTracks.length === 0}
-            >
+            <Link to={publicRoutes.releases} className="button primary">Explore releases <span aria-hidden="true">→</span></Link>
+            <button type="button" className="text-link text-link--button" onClick={() => handlePlay(featuredRelease)} disabled={playableTracks.length === 0}>
               {playableTracks.length === 0 ? 'Audio coming soon' : 'Play latest'}
             </button>
-            <Link to={publicRoutes.releases} className="button secondary">Browse releases</Link>
           </div>
         </div>
-
-        <div className="hero-visual music-cover">
+        <div className="home-hero__artwork music-cover">
           <img src={featuredRelease.artwork_url ?? ''} alt={featuredRelease.title} />
+          <span className="artwork-caption">{featuredRelease.title} / {featuredRelease.release_date.slice(0, 4)}</span>
         </div>
       </section>
 
-      <section className="release-overview">
-        <div className="section-heading">
-          <p className="eyebrow">Latest release</p>
-          <h2>{latestRelease.title}</h2>
+      <section className="discipline-section" aria-labelledby="discipline-heading">
+        <div className="section-intro"><p className="section-number">02 / Three rooms</p><h2 id="discipline-heading">One house,<br />three practices.</h2></div>
+        <div className="discipline-list">
+          {disciplines.map((discipline) => <article className="discipline-entry" key={discipline.number}><span className="discipline-entry__number">{discipline.number}</span><div><h3>{discipline.label}</h3><p>{discipline.description}</p></div><span className="discipline-entry__arrow" aria-hidden="true">↗</span></article>)}
         </div>
-        <article className="feature-card new-release-section">
-          <div className="feature-artwork music-cover">
-            <img src={latestRelease.artwork_url ?? ''} alt={latestRelease.title} />
-          </div>
-          <div className="feature-copy">
-            <p>{latestRelease.type}</p>
-            <h3>{latestRelease.title}</h3>
-            <p>{latestRelease.description}</p>
-            <Link to={`/releases/${latestRelease.slug}`} className="text-link">View release</Link>
-          </div>
-        </article>
       </section>
 
-      {featuredRelease.id !== latestRelease.id && (
-        <section className="release-overview">
-          <div className="section-heading">
-            <p className="eyebrow">Featured release</p>
-            <h2>{featuredRelease.title}</h2>
-          </div>
-          <article className="feature-card muted">
-            <div className="feature-copy">
-              <p>{featuredRelease.type}</p>
-              <h3>{featuredRelease.title}</h3>
-              <p>{featuredRelease.description}</p>
-              <button type="button" className="button secondary" onClick={() => handlePlay(featuredRelease)} disabled={playableTracks.length === 0}>
-                {playableTracks.length === 0 ? 'Audio coming soon' : 'Play selection'}
-              </button>
-            </div>
-            <div className="feature-artwork music-cover"><img src={featuredRelease.artwork_url ?? ''} alt={featuredRelease.title} /></div>
-          </article>
-        </section>
-      )}
+      <section className="latest-section" aria-labelledby="latest-heading">
+        <div className="section-heading split"><div><p className="section-number">03 / Archive</p><h2 id="latest-heading">Latest releases</h2></div><Link to={publicRoutes.releases} className="text-link">View archive →</Link></div>
+        <div className="home-release-list">
+          {visibleReleases.slice(0, 3).map((release, index) => <Link className="home-release-row" to={`/releases/${release.slug}`} key={release.id}><span className="home-release-row__index">{String(index + 1).padStart(2, '0')}</span><span className="home-release-row__image music-cover"><img src={release.artwork_url ?? ''} alt="" /></span><span className="home-release-row__title">{release.title}</span><span className="home-release-row__meta">{release.status === 'upcoming' ? 'Future' : release.type} / {release.release_date.slice(0, 4)}</span><span aria-hidden="true">→</span></Link>)}
+        </div>
+      </section>
+
+      <section className="featured-release-section"><div className="featured-release__artwork music-cover"><img src={latestRelease.artwork_url ?? ''} alt={latestRelease.title} /></div><div className="featured-release__copy"><p className="section-number">04 / Featured release</p><p className="eyebrow">{latestRelease.type} / {latestRelease.release_date.slice(0, 4)}</p><h2>{latestRelease.title}</h2><p>{latestRelease.description}</p><Link to={`/releases/${latestRelease.slug}`} className="text-link">View release →</Link></div></section>
     </div>
   );
 }
