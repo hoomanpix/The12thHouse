@@ -2076,3 +2076,59 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible { 
   .archive-toolbar .filter-pill,
   .archive-toolbar .filter-pill.active { flex:0 0 auto; }
 }
+
+
+/* Theme revision: the main website is light editorial; InteractiveIntro remains its own white surface. */
+:root {
+  --bg: #ffffff;
+  --panel: #fafafa;
+  --panel-alt: #f2f2f2;
+  --ink: #111111;
+  --muted: rgba(17, 17, 17, 0.62);
+  --line: rgba(17, 17, 17, 0.18);
+  --accent: #111111;
+  --accent-soft: #eeeeee;
+  --shadow: rgba(17, 17, 17, 0.12);
+}
+
+body { background: var(--bg); color: var(--ink); }
+.site-shell, .page-shell, .page-section, .topbar { background: var(--bg); color: var(--ink); }
+.topbar { border-bottom-color: var(--line); }
+.brand-link, .nav-item, .nav-logout, h1, h2, h3, .lede, .feature-copy, .detail-copy, .about-copy, .track-row, .archive-item__title, .home-release-row__title { color: var(--ink); }
+.eyebrow, .section-number, .archive-item__number, .archive-item__type, .archive-item__date, .home-release-row__index, .home-release-row__meta, .artwork-caption { color: var(--muted); }
+
+.hero-visual.music-cover, .feature-artwork.music-cover, .release-cover.music-cover, .detail-cover.music-cover, .home-hero__artwork, .featured-release__artwork, .player-detail__artwork { background: var(--panel-alt); box-shadow: 0 18px 40px var(--shadow); }
+.feature-card, .admin-panel { background: var(--panel); border-color: var(--line); }
+.button, .filter-pill, .player-button, .track-play { border-color: var(--line); color: var(--ink); background: transparent; }
+.button.primary, .filter-pill.active, .player-button.primary { background: var(--ink); border-color: var(--ink); color: #ffffff; }
+.button.secondary:hover, .filter-pill:hover, .player-button:hover, .track-play:hover { border-color: var(--ink); }
+.text-link, .platform-list a, .social-links a { color: var(--ink); border-bottom-color: var(--line); }
+.archive-list, .home-release-list, .discipline-list, .member-list { border-color: var(--line); }
+.archive-item, .home-release-row, .discipline-entry, .member-entry, .track-row { border-bottom-color: var(--line); }
+.archive-item:hover, .home-release-row:hover, .discipline-entry:hover { background: rgba(17,17,17,.035); }
+
+.global-player { background: rgba(255,255,255,.98); color: var(--ink); border-top-color: var(--line); box-shadow: 0 -8px 24px rgba(17,17,17,.06); }
+.global-player .player-strip__title, .global-player .player-detail__heading h3, .global-player .player-button { color: var(--ink); }
+.global-player .player-strip__artist, .global-player .player-detail__heading p, .global-player .player-detail__meta p { color: var(--muted); }
+.global-player .player-strip__progress, .global-player .expanded-progress-track, .global-player .volume-track { background: rgba(17,17,17,.14); }
+.global-player .player-strip__progress-bar { background: rgba(17,17,17,.82); }
+.global-player .player-button { border-color: var(--line); }
+.global-player .player-button--primary { background: var(--ink); border-color: var(--ink); color: #ffffff; }
+.global-player input[type='range']::-webkit-slider-runnable-track { background: rgba(17,17,17,.18); }
+.global-player input[type='range']::-moz-range-track { background: rgba(17,17,17,.18); }
+.global-player input[type='range']::-webkit-slider-thumb, .global-player input[type='range']::-moz-range-thumb { background: var(--ink); }
+
+.blackout-layer { background: #ffffff; }
+.cover-spotlight-clone { box-shadow: 0 0 0 1px rgba(17,17,17,.18), 0 28px 70px rgba(17,17,17,.18) !important; }
+.spotlight-info { color: var(--ink); border-left-color: rgba(17,17,17,.55); }
+.spotlight-info__type { color: var(--muted); }
+
+.archive-toolbar .filter-pill, .archive-toolbar .filter-pill.active { border-color: var(--line); color: var(--ink); background: transparent; }
+.archive-toolbar .filter-pill.active { background: var(--panel-alt); border-color: var(--ink); color: var(--ink); }
+
+.auth-form input, .admin-inline-form input, .admin-inline-form select, .admin-link-row input, .admin-link-row select, .admin-release-picker select { color: var(--ink); background: transparent; border-color: var(--line); }
+.auth-form input::placeholder, .admin-inline-form input::placeholder, .admin-link-row input::placeholder { color: rgba(17,17,17,.46); }
+
+@media (max-width:700px) {
+  .main-nav { background: var(--bg); border-bottom-color: var(--line); }
+}
