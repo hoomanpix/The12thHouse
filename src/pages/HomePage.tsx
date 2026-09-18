@@ -3,12 +3,6 @@ import { useCatalog } from '../features/catalog/CatalogProvider';
 import { publicRoutes } from '../config/routes';
 import { useAudioPlayer } from '../features/audio-player/AudioPlayerProvider';
 
-const disciplines = [
-  { number: '01', label: 'Music', description: 'Sound, rhythm, atmosphere, and the spaces between them.' },
-  { number: '02', label: 'Visuals', description: 'Image, motion, and visual worlds shaped around each work.' },
-  { number: '03', label: 'Digital', description: 'Interactive architecture for encountering the collective’s work.' },
-];
-
 export function HomePage() {
   const { setQueue, playTrack } = useAudioPlayer();
   const { releases, recordPlay } = useCatalog();
@@ -57,13 +51,6 @@ export function HomePage() {
         <div className="home-hero__artwork music-cover">
           <img src={featuredRelease.artwork_url ?? ''} alt={featuredRelease.title} />
           <span className="artwork-caption">{featuredRelease.title} / {featuredRelease.release_date.slice(0, 4)}</span>
-        </div>
-      </section>
-
-      <section className="discipline-section" aria-labelledby="discipline-heading">
-        <div className="section-intro"><p className="section-number">02 / Three rooms</p><h2 id="discipline-heading">One house,<br />three practices.</h2></div>
-        <div className="discipline-list">
-          {disciplines.map((discipline) => <article className="discipline-entry" key={discipline.number}><span className="discipline-entry__number">{discipline.number}</span><div><h3>{discipline.label}</h3><p>{discipline.description}</p></div><span className="discipline-entry__arrow" aria-hidden="true">↗</span></article>)}
         </div>
       </section>
 
