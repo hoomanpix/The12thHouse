@@ -163,6 +163,7 @@ export default function App() {
               <Route path={publicRoutes.about} element={<AboutPage />} />
                 <Route path={publicRoutes.login} element={<LoginPage />} />
                 <Route path={publicRoutes.admin} element={<ProtectedAdminRoute><AdminPage /></ProtectedAdminRoute>} />
+                <Route path="*" element={<div className="page-section"><h1>Page not found</h1><p className="admin-empty">The page you requested does not exist.</p></div>} />
               </Routes>
             </Layout>
           </AudioPlayerProvider>
