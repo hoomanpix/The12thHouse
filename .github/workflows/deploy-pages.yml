@@ -32,7 +32,7 @@ jobs:
         run: npm ci
 
       - name: Build
-        run: npm run build
+        run: VITE_BASE_PATH=/The12thHouse/ npm run build
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
