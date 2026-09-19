@@ -2132,3 +2132,39 @@ body { background: var(--bg); color: var(--ink); }
 @media (max-width:700px) {
   .main-nav { background: var(--bg); border-bottom-color: var(--line); }
 }
+
+
+/* Codex visual transfer: preserve the existing app contracts while adopting the uploaded layout language. */
+.codex-home { gap:64px; }
+.codex-hero { min-height:72vh; align-items:center; }
+.codex-hero .hero-copy { gap:18px; }
+.codex-hero .hero-copy h1 { font-weight:600; letter-spacing:-.075em; }
+.codex-hero .hero-visual { border-radius:var(--radius); }
+.codex-hero .hero-visual img { aspect-ratio:1/1.1; object-fit:cover; }
+.codex-latest { gap:22px; }
+.codex-latest .section-heading { margin-bottom:6px; }
+.codex-release-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:28px; }
+.codex-release-card { display:grid; gap:16px; min-width:0; }
+.codex-release-card .release-cover { border-radius:var(--radius); aspect-ratio:1/1.1; }
+.codex-release-card .release-cover img { width:100%; height:100%; object-fit:cover; }
+.codex-release-card .release-card-meta { display:flex; align-items:end; justify-content:space-between; gap:14px; }
+.codex-release-card .release-card-meta > div { display:grid; gap:2px; min-width:0; }
+.codex-release-card .release-card-meta h3 { font-size:clamp(1.25rem,2vw,2rem); line-height:1.05; }
+.codex-release-card .release-card-meta span { color:var(--muted); font-size:.8rem; text-transform:lowercase; }
+.codex-release-card .track-play { flex:0 0 auto; }
+.codex-featured { margin-top:4px; }
+.codex-featured .feature-card { border-radius:var(--radius); padding:28px; background:var(--panel); }
+.codex-featured .feature-card h2 { font-size:clamp(2.5rem,5vw,5rem); font-weight:600; }
+.codex-featured .feature-artwork { border-radius:var(--radius); }
+.codex-featured .feature-artwork img { aspect-ratio:1/1.1; object-fit:cover; }
+.codex-archive-link { display:flex; justify-content:flex-end; padding:8px 0 20px; }
+
+@media (max-width:700px) {
+  .codex-home { gap:48px; }
+  .codex-hero { min-height:auto; }
+  .codex-hero .hero-visual { order:-1; }
+  .codex-release-grid { grid-template-columns:1fr; gap:36px; }
+  .codex-featured .feature-card { grid-template-columns:1fr; padding:20px; }
+  .codex-featured .feature-artwork { order:-1; }
+  .codex-archive-link { justify-content:flex-start; }
+}

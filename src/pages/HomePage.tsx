@@ -5,7 +5,7 @@ import { useAudioPlayer } from '../features/audio-player/AudioPlayerProvider';
 
 export function HomePage() {
   const { setQueue, playTrack } = useAudioPlayer();
-  const { releases, recordPlay } = useCatalog();
+  const { artist, releases, recordPlay } = useCatalog();
   const visibleReleases = releases.filter((release) => release.published);
   const featuredRelease = visibleReleases.find((release) => release.featured) ?? visibleReleases[0];
   const latestRelease = visibleReleases[0];
@@ -16,16 +16,18 @@ export function HomePage() {
   }
 
   const handlePlay = (release: typeof featuredRelease) => {
-    const queue = (release.tracks ?? []).filter((track) => track.published !== false && Boolean(track.audio_url)).map((track) => ({
-      id: `${release.id}-${track.id}`,
-      releaseId: release.id,
-      trackId: track.id,
-      title: track.title,
-      audioUrl: track.audio_url,
-      artworkUrl: release.artwork_url,
-      releaseTitle: release.title,
-      duration: track.duration,
-    }));
+    const queue = (release.tracks ?? [])
+      .filter((track) => track.published !== false && Boolean(track.audio_url))
+      .map((track) => ({
+        id: `${release.id}-${track.id}`,
+        releaseId: release.id,
+        trackId: track.id,
+        title: track.title,
+        audioUrl: track.audio_url,
+        artworkUrl: release.artwork_url,
+        releaseTitle: release.title,
+        duration: track.duration,
+      }));
     setQueue(queue);
     if (queue[0]) {
       recordPlay(release.id, queue[0].trackId);
@@ -34,34 +36,48 @@ export function HomePage() {
   };
 
   return (
-    <div className="page-section home-page editorial-home">
-      <section className="home-hero" aria-labelledby="home-heading">
-        <div className="home-hero__copy">
-          <p className="section-number">01 / The house</p>
-          <p className="eyebrow">Multidisciplinary creative collective</p>
-          <h1 id="home-heading">Sound.<br />Image.<br />Digital.</h1>
-          <p className="lede">The12thHouse connects sound, visual work, and digital experiences in one evolving creative space.</p>
+    <div className="page-section home-page codex-home">
+      <section className="hero-block codex-hero">
+        <div className="hero-copy">
+          <p className="eyebrow">Featured artist</p>
+          <h1>{artist.name}</h1>
+          <p className="lede">{artist.biography || 'A sonic space for dreamers, seekers, and those who find home in the in-between.'}</p>
           <div className="hero-actions">
-            <Link to={publicRoutes.releases} className="button primary">Explore releases <span aria-hidden="true">→</span></Link>
-            <button type="button" className="text-link text-link--button" onClick={() => handlePlay(featuredRelease)} disabled={playableTracks.length === 0}>
-              {playableTracks.length === 0 ? 'Audio coming soon' : 'Play latest'}
+            <button type="button" className="button primary" onClick={() => handlePlay(featuredRelease)} disabled={playableTracks.length === 0}>
+              {playableTracks.length === 0 ? 'Listen soon' : 'Play latest'}
             </button>
+            <Link to={publicRoutes.about} className="button secondary">Explore artists</Link>
           </div>
         </div>
-        <div className="home-hero__artwork music-cover">
+        <div className="hero-visual music-cover">
           <img src={featuredRelease.artwork_url ?? ''} alt={featuredRelease.title} />
-          <span className="artwork-caption">{featuredRelease.title} / {featuredRelease.release_date.slice(0, 4)}</span>
         </div>
       </section>
 
-      <section className="latest-section" aria-labelledby="latest-heading">
-        <div className="section-heading split"><div><p className="section-number">03 / Archive</p><h2 id="latest-heading">Latest releases</h2></div><Link to={publicRoutes.releases} className="text-link">View archive →</Link></div>
-        <div className="home-release-list">
-          {visibleReleases.slice(0, 3).map((release, index) => <Link className="home-release-row" to={`/releases/${release.slug}`} key={release.id}><span className="home-release-row__index">{String(index + 1).padStart(2, '0')}</span><span className="home-release-row__image music-cover"><img src={release.artwork_url ?? ''} alt="" /></span><span className="home-release-row__title">{release.title}</span><span className="home-release-row__meta">{release.status === 'upcoming' ? 'Future' : release.type} / {release.release_date.slice(0, 4)}</span><span aria-hidden="true">→</span></Link>)}
+      <section className="release-overview codex-latest">
+        <div className="section-heading split">
+          <div><p className="eyebrow">Latest release</p><h2>{latestRelease.title}</h2></div>
+          <Link to={publicRoutes.releases} className="text-link">View all →</Link>
+        </div>
+        <div className="codex-release-grid">
+          {visibleReleases.slice(0, 2).map((release) => {
+            const hasAudio = (release.tracks ?? []).some((track) => track.published !== false && Boolean(track.audio_url));
+            return <article className="codex-release-card" key={release.id}>
+              <Link className="release-cover music-cover" to={`/releases/${release.slug}`}><img src={release.artwork_url ?? ''} alt={release.title} /></Link>
+              <div className="release-card-meta"><div><Link to={`/releases/${release.slug}`}><h3>{release.title}</h3></Link><span>{artist.name}</span><span>{release.type} · {release.release_date.slice(0, 4)}</span></div><button type="button" className="track-play" aria-label={`Play ${release.title}`} onClick={() => handlePlay(release)} disabled={!hasAudio}>▶</button></div>
+            </article>;
+          })}
         </div>
       </section>
 
-      <section className="featured-release-section"><div className="featured-release__artwork music-cover"><img src={latestRelease.artwork_url ?? ''} alt={latestRelease.title} /></div><div className="featured-release__copy"><p className="section-number">04 / Featured release</p><p className="eyebrow">{latestRelease.type} / {latestRelease.release_date.slice(0, 4)}</p><h2>{latestRelease.title}</h2><p>{latestRelease.description}</p><Link to={`/releases/${latestRelease.slug}`} className="text-link">View release →</Link></div></section>
+      <section className="release-overview codex-featured">
+        <article className="feature-card">
+          <div className="feature-copy"><p className="eyebrow">Featured release</p><h2>{featuredRelease.title}</h2><p>{featuredRelease.description}</p><div className="detail-actions"><button type="button" className="button primary" onClick={() => handlePlay(featuredRelease)} disabled={playableTracks.length === 0}>{playableTracks.length === 0 ? 'Listen soon' : 'Play selection'}</button><Link to={`/releases/${featuredRelease.slug}`} className="text-link">View details →</Link></div></div>
+          <div className="feature-artwork music-cover"><img src={featuredRelease.artwork_url ?? ''} alt={featuredRelease.title} /></div>
+        </article>
+      </section>
+
+      <section className="codex-archive-link"><Link to={publicRoutes.releases} className="text-link">Explore the full archive →</Link></section>
     </div>
   );
 }
