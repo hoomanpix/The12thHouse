@@ -5,57 +5,99 @@ import { useAudioPlayer } from '../features/audio-player/AudioPlayerProvider';
 
 export function HomePage() {
   const { setQueue, playTrack } = useAudioPlayer();
-  const { releases, recordPlay } = useCatalog();
-  const visibleReleases = releases.filter((release) => release.published);
+  const { artist: mockArtist, releases: mockReleases, recordPlay } = useCatalog();
+  const visibleReleases = mockReleases.filter((release) => release.published);
   const featuredRelease = visibleReleases.find((release) => release.featured) ?? visibleReleases[0];
+  const latestRelease = visibleReleases[0];
 
-  if (!featuredRelease) return <div className="page-section"><p className="admin-empty">No releases are published yet.</p></div>;
+  if (!featuredRelease || !latestRelease) {
+    return <div className="page-section"><p className="admin-empty">No releases are published yet.</p></div>;
+  }
 
-  const playableTracks = featuredRelease.status === 'upcoming'
-    ? []
-    : (featuredRelease.tracks ?? []).filter((track) => track.published !== false && Boolean(track.audio_url));
-  const handlePlay = (release: typeof featuredRelease) => {
-    const queue = (release.tracks ?? []).filter((track) => track.published !== false && Boolean(track.audio_url)).map((track) => ({
-      id: `${release.id}-${track.id}`, releaseId: release.id, trackId: track.id, title: track.title,
-      audioUrl: track.audio_url, artworkUrl: release.artwork_url, releaseTitle: release.title, duration: track.duration,
+  const handlePlayFeatured = () => {
+    const firstTrack = featuredRelease?.tracks?.[0];
+    if (!featuredRelease) return;
+    const queue = (featuredRelease.tracks ?? []).map((track) => ({
+      id: `${featuredRelease.id}-${track.id}`,
+      releaseId: featuredRelease.id,
+      trackId: track.id,
+      title: track.title,
+      audioUrl: track.audio_url,
+      artworkUrl: featuredRelease.artwork_url,
+      releaseTitle: featuredRelease.title,
+      duration: track.duration,
     }));
+
     setQueue(queue);
-    if (queue[0]) { recordPlay(release.id, queue[0].trackId); playTrack(queue[0]); }
+    if (firstTrack) {
+      recordPlay(featuredRelease.id, firstTrack.id);
+      playTrack(queue[0]);
+    }
   };
 
   return (
-    <div className="page-section home-page reference-home">
-      <section className="reference-hero" aria-labelledby="hero-title">
-        <div className="reference-hero__copy">
-          <p className="eyebrow">Featured artist</p>
-           <h1 id="hero-title">The12thHouse</h1>
-          <p className="reference-hero__lede">A sonic space for dreamers, seekers, and those who find home in the in-between. Exploring ambient, electronic and experimental sounds from around the world.</p>
-          <div className="reference-actions">
-            <button type="button" className="button primary" onClick={() => handlePlay(featuredRelease)} disabled={playableTracks.length === 0}>{playableTracks.length === 0 ? 'Listen soon' : 'Listen now'}</button>
-            <Link to={publicRoutes.about} className="button secondary">Explore artists</Link>
+    <div className="page-section home-page">
+      <section className="hero-block">
+        <div className="hero-copy">
+          <p className="eyebrow">Independent electronic artist</p>
+          <h1>{mockArtist.name}</h1>
+          <p className="lede">
+            Sculpted atmospheres, slow-burn rhythm, and intimate songs for the edge of the night.
+          </p>
+          <div className="hero-actions">
+            <button type="button" className="button primary" onClick={handlePlayFeatured}>
+              Play latest
+            </button>
+            <Link to={publicRoutes.releases} className="button secondary">
+              Browse releases
+            </Link>
           </div>
         </div>
-        <div className="reference-hero__image music-cover"><img src={featuredRelease.artwork_url ?? ''} alt={featuredRelease.title} width="900" height="700" fetchPriority="high" decoding="async" /></div>
-      </section>
 
-      <section className="reference-releases" aria-labelledby="latest-title">
-        <div className="reference-section-heading"><h2 id="latest-title">Latest release</h2><Link to={publicRoutes.releases} className="text-link">View all <span aria-hidden="true">→</span></Link></div>
-        <div className="reference-release-grid">
-          {visibleReleases.slice(0, 2).map((release) => (
-             <article className="reference-release-card" key={release.id}>
-              <Link to={`/releases/${release.slug}`} className="reference-release-card__image music-cover"><img src={release.artwork_url ?? ''} alt={release.title} width="360" height="360" loading="lazy" decoding="async" /></Link>
-               <div className="reference-release-card__copy"><Link to={`/releases/${release.slug}`}><h3>{release.title}</h3></Link><p>The12thHouse</p><span>{release.type} <b aria-hidden="true">·</b> {release.status === 'upcoming' ? 'coming soon' : release.release_date.slice(0, 4)}</span><button type="button" className="round-play" onClick={() => handlePlay(release)} aria-label={`Play ${release.title}`} disabled={(release.tracks ?? []).every((track) => !track.audio_url)}>▶</button></div>
-            </article>
-          ))}
+        <div className="hero-visual">
+          <img src={featuredRelease.artwork_url ?? ''} alt={featuredRelease.title} />
         </div>
       </section>
 
-      <section className="reference-featured" aria-labelledby="featured-release-title">
-        <div className="reference-featured__image music-cover"><img src={featuredRelease.artwork_url ?? ''} alt="" width="900" height="700" loading="lazy" decoding="async" /></div>
-         <div className="reference-featured__copy"><p className="eyebrow">Featured release</p><h2 id="featured-release-title">{featuredRelease.title}</h2><p>The12thHouse</p><p className="reference-featured__description">{featuredRelease.description}</p><div className="reference-actions"><button type="button" className="button primary" onClick={() => handlePlay(featuredRelease)} disabled={playableTracks.length === 0}>{playableTracks.length === 0 ? 'Listen soon' : 'Listen now'}</button><Link to={`/releases/${featuredRelease.slug}`} className="text-link">View details <span aria-hidden="true">→</span></Link></div></div>
+      <section className="release-overview">
+        <div className="section-heading">
+          <p className="eyebrow">Latest release</p>
+          <h2>{latestRelease.title}</h2>
+        </div>
+        <article className="feature-card">
+          <div className="feature-artwork">
+            <img src={latestRelease.artwork_url ?? ''} alt={latestRelease.title} />
+          </div>
+          <div className="feature-copy">
+            <p>{latestRelease.type}</p>
+            <h3>{latestRelease.title}</h3>
+            <p>{latestRelease.description}</p>
+            <Link to={`/releases/${latestRelease.slug}`} className="text-link">
+              View release
+            </Link>
+          </div>
+        </article>
       </section>
 
-      <section className="reference-archive-link"><Link to={publicRoutes.releases}>Explore the full archive <span aria-hidden="true">→</span></Link></section>
+      <section className="release-overview">
+        <div className="section-heading">
+          <p className="eyebrow">Featured release</p>
+          <h2>{featuredRelease.title}</h2>
+        </div>
+        <article className="feature-card muted">
+          <div className="feature-copy">
+            <p>{featuredRelease.type}</p>
+            <h3>{featuredRelease.title}</h3>
+            <p>{featuredRelease.description}</p>
+            <button type="button" className="button secondary" onClick={handlePlayFeatured}>
+              Play selection
+            </button>
+          </div>
+          <div className="feature-artwork">
+            <img src={featuredRelease.artwork_url ?? ''} alt={featuredRelease.title} />
+          </div>
+        </article>
+      </section>
     </div>
   );
 }

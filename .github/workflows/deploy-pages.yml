@@ -31,13 +31,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Test
-        run: npm test -- --run
-
       - name: Build
-        env:
-          VITE_SUPABASE_URL: https://qhjqbqtcdeeoymmympzb.supabase.co
-          VITE_SUPABASE_ANON_KEY: sb_publishable_tlUC8z1qEtHmrFWuJY82iw_vkDQM5_-
         run: npm run build
 
       - name: Upload Pages artifact

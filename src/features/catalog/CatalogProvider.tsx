@@ -2,20 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import { mockArtist, mockReleases } from '../../data/mock';
 import type { Artist, PlatformLink, Release, Track } from '../../types';
 
-const storageKey = 'the12thhouse-catalog';
-
-function isRelease(value: unknown): value is Release {
-  if (!value || typeof value !== 'object') return false;
-  const release = value as Partial<Release>;
-  return typeof release.id === 'string'
-    && typeof release.title === 'string'
-    && typeof release.slug === 'string'
-    && (release.type === 'single' || release.type === 'album')
-    && typeof release.release_date === 'string'
-    && typeof release.description === 'string'
-    && typeof release.featured === 'boolean'
-    && typeof release.published === 'boolean';
-}
+const storageKey = 'new-wave-catalog';
 
 interface CatalogContextValue {
   artist: Artist;
@@ -35,21 +22,11 @@ const CatalogContext = createContext<CatalogContextValue | null>(null);
 
 function getInitialReleases() {
   if (typeof window === 'undefined') return mockReleases as Release[];
-  let saved: string | null = null;
-  try {
-    saved = window.localStorage.getItem(storageKey);
-  } catch {
-    return mockReleases as Release[];
-  }
+  const saved = window.localStorage.getItem(storageKey);
   if (!saved) return mockReleases as Release[];
 
   try {
-    const parsed: unknown = JSON.parse(saved);
-    if (!Array.isArray(parsed) || !parsed.every(isRelease)) {
-      window.localStorage.removeItem(storageKey);
-      return mockReleases as Release[];
-    }
-    return parsed;
+    return JSON.parse(saved) as Release[];
   } catch {
     return mockReleases as Release[];
   }
@@ -59,11 +36,7 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
   const [releases, setReleases] = useState<Release[]>(getInitialReleases);
 
   useEffect(() => {
-    try {
-      window.localStorage.setItem(storageKey, JSON.stringify(releases));
-    } catch {
-      // Storage can be unavailable in private browsing or restricted embeds.
-    }
+    window.localStorage.setItem(storageKey, JSON.stringify(releases));
   }, [releases]);
 
   const updateRelease = useCallback((releaseId: string, update: Partial<Release>) => {

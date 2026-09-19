@@ -1,18 +1,11 @@
 export type ReleaseType = 'single' | 'album';
-export type ReleaseStatus = 'released' | 'upcoming' | 'archived';
 
 export type PlatformType =
   | 'spotify'
   | 'apple_music'
   | 'youtube_music'
   | 'soundcloud'
-  | 'tidal'
-  | 'deezer'
   | 'bandcamp'
-  | 'amazon_music'
-  | 'beatport'
-  | 'audiomack'
-  | 'mixcloud'
   | 'custom';
 
 export interface PlatformLink {
@@ -46,7 +39,6 @@ export interface Release {
   artwork_url: string | null;
   featured: boolean;
   published: boolean;
-  status?: ReleaseStatus;
   created_at?: string;
   updated_at?: string;
   tracks?: Track[];

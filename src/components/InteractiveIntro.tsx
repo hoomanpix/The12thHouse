@@ -67,7 +67,6 @@ export function InteractiveIntro({ artistName, onComplete }: InteractiveIntroPro
       pointerRef.current = { x: clientX, y: clientY };
       if (segmentDistance <= 0.1) return;
 
-      const angle = Math.atan2(segmentY, segmentX);
       const newCharacters: IntroCharacter[] = [];
       let consumed = 0;
       while (pathDistanceRef.current + segmentDistance - consumed >= MIN_PLACEMENT_DISTANCE && revealedCountRef.current < characters.length) {
@@ -83,7 +82,6 @@ export function InteractiveIntro({ artistName, onComplete }: InteractiveIntroPro
       pathDistanceRef.current += segmentDistance - consumed;
       if (newCharacters.length > 0) setRevealedCharacters((current) => [...current, ...newCharacters]);
       if (revealedCountRef.current >= characters.length) completeIntro();
-      void angle;
     };
 
     const handlePointerMove = (event: PointerEvent) => handleMotion(event.clientX, event.clientY, event.movementX, event.movementY);
