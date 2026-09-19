@@ -48,8 +48,7 @@ const members: Member[] = [
 ];
 
 export function AboutPage() {
-  const [activeMemberId, setActiveMemberId] = useState(members[0].id);
-  const activeMember = members.find((member) => member.id === activeMemberId) ?? members[0];
+  const [activeMemberId, setActiveMemberId] = useState<string | null>(members[0].id);
 
   return (
     <div className="page-section about-page">
@@ -62,44 +61,42 @@ export function AboutPage() {
       </section>
 
       <section className="member-directory" aria-label="The12thHouse members">
-        <div className="member-list" role="tablist" aria-label="Select a member">
+        <div className="member-list">
           {members.map((member) => {
-            const isActive = member.id === activeMember.id;
+            const isActive = member.id === activeMemberId;
             return (
-              <button
-                key={member.id}
-                type="button"
-                className={`member-tab${isActive ? ' is-active' : ''}`}
-                role="tab"
-                aria-selected={isActive}
-                aria-controls={`panel-${member.id}`}
-                onClick={() => setActiveMemberId(member.id)}
-              >
-                <span className="member-tab__number">{member.number}</span>
-                <span className="member-tab__name">{member.name}</span>
-                <span className="member-tab__role">{member.role}</span>
-              </button>
+              <div className={`member-item${isActive ? ' is-open' : ''}`} key={member.id}>
+                <button
+                  type="button"
+                  className={`member-tab${isActive ? ' is-active' : ''}`}
+                  aria-expanded={isActive}
+                  aria-controls={`panel-${member.id}`}
+                  onClick={() => setActiveMemberId(isActive ? null : member.id)}
+                >
+                  <span className="member-tab__number">{member.number}</span>
+                  <span className="member-tab__name">{member.name}</span>
+                  <span className="member-tab__role">{member.role}</span>
+                  <span className="member-tab__indicator" aria-hidden="true">{isActive ? '−' : '+'}</span>
+                </button>
+
+                {isActive && (
+                  <article id={`panel-${member.id}`} className="member-detail" aria-label={`${member.name} profile`}>
+                    <p className="eyebrow">{member.role}</p>
+                    <h2>{member.name}</h2>
+                    <p>{member.about}</p>
+                    <div className="member-social-links" aria-label={`${member.name} social links`}>
+                      {member.socials.map((social) => (
+                        <a key={social.label} href={social.href} target="_blank" rel="noreferrer">
+                          {social.label}
+                        </a>
+                      ))}
+                    </div>
+                  </article>
+                )}
+              </div>
             );
           })}
         </div>
-
-        <article
-          id={`panel-${activeMember.id}`}
-          className="member-detail"
-          role="tabpanel"
-          aria-label={`${activeMember.name} profile`}
-        >
-          <p className="eyebrow">{activeMember.role}</p>
-          <h2>{activeMember.name}</h2>
-          <p>{activeMember.about}</p>
-          <div className="member-social-links" aria-label={`${activeMember.name} social links`}>
-            {activeMember.socials.map((social) => (
-              <a key={social.label} href={social.href} target="_blank" rel="noreferrer">
-                {social.label}
-              </a>
-            ))}
-          </div>
-        </article>
       </section>
     </div>
   );
