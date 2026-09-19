@@ -1036,3 +1036,52 @@ input[type='range'] {
   transition: opacity 1.067s ease, visibility 1.067s ease;
   pointer-events: none;
 }
+
+
+/* Final intro scale: compact glyphs keep the reveal quiet and editorial. */
+.intro-character {
+  font-size: clamp(24px, 2.1vw, 44px);
+  letter-spacing: -0.07em;
+}
+
+/* The12thHouse wordmark: two measured lines, aligned as a small typographic block. */
+.brand-link {
+  display: grid;
+  width: 6.7rem;
+  gap: 1px;
+  color: var(--ink);
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 0.92;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.brand-line {
+  display: block;
+  white-space: nowrap;
+}
+
+.brand-line--top {
+  letter-spacing: 0.18em;
+}
+
+.brand-line--bottom {
+  padding-left: 0.02em;
+  letter-spacing: 0.42em;
+}
+
+@media (max-width: 700px) {
+  .brand-link {
+    width: 6.25rem;
+    font-size: 0.66rem;
+  }
+
+  .brand-line--top {
+    letter-spacing: 0.14em;
+  }
+
+  .brand-line--bottom {
+    letter-spacing: 0.35em;
+  }
+}
