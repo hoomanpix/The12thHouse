@@ -1097,3 +1097,160 @@ input[type='range'] {
     justify-self: end;
   }
 }
+
+
+/* The12thHouse About: a text-led collective directory with no image dependency. */
+.about-page {
+  gap: clamp(56px, 9vw, 132px);
+}
+
+.about-intro {
+  display: grid;
+  max-width: 980px;
+  gap: 22px;
+}
+
+.about-intro h1 {
+  max-width: 900px;
+  font-size: clamp(2.8rem, 7vw, 7.4rem);
+  line-height: 0.92;
+}
+
+.about-philosophy {
+  max-width: 690px;
+  margin: 14px 0 0;
+  color: var(--muted);
+  font-size: clamp(1.05rem, 1.6vw, 1.35rem);
+  line-height: 1.55;
+}
+
+.member-directory {
+  display: grid;
+  grid-template-columns: minmax(240px, 0.72fr) minmax(0, 1.28fr);
+  gap: clamp(28px, 7vw, 110px);
+  align-items: start;
+  border-top: 1px solid var(--line);
+  padding-top: 24px;
+}
+
+.member-list {
+  display: grid;
+  border-top: 1px solid var(--line);
+}
+
+.member-tab {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  gap: 10px 16px;
+  align-items: baseline;
+  width: 100%;
+  padding: 16px 0 17px;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  background: transparent;
+  color: var(--muted);
+  text-align: left;
+  cursor: pointer;
+  transition: color 0.2s ease, padding-left 0.2s ease;
+}
+
+.member-tab:hover,
+.member-tab:focus-visible,
+.member-tab.is-active {
+  color: var(--ink);
+}
+
+.member-tab.is-active {
+  padding-left: 8px;
+}
+
+.member-tab__number,
+.member-tab__role {
+  color: inherit;
+  font-size: 0.68rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.member-tab__name {
+  font-size: clamp(1rem, 1.7vw, 1.3rem);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+
+.member-tab__role {
+  grid-column: 2;
+  margin-top: -5px;
+  color: var(--muted);
+}
+
+.member-detail {
+  display: grid;
+  align-content: start;
+  gap: 20px;
+  min-height: 250px;
+  border-left: 1px solid var(--line);
+  padding: 8px 0 12px clamp(24px, 4vw, 58px);
+}
+
+.member-detail h2 {
+  max-width: 650px;
+  font-size: clamp(2.2rem, 5vw, 5.4rem);
+}
+
+.member-detail > p:not(.eyebrow) {
+  max-width: 600px;
+  margin: 0;
+  color: var(--muted);
+  font-size: clamp(1rem, 1.5vw, 1.2rem);
+  line-height: 1.55;
+}
+
+.member-social-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 22px;
+  margin-top: 12px;
+}
+
+.member-social-links a {
+  color: var(--ink);
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 3px;
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+@media (max-width: 900px) {
+  .member-directory {
+    grid-template-columns: 1fr;
+    gap: 38px;
+  }
+
+  .member-detail {
+    min-height: 0;
+    border-top: 1px solid var(--line);
+    border-left: 0;
+    padding: 28px 0 8px;
+  }
+}
+
+@media (max-width: 640px) {
+  .about-page {
+    gap: 62px;
+  }
+
+  .about-intro h1 {
+    font-size: clamp(2.7rem, 12vw, 4.5rem);
+  }
+
+  .member-tab {
+    grid-template-columns: 27px minmax(0, 1fr);
+    gap: 8px 12px;
+  }
+
+  .member-tab__name {
+    font-size: 1.05rem;
+  }
+}
