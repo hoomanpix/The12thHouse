@@ -17,8 +17,8 @@ const members: Member[] = [
     name: 'Member 01 — Placeholder',
     about: 'A placeholder profile for the musician and producer of The12thHouse. Replace this text with the member’s short biography, practice, and role in the collective.',
     socials: [
+      { label: 'X — placeholder', href: 'https://x.com/your-handle' },
       { label: 'Instagram — placeholder', href: 'https://instagram.com/your-handle' },
-      { label: 'SoundCloud — placeholder', href: 'https://soundcloud.com/your-handle' },
     ],
   },
   {
@@ -28,8 +28,9 @@ const members: Member[] = [
     name: 'Member 02 — Placeholder',
     about: 'A placeholder profile for the designer and animator of The12thHouse. Replace this text with the member’s short biography, visual language, and contribution to the collective.',
     socials: [
+      { label: 'X — placeholder', href: 'https://x.com/your-handle' },
       { label: 'Instagram — placeholder', href: 'https://instagram.com/your-handle' },
-      { label: 'Behance — placeholder', href: 'https://behance.net/your-handle' },
+      { label: 'Pinterest — placeholder', href: 'https://pinterest.com/your-handle' },
     ],
   },
   {
@@ -39,6 +40,7 @@ const members: Member[] = [
     name: 'Member 03 — Placeholder',
     about: 'A placeholder profile for the web and app developer of The12thHouse. Replace this text with the member’s short biography, technical practice, and contribution to the platform.',
     socials: [
+      { label: 'X — placeholder', href: 'https://x.com/your-handle' },
       { label: 'Instagram — placeholder', href: 'https://instagram.com/your-handle' },
       { label: 'GitHub — placeholder', href: 'https://github.com/your-handle' },
     ],
