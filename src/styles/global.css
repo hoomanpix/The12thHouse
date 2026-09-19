@@ -1010,3 +1010,29 @@ input[type='range'] {
     flex-direction: column;
   }
 }
+
+
+/* Directional pointer/touch reveal: every glyph follows the drag vector. */
+.intro-character {
+  position: absolute;
+  display: block;
+  margin: 0;
+  color: #111111;
+  font-family: 'Inter', sans-serif;
+  font-size: clamp(52px, 7vw, 144px);
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.08em;
+  white-space: pre;
+  transform-origin: center;
+  user-select: none;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: geometricPrecision;
+}
+
+.intro-screen--fading {
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 1.067s ease, visibility 1.067s ease;
+  pointer-events: none;
+}

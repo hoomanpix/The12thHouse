@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 
 export interface InteractiveIntroProps { artistName: string; onComplete?: () => void; }
-type IntroCharacter = { id: number; char: string; x: number; y: number };
+type IntroCharacter = { id: number; char: string; x: number; y: number; angle: number };
 const MIN_PLACEMENT_DISTANCE = 32;
 const COMPLETION_PAUSE_DURATION = 2667;
 const FADE_DURATION = 1067;
@@ -64,6 +64,7 @@ export function InteractiveIntro({ artistName, onComplete }: InteractiveIntroPro
       const segmentX = Number.isFinite(deltaX) && Math.abs(deltaX) > 0.1 ? deltaX : clientX - previous.x;
       const segmentY = Number.isFinite(deltaY) && Math.abs(deltaY) > 0.1 ? deltaY : clientY - previous.y;
       const segmentDistance = Math.hypot(segmentX, segmentY);
+      const angle = Math.atan2(segmentY, segmentX);
       pointerRef.current = { x: clientX, y: clientY };
       if (segmentDistance <= 0.1) return;
 
@@ -75,7 +76,7 @@ export function InteractiveIntro({ artistName, onComplete }: InteractiveIntroPro
         const ratio = Math.min(1, consumed / segmentDistance);
         const x = previous.x + segmentX * ratio;
         const y = previous.y + segmentY * ratio;
-        newCharacters.push({ id: revealedCountRef.current, char: characters[revealedCountRef.current], x, y });
+        newCharacters.push({ id: revealedCountRef.current, char: characters[revealedCountRef.current], x, y, angle });
         revealedCountRef.current += 1;
         pathDistanceRef.current = 0;
       }
@@ -106,6 +107,6 @@ export function InteractiveIntro({ artistName, onComplete }: InteractiveIntroPro
   }, [characters, completeIntro, isComplete, isDismissed]);
 
   return <div className={['intro-screen', isFading ? 'intro-screen--fading' : '', isDismissed ? 'intro-screen--hidden' : ''].filter(Boolean).join(' ')} role="dialog" aria-modal="true" aria-label={`${displayName} intro`} aria-hidden={isDismissed}>
-    <div className="intro-assembly" aria-hidden="true">{revealedCharacters.map((character) => { const characterStyle: CSSProperties = { left: `${character.x}px`, top: `${character.y}px` }; return <span key={`${character.id}-${character.char}`} className={['intro-character', character.char === ' ' ? 'intro-character--space' : ''].filter(Boolean).join(' ')} style={characterStyle}>{character.char}</span>; })}</div>
+    <div className="intro-assembly" aria-hidden="true">{revealedCharacters.map((character) => { const characterStyle: CSSProperties = { left: `${character.x}px`, top: `${character.y}px`, transform: `translate(-50%, -50%) rotate(${character.angle}rad)` }; return <span key={`${character.id}-${character.char}`} className={['intro-character', character.char === ' ' ? 'intro-character--space' : ''].filter(Boolean).join(' ')} style={characterStyle}>{character.char}</span>; })}</div>
   </div>;
 }
