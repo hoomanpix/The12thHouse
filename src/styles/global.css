@@ -1040,8 +1040,11 @@ input[type='range'] {
 
 /* Final intro scale: compact glyphs keep the reveal quiet and editorial. */
 .intro-character {
-  font-size: clamp(24px, 2.1vw, 44px);
-  letter-spacing: -0.07em;
+  font-size: clamp(22px, 1.7vw, 36px);
+  font-weight: 400;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  will-change: transform, left, top;
 }
 
 /* The12thHouse wordmark: two measured lines, aligned as a small typographic block. */
