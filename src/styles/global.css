@@ -1365,3 +1365,71 @@ input[type='range'] {
     gap: 12px;
   }
 }
+
+
+/* Member accordion: each profile opens directly beneath its own name. */
+.member-directory {
+  display: block;
+}
+
+.member-list {
+  max-width: 980px;
+}
+
+.member-item {
+  border-bottom: 1px solid var(--line);
+}
+
+.member-tab {
+  grid-template-columns: 34px minmax(0, 1fr) auto;
+  border-bottom: 0;
+}
+
+.member-tab__indicator {
+  grid-column: 3;
+  grid-row: 1 / span 2;
+  align-self: center;
+  color: var(--muted);
+  font-size: 1.2rem;
+  font-weight: 300;
+  line-height: 1;
+}
+
+.member-detail {
+  min-height: 0;
+  border: 0;
+  padding: 8px 42px 28px 50px;
+  animation: member-panel-in 0.24s ease both;
+}
+
+@keyframes member-panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 900px) {
+  .member-directory {
+    display: block;
+  }
+
+  .member-detail {
+    border: 0;
+    padding: 8px 32px 26px 50px;
+  }
+}
+
+@media (max-width: 640px) {
+  .member-tab {
+    grid-template-columns: 27px minmax(0, 1fr) auto;
+  }
+
+  .member-detail {
+    padding: 8px 18px 24px 39px;
+  }
+}
