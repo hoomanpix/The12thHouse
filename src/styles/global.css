@@ -1088,3 +1088,12 @@ input[type='range'] {
     letter-spacing: 0.35em;
   }
 }
+
+
+/* Featured release mobile refinement: give the artwork a little more presence. */
+@media (max-width: 640px) {
+  .feature-card.muted .feature-artwork {
+    width: min(100%, 180px);
+    justify-self: end;
+  }
+}
