@@ -6,7 +6,6 @@ const navItems = [
   { label: 'Home', to: publicRoutes.home },
   { label: 'Releases', to: publicRoutes.releases },
   { label: 'About', to: publicRoutes.about },
-  { label: 'Admin', to: publicRoutes.admin },
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {

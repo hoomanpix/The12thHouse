@@ -69,8 +69,11 @@ export function HomePage() {
             <img src={latestRelease.artwork_url ?? ''} alt={latestRelease.title} />
           </div>
           <div className="feature-copy">
-            <p>{latestRelease.type}</p>
+            <p className="release-type">{latestRelease.type}</p>
             <h3>{latestRelease.title}</h3>
+            <time className="release-date" dateTime={latestRelease.release_date}>
+              {new Date(latestRelease.release_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+            </time>
             <p>{latestRelease.description}</p>
             <Link to={`/releases/${latestRelease.slug}`} className="text-link">
               View release
@@ -86,8 +89,11 @@ export function HomePage() {
         </div>
         <article className="feature-card muted">
           <div className="feature-copy">
-            <p>{featuredRelease.type}</p>
+            <p className="release-type">{featuredRelease.type}</p>
             <h3>{featuredRelease.title}</h3>
+            <time className="release-date" dateTime={featuredRelease.release_date}>
+              {new Date(featuredRelease.release_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+            </time>
             <p>{featuredRelease.description}</p>
             <button type="button" className="button secondary" onClick={handlePlayFeatured}>
               Play selection

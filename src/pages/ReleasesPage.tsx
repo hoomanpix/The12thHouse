@@ -43,10 +43,12 @@ export function ReleasesPage() {
             </Link>
             <div className="release-card-meta">
               <div>
-                <p className="eyebrow subtle">{release.type}</p>
+                <p className="eyebrow subtle release-type">{release.type}</p>
                 <h3>{release.title}</h3>
               </div>
-              <span>{new Date(release.release_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+              <time dateTime={release.release_date}>
+                {new Date(release.release_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+              </time>
             </div>
           </article>
         ))}

@@ -1,0 +1,261 @@
+.admin-shell {
+  min-height: 100vh;
+  padding: 20px 24px calc(140px + env(safe-area-inset-bottom));
+}
+
+.admin-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 18px 0 26px;
+  border-bottom: 1px solid var(--line);
+}
+
+.admin-back-link {
+  color: var(--muted);
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 3px;
+  font-size: 0.74rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.admin-page-shell {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding-top: 42px;
+}
+
+.release-type,
+.release-date,
+.release-card-meta time {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.74rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.release-date,
+.release-card-meta time {
+  letter-spacing: 0.02em;
+  text-transform: none;
+}
+
+@media (max-width: 640px) {
+  .site-shell {
+    padding: 12px 16px calc(148px + env(safe-area-inset-bottom));
+  }
+
+  .topbar {
+    gap: 10px;
+    padding: 12px 0 16px;
+  }
+
+  .brand-link {
+    font-size: 0.94rem;
+    line-height: 0.9;
+    letter-spacing: 0.16em;
+  }
+
+  .main-nav {
+    flex: 1 1 auto;
+    min-width: 0;
+    justify-content: flex-end;
+    gap: clamp(8px, 2.8vw, 14px);
+    flex-wrap: nowrap;
+  }
+
+  .nav-item {
+    flex: 0 0 auto;
+    font-size: clamp(0.61rem, 2.2vw, 0.72rem);
+    letter-spacing: 0.09em;
+  }
+
+  .page-shell {
+    padding-top: 30px;
+  }
+
+  .home-page {
+    gap: 56px;
+  }
+
+  .hero-block,
+  .feature-card,
+  .feature-card.muted {
+    gap: 20px;
+  }
+
+  .hero-copy,
+  .feature-copy {
+    gap: 12px;
+  }
+
+  .release-overview {
+    display: grid;
+    gap: 16px;
+  }
+
+  .release-overview .section-heading {
+    gap: 6px;
+  }
+
+  .release-overview .section-heading h2 {
+    font-size: clamp(2rem, 10vw, 3rem);
+  }
+
+  .feature-card {
+    padding: 18px;
+  }
+
+  .feature-card .feature-artwork {
+    order: -1;
+  }
+
+  .feature-card.muted {
+    grid-template-columns: 1fr;
+  }
+
+  .feature-card.muted .feature-copy {
+    order: 1;
+  }
+
+  .feature-card.muted .feature-artwork {
+    width: 100%;
+    max-width: min(330px, 100%);
+    justify-self: end;
+  }
+
+  .feature-card.muted .feature-artwork img {
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
+  }
+
+  .feature-copy h3 {
+    font-size: clamp(1.55rem, 7vw, 2.2rem);
+  }
+
+  .feature-copy > p:not(.release-type):not(.release-date) {
+    max-width: 34rem;
+    line-height: 1.55;
+  }
+
+  .release-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 22px 14px;
+  }
+
+  .release-card {
+    gap: 10px;
+    min-width: 0;
+  }
+
+  .release-card .release-cover {
+    border-radius: 14px;
+    box-shadow: 0 12px 24px var(--shadow);
+  }
+
+  .release-card .release-cover img {
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
+  }
+
+  .release-card-meta {
+    display: grid;
+    align-items: start;
+    gap: 5px;
+  }
+
+  .release-card-meta h3 {
+    font-size: clamp(1rem, 4.6vw, 1.2rem);
+    line-height: 1.05;
+  }
+
+  .release-card-meta time {
+    font-size: 0.72rem;
+  }
+
+  .release-detail {
+    gap: 42px;
+  }
+
+  .detail-copy {
+    gap: 14px;
+  }
+
+  .track-row {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: 10px;
+    min-height: 64px;
+  }
+
+  .admin-shell {
+    padding: 12px 16px calc(148px + env(safe-area-inset-bottom));
+  }
+
+  .admin-topbar {
+    gap: 12px;
+    padding: 12px 0 16px;
+  }
+
+  .admin-topbar .brand-link {
+    flex: 0 0 auto;
+  }
+
+  .admin-back-link {
+    font-size: 0.66rem;
+    white-space: nowrap;
+  }
+
+  .admin-page-shell {
+    padding-top: 28px;
+  }
+
+  .admin-page {
+    gap: 20px;
+  }
+
+  .admin-page h1 {
+    font-size: clamp(2.7rem, 13vw, 4.5rem);
+  }
+
+  .admin-panel {
+    padding: 18px;
+  }
+
+  .admin-stats {
+    gap: 8px;
+  }
+
+  .admin-stat {
+    padding: 14px;
+  }
+
+  .global-player {
+    bottom: calc(10px + env(safe-area-inset-bottom));
+  }
+
+  .global-player.is-expanded .player-detail {
+    max-height: min(330px, calc(100dvh - 118px - env(safe-area-inset-top) - env(safe-area-inset-bottom)));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto;
+  }
+
+  .feature-card,
+  .release-card,
+  .admin-shell,
+  .global-player,
+  .player-detail {
+    animation: none;
+    transition: none;
+  }
+}

@@ -6,6 +6,9 @@ export default defineConfig({
   // its repository subpath by setting VITE_BASE_PATH=/new-wave/ when building.
   base: process.env.VITE_BASE_PATH ?? '/',
   plugins: [react()],
+  server: {
+    allowedHosts: true,
+  },
   test: {
     environment: 'jsdom',
     globals: true,
