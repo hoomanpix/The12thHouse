@@ -125,7 +125,7 @@
 
   .feature-card.muted .feature-artwork {
     width: 100%;
-    max-width: min(330px, 100%);
+    max-width: min(220px, 100%);
     justify-self: end;
   }
 
@@ -257,5 +257,232 @@
   .player-detail {
     animation: none;
     transition: none;
+  }
+}
+
+/* Refinements from the second mobile preview pass. */
+.brand-link {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0;
+  font-size: 0.98rem;
+  font-weight: 650;
+  letter-spacing: 0.12em;
+  line-height: 0.88;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.brand-line {
+  display: block;
+}
+
+.brand-line--top {
+  letter-spacing: 0.14em;
+}
+
+.brand-line--bottom {
+  margin-left: 0.17em;
+  letter-spacing: 0.19em;
+}
+
+/* Keep the first Home cover near the release-card scale while preserving a text/art pairing. */
+.hero-block {
+  align-items: center;
+}
+
+.hero-visual {
+  width: min(100%, 420px);
+  justify-self: end;
+}
+
+/* Compact fixed player: content has enough bottom room to scroll clear of it. */
+.site-shell {
+  padding-bottom: 132px;
+}
+
+.admin-shell {
+  padding-bottom: calc(132px + env(safe-area-inset-bottom));
+}
+
+.player-shell {
+  background: rgba(10, 10, 10, 0.88);
+}
+
+.player-strip {
+  min-height: 48px;
+  gap: 8px;
+  padding: 6px 10px 7px;
+}
+
+.player-strip__progress {
+  min-width: 48px;
+}
+
+.player-button--primary {
+  width: 30px;
+  height: 30px;
+}
+
+.player-detail__topbar {
+  justify-content: flex-start;
+  padding: 10px 14px 0;
+}
+
+.player-detail__content {
+  grid-template-columns: minmax(76px, 104px) minmax(0, 1fr);
+  gap: 14px;
+  align-items: end;
+  padding: 10px 14px calc(12px + env(safe-area-inset-bottom));
+}
+
+.player-detail__artwork {
+  border-radius: 12px;
+  box-shadow: 0 10px 20px rgba(255, 255, 255, 0.06);
+}
+
+.player-detail__meta {
+  gap: 12px;
+}
+
+.player-detail__heading h3 {
+  font-size: clamp(1.25rem, 5vw, 2.1rem);
+}
+
+.global-player.is-expanded .player-detail {
+  max-height: min(300px, calc(100dvh - 100px - env(safe-area-inset-top) - env(safe-area-inset-bottom)));
+}
+
+@media (max-width: 640px) {
+  .site-shell {
+    padding-bottom: calc(132px + env(safe-area-inset-bottom));
+  }
+
+  .topbar {
+    align-items: center;
+  }
+
+  .brand-link {
+    font-size: 0.78rem;
+    letter-spacing: 0.1em;
+  }
+
+  .brand-line--top {
+    letter-spacing: 0.11em;
+  }
+
+  .brand-line--bottom {
+    letter-spacing: 0.15em;
+  }
+
+  /* The hero remains a text/art composition instead of a full-width image. */
+  .hero-block {
+    grid-template-columns: minmax(0, 1fr) minmax(132px, 40vw);
+    gap: 14px;
+    align-items: center;
+  }
+
+  .hero-visual {
+    width: 100%;
+    max-width: 170px;
+    justify-self: end;
+  }
+
+  .hero-visual img {
+    aspect-ratio: 1 / 1;
+  }
+
+  .hero-copy {
+    min-width: 0;
+  }
+
+  .hero-copy h1 {
+    font-size: clamp(2.25rem, 10vw, 4rem);
+  }
+
+  .hero-copy .lede {
+    font-size: 0.88rem;
+    line-height: 1.4;
+  }
+
+  .hero-actions {
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .hero-actions .button {
+    min-height: 38px;
+    padding-inline: 13px;
+    font-size: 0.78rem;
+  }
+
+  .feature-card:not(.muted) .feature-artwork {
+    width: min(100%, 220px);
+    justify-self: start;
+  }
+
+  .feature-card:not(.muted) .feature-artwork img,
+  .feature-card.muted .feature-artwork img {
+    aspect-ratio: 1 / 1;
+  }
+
+  .detail-cover {
+    width: min(100%, 220px);
+    justify-self: start;
+  }
+
+  .detail-cover img {
+    aspect-ratio: 1 / 1;
+  }
+
+  .global-player {
+    bottom: env(safe-area-inset-bottom);
+  }
+
+  .player-strip {
+    grid-template-columns: auto minmax(0, 1fr) minmax(48px, 74px) auto;
+    min-height: 48px;
+    padding-bottom: 6px;
+  }
+
+  .player-strip__title {
+    font-size: 0.74rem;
+  }
+
+  .player-strip__artist {
+    font-size: 0.62rem;
+  }
+
+  .player-button--primary {
+    width: 28px;
+    height: 28px;
+  }
+
+  .player-button--compact {
+    min-height: 28px;
+    padding: 0 8px;
+  }
+
+  .player-detail__topbar {
+    padding: 8px 12px 0;
+  }
+
+  .player-detail__content {
+    grid-template-columns: 84px minmax(0, 1fr);
+    gap: 12px;
+    padding: 8px 12px calc(10px + env(safe-area-inset-bottom));
+  }
+
+  .player-detail__controls {
+    justify-content: flex-start;
+    gap: 7px;
+  }
+
+  .player-button--wide,
+  .player-button--primary.player-button--wide {
+    min-width: 38px;
+    width: 38px;
+    height: 38px;
   }
 }

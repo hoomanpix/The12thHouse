@@ -13,10 +13,7 @@ import { publicRoutes } from './config/routes';
 import { CatalogProvider } from './features/catalog/CatalogProvider';
 
 export default function App() {
-  const [introComplete, setIntroComplete] = useState(() => {
-    if (typeof window === 'undefined') return false;
-    return window.matchMedia('(max-width: 640px), (prefers-reduced-motion: reduce)').matches;
-  });
+  const [introComplete, setIntroComplete] = useState(false);
   const location = useLocation();
   const isAdminRoute = location.pathname === publicRoutes.admin;
 
