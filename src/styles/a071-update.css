@@ -284,54 +284,59 @@
   }
 }
 
-/* Refined A 071 Studio wordmark: compact, editorial, and aligned with the navigation. */
+/* Refined A 071 Studio wordmark: a fixed, left-aligned two-line lockup. */
 .topbar .brand-link,
 .admin-topbar .brand-link {
-  width: 5.9rem;
-  gap: 0;
+  width: 6rem;
+  grid-template-columns: 1fr;
+  justify-items: start;
+  gap: 3px;
+  padding-left: 10px;
+  border-left: 1px solid var(--ink);
   color: var(--ink);
   font-family: 'Inter', sans-serif;
-  font-size: 0.76rem;
-  font-weight: 800;
-  line-height: 0.84;
-  letter-spacing: 0;
+  font-size: 0.86rem;
+  font-weight: 750;
+  line-height: 0.86;
+  letter-spacing: 0.03em;
   text-transform: uppercase;
   font-variant-numeric: tabular-nums;
+  text-align: left;
 }
 
 .topbar .brand-line,
 .admin-topbar .brand-line {
   display: block;
-  width: fit-content;
+  width: 100%;
   white-space: nowrap;
 }
 
 .topbar .brand-line--top,
 .admin-topbar .brand-line--top {
-  letter-spacing: 0.11em;
+  letter-spacing: 0.08em;
 }
 
 .topbar .brand-line--bottom,
 .admin-topbar .brand-line--bottom {
   padding-left: 0;
-  letter-spacing: 0.27em;
+  letter-spacing: 0.2em;
 }
 
 @media (max-width: 700px) {
   .topbar .brand-link,
   .admin-topbar .brand-link {
-    width: 5.55rem;
-    font-size: 0.7rem;
-    line-height: 0.86;
+    width: 5.7rem;
+    font-size: 0.8rem;
+    line-height: 0.88;
   }
 
   .topbar .brand-line--top,
   .admin-topbar .brand-line--top {
-    letter-spacing: 0.09em;
+    letter-spacing: 0.06em;
   }
 
   .topbar .brand-line--bottom,
   .admin-topbar .brand-line--bottom {
-    letter-spacing: 0.22em;
+    letter-spacing: 0.16em;
   }
 }
