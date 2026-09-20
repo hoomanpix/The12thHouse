@@ -2,7 +2,8 @@ import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties }
 
 export interface InteractiveIntroProps { artistName: string; onComplete?: () => void; }
 type IntroCharacter = { id: number; char: string; x: number; y: number; angle: number; delay: number };
-const MIN_PLACEMENT_DISTANCE = 54;
+const BASE_PLACEMENT_DISTANCE = 42;
+const CHARACTER_CLEARANCE = 6;
 const COMPLETION_PAUSE_DURATION = 2667;
 const FADE_DURATION = 1067;
 
@@ -20,6 +21,11 @@ export function InteractiveIntro({ artistName, onComplete }: InteractiveIntroPro
   const dismissedRef = useRef(false);
   const completionStartedRef = useRef(false);
   const prefersReducedMotionRef = useRef(false);
+
+  const getPlacementDistance = useCallback(() => {
+    const viewportFontSize = Math.min(42, Math.max(26, window.innerWidth * 0.02));
+    return Math.max(BASE_PLACEMENT_DISTANCE, viewportFontSize + CHARACTER_CLEARANCE);
+  }, []);
 
   const triggerComplete = useCallback(() => {
     if (dismissedRef.current) return;
@@ -78,8 +84,9 @@ export function InteractiveIntro({ artistName, onComplete }: InteractiveIntroPro
 
       const newCharacters: IntroCharacter[] = [];
       let consumed = 0;
-      while (pathDistanceRef.current + segmentDistance - consumed >= MIN_PLACEMENT_DISTANCE && revealedCountRef.current < characters.length) {
-        const distanceToPlacement = MIN_PLACEMENT_DISTANCE - pathDistanceRef.current;
+      const placementDistance = getPlacementDistance();
+      while (pathDistanceRef.current + segmentDistance - consumed >= placementDistance && revealedCountRef.current < characters.length) {
+        const distanceToPlacement = placementDistance - pathDistanceRef.current;
         consumed += distanceToPlacement;
         const ratio = Math.min(1, consumed / segmentDistance);
         const x = previous.x + segmentX * ratio;
@@ -119,7 +126,7 @@ export function InteractiveIntro({ artistName, onComplete }: InteractiveIntroPro
       window.removeEventListener('wheel', handleWheel);
       window.removeEventListener('touchmove', handleTouchMove);
     };
-  }, [characters, completeIntro, isComplete, isDismissed]);
+  }, [characters, completeIntro, getPlacementDistance, isComplete, isDismissed]);
 
   return <div className={['intro-screen', isFading ? 'intro-screen--fading' : '', isDismissed ? 'intro-screen--hidden' : ''].filter(Boolean).join(' ')} role="dialog" aria-modal="true" aria-label={`${displayName} intro`} aria-hidden={isDismissed}>
     <div className="intro-assembly" aria-hidden="true">{revealedCharacters.map((character) => { const characterStyle: CSSProperties = { left: `${character.x}px`, top: `${character.y}px`, transform: `translate(-50%, -50%) rotate(${character.angle}rad)`, '--intro-delay': `${character.delay}ms` } as CSSProperties; return <span key={`${character.id}-${character.char}`} className={['intro-character', character.char === ' ' ? 'intro-character--space' : ''].filter(Boolean).join(' ')} style={characterStyle}>{character.char}</span>; })}</div>
