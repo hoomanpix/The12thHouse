@@ -64,7 +64,9 @@ export function InteractiveIntro({ artistName, onComplete }: InteractiveIntroPro
       const segmentX = Number.isFinite(deltaX) && Math.abs(deltaX) > 0.1 ? deltaX : clientX - previous.x;
       const segmentY = Number.isFinite(deltaY) && Math.abs(deltaY) > 0.1 ? deltaY : clientY - previous.y;
       const segmentDistance = Math.hypot(segmentX, segmentY);
-      const angle = Math.atan2(segmentY, segmentX);
+      let angle = Math.atan2(segmentY, segmentX);
+      if (angle > Math.PI / 2) angle -= Math.PI;
+      if (angle < -Math.PI / 2) angle += Math.PI;
       pointerRef.current = { x: clientX, y: clientY };
       if (segmentDistance <= 0.1) return;
 

@@ -151,7 +151,7 @@
     justify-self: center;
   }
 
-  .feature-card .feature-artwork,
+  .feature-card:not(.muted) .feature-artwork,
   .feature-card.muted .feature-artwork {
     width: var(--a071-mobile-card-artwork);
     max-width: 100%;
