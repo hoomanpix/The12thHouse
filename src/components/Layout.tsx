@@ -16,8 +16,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <header className="topbar">
         <div className="brand-block">
           <NavLink to={publicRoutes.home} className="brand-link" aria-label={`${siteConfig.brand} home`}>
-            <span className="brand-line brand-line--top">{siteConfig.brandLines[0]}</span>
-            <span className="brand-line brand-line--bottom">{siteConfig.brandLines[1]}</span>
+            <span className="brand-line brand-line--top"><span className="brand-line__initial">A</span><span>071</span></span>
+            <span className="brand-line brand-line--bottom"><span className="brand-line__initial">S</span><span>TUDIO</span></span>
           </NavLink>
         </div>
 

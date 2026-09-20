@@ -306,9 +306,26 @@
 
 .topbar .brand-line,
 .admin-topbar .brand-line {
-  display: block;
+  display: flex;
+  align-items: baseline;
   width: 100%;
   white-space: nowrap;
+}
+
+.topbar .brand-line__initial,
+.admin-topbar .brand-line__initial {
+  display: inline-block;
+  flex: 0 0 0.82em;
+}
+
+.topbar .brand-line--top > span:last-child,
+.admin-topbar .brand-line--top > span:last-child {
+  margin-left: 0.22em;
+}
+
+.topbar .brand-line--bottom > span:last-child,
+.admin-topbar .brand-line--bottom > span:last-child {
+  margin-left: 0.02em;
 }
 
 .topbar .brand-line--top,
@@ -319,6 +336,7 @@
 .topbar .brand-line--bottom,
 .admin-topbar .brand-line--bottom {
   padding-left: 0;
+  margin-left: -0.025em;
   letter-spacing: 0.2em;
 }
 
@@ -337,6 +355,7 @@
 
   .topbar .brand-line--bottom,
   .admin-topbar .brand-line--bottom {
+    margin-left: -0.02em;
     letter-spacing: 0.16em;
   }
 }

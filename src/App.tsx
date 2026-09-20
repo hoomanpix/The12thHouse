@@ -31,8 +31,8 @@ export default function App() {
             <div className="admin-shell">
               <header className="admin-topbar">
                 <Link to={publicRoutes.home} className="brand-link" aria-label={`Return to ${siteConfig.brand} website`}>
-                  <span className="brand-line brand-line--top">{siteConfig.brandLines[0]}</span>
-                  <span className="brand-line brand-line--bottom">{siteConfig.brandLines[1]}</span>
+                  <span className="brand-line brand-line--top"><span className="brand-line__initial">A</span><span>071</span></span>
+                  <span className="brand-line brand-line--bottom"><span className="brand-line__initial">S</span><span>TUDIO</span></span>
                 </Link>
                 <Link to={publicRoutes.home} className="admin-back-link">Back to site</Link>
               </header>

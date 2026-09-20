@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties }
 
 export interface InteractiveIntroProps { artistName: string; onComplete?: () => void; }
 type IntroCharacter = { id: number; char: string; x: number; y: number; angle: number };
-const MIN_PLACEMENT_DISTANCE = 30;
+const MIN_PLACEMENT_DISTANCE = 54;
 const COMPLETION_PAUSE_DURATION = 2667;
 const FADE_DURATION = 1067;
 
