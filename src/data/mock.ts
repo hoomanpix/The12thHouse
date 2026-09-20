@@ -1,13 +1,13 @@
 export const mockArtist = {
   id: 'artist-1',
-  name: 'The12thHouse',
-  slug: 'new-wave',
+  name: 'A 071 Studio',
+  slug: 'a-071-studio',
   biography:
-    'The12thHouse is an independent electronic artist writing cinematic minimalist pop shaped by night drives, faded neon, and late-shift introspection. Her work moves between synth textures, intimate songwriting, and disciplined rhythm structures built for the long road.',
+    'A 071 Studio is a creative practice for music, image, motion, and code — a shared space where distinct disciplines meet without losing their individual voices.',
   image_url: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=900&q=80',
   location: 'Brooklyn, NY',
-  email: 'hello@newwave.com',
-  website: 'https://newwave.com',
+  email: null,
+  website: null,
 };
 
 export const mockReleases = [
@@ -17,6 +17,7 @@ export const mockReleases = [
     title: 'Glass Horizon',
     slug: 'glass-horizon',
     type: 'album',
+    contentType: 'music',
     release_date: '2025-01-18',
     description:
       'A quiet, luminous record about the architecture of moving on—slow-burn synths, spacious drums, and melodies that arrive like memory.',
@@ -40,6 +41,7 @@ export const mockReleases = [
     title: 'Low Tide Memory',
     slug: 'low-tide-memory',
     type: 'single',
+    contentType: 'music',
     release_date: '2025-03-04',
     description:
       'The first chapter of a new season: low-slung percussion and a vocal take that never pushes too hard.',

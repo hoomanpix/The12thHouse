@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useAudioPlayer } from '../features/audio-player/AudioPlayerProvider';
+import { siteConfig } from '../config/site';
 
 export function GlobalAudioPlayer() {
   const { state, togglePlay, playPrevious, playNext, seek, setVolume } = useAudioPlayer();
@@ -12,7 +13,7 @@ export function GlobalAudioPlayer() {
 
   const progress = state.duration > 0 ? (state.currentTime / state.duration) * 100 : 0;
   const trackTitle = activeTrack?.title ?? 'No track selected';
-  const artistName = activeTrack?.releaseTitle ?? 'The12thHouse';
+  const artistName = activeTrack?.releaseTitle ?? siteConfig.brand;
   const remainingTime = Math.max(state.duration - state.currentTime, 0);
 
   useEffect(() => {
@@ -51,6 +52,7 @@ export function GlobalAudioPlayer() {
             }}
             aria-label={state.isPlaying ? 'Pause' : 'Play'}
           >
+            <span className="player-emoji" aria-hidden="true">{state.isPlaying ? '⏸️' : '▶️'}</span>
             <PlayerIcon name={state.isPlaying ? 'pause' : 'play'} />
           </button>
 
@@ -112,7 +114,8 @@ export function GlobalAudioPlayer() {
               </div>
 
               <div className="player-detail__controls">
-                <button type="button" className="player-button player-button--wide" onClick={playPrevious} aria-label="Previous track">
+                <button type="button" className="player-button player-button--wide" onClick={playPrevious} aria-label="Previous track" title="Previous track">
+                  <span className="player-emoji" aria-hidden="true">⏮️</span>
                   <PlayerIcon name="previous" />
                 </button>
                 <button
@@ -120,10 +123,13 @@ export function GlobalAudioPlayer() {
                   className="player-button player-button--primary player-button--wide"
                   onClick={togglePlay}
                   aria-label={state.isPlaying ? 'Pause' : 'Play'}
+                  title={state.isPlaying ? 'Pause' : 'Play'}
                 >
+                  <span className="player-emoji" aria-hidden="true">{state.isPlaying ? '⏸️' : '▶️'}</span>
                   <PlayerIcon name={state.isPlaying ? 'pause' : 'play'} />
                 </button>
-                <button type="button" className="player-button player-button--wide" onClick={playNext} aria-label="Next track">
+                <button type="button" className="player-button player-button--wide" onClick={playNext} aria-label="Next track" title="Next track">
+                  <span className="player-emoji" aria-hidden="true">⏭️</span>
                   <PlayerIcon name="next" />
                 </button>
               </div>

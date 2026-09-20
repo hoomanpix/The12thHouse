@@ -1,11 +1,13 @@
 import { NavLink } from 'react-router-dom';
 import { GlobalAudioPlayer } from './GlobalAudioPlayer';
 import { publicRoutes } from '../config/routes';
+import { siteConfig } from '../config/site';
 
 const navItems = [
   { label: 'Home', to: publicRoutes.home },
   { label: 'Releases', to: publicRoutes.releases },
   { label: 'About', to: publicRoutes.about },
+  { label: 'Contact', to: publicRoutes.contact },
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {
@@ -13,9 +15,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
     <div className="site-shell">
       <header className="topbar">
         <div className="brand-block">
-          <NavLink to={publicRoutes.home} className="brand-link" aria-label="The12thHouse home">
-            <span className="brand-line brand-line--top">THE12TH</span>
-            <span className="brand-line brand-line--bottom">HOUSE</span>
+          <NavLink to={publicRoutes.home} className="brand-link" aria-label={`${siteConfig.brand} home`}>
+            <span className="brand-line brand-line--top">{siteConfig.brandLines[0]}</span>
+            <span className="brand-line brand-line--bottom">{siteConfig.brandLines[1]}</span>
           </NavLink>
         </div>
 

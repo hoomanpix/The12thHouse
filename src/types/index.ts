@@ -1,4 +1,5 @@
 export type ReleaseType = 'single' | 'album';
+export type ReleaseContentType = 'music' | 'visual';
 
 export type PlatformType =
   | 'spotify'
@@ -34,6 +35,7 @@ export interface Release {
   title: string;
   slug: string;
   type: ReleaseType;
+  contentType: ReleaseContentType;
   release_date: string;
   description: string;
   artwork_url: string | null;

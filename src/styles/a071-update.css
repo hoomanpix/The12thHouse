@@ -1,0 +1,186 @@
+:root {
+  --a071-mobile-card-artwork: min(176px, 48vw);
+}
+
+/* Global content patterns introduced by the A 071 Studio update. */
+.release-filter-groups {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 14px;
+}
+
+.filter-group {
+  display: grid;
+  gap: 6px;
+}
+
+.filter-group__label {
+  color: var(--muted);
+  font-size: 0.68rem;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.release-empty {
+  min-height: 180px;
+  display: grid;
+  place-items: center;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  color: var(--muted);
+}
+
+.contact-intro {
+  display: grid;
+  gap: 18px;
+  max-width: 720px;
+}
+
+.contact-list {
+  border-top: 1px solid var(--line);
+}
+
+.contact-member {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+  padding: 22px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.contact-member__number {
+  color: var(--muted);
+  font-size: 0.78rem;
+  letter-spacing: 0.12em;
+}
+
+.contact-member__identity {
+  display: grid;
+  gap: 6px;
+}
+
+.contact-member__identity h2 {
+  margin: 0;
+  font-size: clamp(1.4rem, 3vw, 2.2rem);
+  line-height: 1;
+}
+
+.contact-member__identity a {
+  width: fit-content;
+  color: var(--muted);
+  border-bottom: 1px solid var(--line);
+}
+
+.member-detail {
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+  transition: max-height 0.24s ease, opacity 0.2s ease, padding 0.24s ease;
+}
+
+.member-detail.is-open {
+  max-height: 420px;
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.player-emoji {
+  display: none;
+}
+
+@media (max-width: 640px) {
+  .section-heading.split {
+    grid-template-columns: 1fr;
+    align-items: start;
+    gap: 18px;
+  }
+
+  .release-filter-groups {
+    width: 100%;
+    justify-content: flex-start;
+    gap: 12px;
+  }
+
+  .filter-group {
+    min-width: 0;
+  }
+
+  .filter-bar {
+    gap: 6px;
+  }
+
+  .filter-pill {
+    min-height: 34px;
+    padding-inline: 11px;
+    font-size: 0.76rem;
+  }
+
+  .contact-member {
+    grid-template-columns: 34px minmax(0, 1fr);
+    gap: 10px;
+    padding: 18px 0;
+  }
+
+  .contact-member__identity h2 {
+    font-size: 1.15rem;
+  }
+
+  /* Mobile hero is a normal-flow editorial stack, with artwork at 70–90% width. */
+  .hero-visual {
+    width: min(88%, 320px);
+    max-width: 320px;
+    justify-self: center;
+  }
+
+  .feature-card .feature-artwork,
+  .feature-card.muted .feature-artwork {
+    width: var(--a071-mobile-card-artwork);
+    max-width: 100%;
+  }
+
+  /* The mobile player is an integrated bottom bar, not a floating card. */
+  .global-player {
+    inset-inline: 0;
+    bottom: 0;
+  }
+
+  .player-shell {
+    max-width: none;
+    border-radius: 0;
+    border-left: 0;
+    border-right: 0;
+    border-bottom: 0;
+    box-shadow: 0 -2px 10px rgba(9, 9, 9, 0.06);
+  }
+
+  .player-emoji {
+    display: inline;
+    font-size: 1rem;
+    line-height: 1;
+  }
+
+  .player-icon--previous,
+  .player-icon--play,
+  .player-icon--pause,
+  .player-icon--next {
+    display: none;
+  }
+
+  .player-detail__controls .player-button--wide {
+    min-width: 42px;
+    width: 42px;
+    height: 42px;
+    border-radius: 8px;
+    background: transparent;
+    border-color: var(--line);
+    color: var(--ink);
+  }
+
+  .player-detail__controls .player-button--primary.player-button--wide {
+    background: var(--ink);
+    color: #ffffff;
+  }
+}

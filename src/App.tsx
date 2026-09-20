@@ -7,10 +7,12 @@ import { HomePage } from './pages/HomePage';
 import { ReleasesPage } from './pages/ReleasesPage';
 import { ReleaseDetailPage } from './pages/ReleaseDetailPage';
 import { AboutPage } from './pages/AboutPage';
+import { ContactPage } from './pages/ContactPage';
 import { AdminPage } from './pages/AdminPage';
 import { AudioPlayerProvider } from './features/audio-player/AudioPlayerProvider';
 import { publicRoutes } from './config/routes';
 import { CatalogProvider } from './features/catalog/CatalogProvider';
+import { siteConfig } from './config/site';
 
 export default function App() {
   const [introComplete, setIntroComplete] = useState(false);
@@ -20,7 +22,7 @@ export default function App() {
   return (
     <>
       {!introComplete && !isAdminRoute && (
-        <InteractiveIntro artistName="The12thHouse" onComplete={() => setIntroComplete(true)} />
+        <InteractiveIntro artistName={siteConfig.introName} onComplete={() => setIntroComplete(true)} />
       )}
 
       <CatalogProvider>
@@ -28,9 +30,9 @@ export default function App() {
           {isAdminRoute ? (
             <div className="admin-shell">
               <header className="admin-topbar">
-                <Link to={publicRoutes.home} className="brand-link" aria-label="Return to The12thHouse website">
-                  <span className="brand-line brand-line--top">THE12TH</span>
-                  <span className="brand-line brand-line--bottom">HOUSE</span>
+                <Link to={publicRoutes.home} className="brand-link" aria-label={`Return to ${siteConfig.brand} website`}>
+                  <span className="brand-line brand-line--top">{siteConfig.brandLines[0]}</span>
+                  <span className="brand-line brand-line--bottom">{siteConfig.brandLines[1]}</span>
                 </Link>
                 <Link to={publicRoutes.home} className="admin-back-link">Back to site</Link>
               </header>
@@ -44,6 +46,7 @@ export default function App() {
                 <Route path={publicRoutes.releases} element={<ReleasesPage />} />
                 <Route path={publicRoutes.releaseDetail} element={<ReleaseDetailPage />} />
                 <Route path={publicRoutes.about} element={<AboutPage />} />
+                <Route path={publicRoutes.contact} element={<ContactPage />} />
               </Routes>
             </Layout>
           )}

@@ -20,15 +20,19 @@ interface CatalogContextValue {
 
 const CatalogContext = createContext<CatalogContextValue | null>(null);
 
+function normalizeReleases(releases: Release[]) {
+  return releases.map((release) => ({ ...release, contentType: release.contentType ?? 'music' }));
+}
+
 function getInitialReleases() {
-  if (typeof window === 'undefined') return mockReleases as Release[];
+  if (typeof window === 'undefined') return normalizeReleases(mockReleases as Release[]);
   const saved = window.localStorage.getItem(storageKey);
-  if (!saved) return mockReleases as Release[];
+  if (!saved) return normalizeReleases(mockReleases as Release[]);
 
   try {
-    return JSON.parse(saved) as Release[];
+    return normalizeReleases(JSON.parse(saved) as Release[]);
   } catch {
-    return mockReleases as Release[];
+    return normalizeReleases(mockReleases as Release[]);
   }
 }
 
@@ -135,7 +139,7 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
     );
   }, []);
 
-  const resetCatalog = useCallback(() => setReleases(mockReleases as Release[]), []);
+  const resetCatalog = useCallback(() => setReleases(normalizeReleases(mockReleases as Release[])), []);
 
   const value = useMemo(
     () => ({

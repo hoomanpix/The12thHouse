@@ -3,5 +3,6 @@ export const publicRoutes = {
   releases: '/releases',
   releaseDetail: '/releases/:id',
   about: '/about',
+  contact: '/contact',
   admin: '/admin',
 };

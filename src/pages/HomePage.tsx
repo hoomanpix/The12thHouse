@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { useCatalog } from '../features/catalog/CatalogProvider';
 import { publicRoutes } from '../config/routes';
 import { useAudioPlayer } from '../features/audio-player/AudioPlayerProvider';
+import { siteConfig } from '../config/site';
 
 export function HomePage() {
   const { setQueue, playTrack } = useAudioPlayer();
@@ -39,7 +40,7 @@ export function HomePage() {
     <div className="page-section home-page">
       <section className="hero-block">
         <div className="hero-copy">
-          <p className="eyebrow">Independent electronic artist</p>
+          <p className="eyebrow">{siteConfig.heroEyebrow}</p>
           <h1>{mockArtist.name}</h1>
           <p className="lede">
             Sculpted atmospheres, slow-burn rhythm, and intimate songs for the edge of the night.
