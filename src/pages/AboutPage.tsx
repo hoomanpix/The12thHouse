@@ -9,14 +9,14 @@ export function AboutPage() {
   return (
     <div className="page-section about-page">
       <section className="about-intro" aria-labelledby="about-title">
-        <p className="eyebrow">About A 071 Studio</p>
+        <p className="eyebrow">About The12thHouse</p>
         <h1 id="about-title">Separate practices become one shared studio.</h1>
         <p className="about-philosophy">
-          A 071 Studio is a creative platform for music, image, motion, and code — a shared space where distinct disciplines meet without losing their individual voices.
+          The12thHouse is a creative platform for music, image, motion, and code — a shared space where distinct disciplines meet without losing their individual voices.
         </p>
       </section>
 
-      <section className="member-directory" aria-label="A 071 Studio members">
+      <section className="member-directory" aria-label="The12thHouse members">
         <div className="member-list">
           {aboutMembers.map((member: Member) => {
             const isActive = member.id === activeMemberId;

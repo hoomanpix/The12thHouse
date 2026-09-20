@@ -1,9 +1,9 @@
 export const mockArtist = {
   id: 'artist-1',
-  name: 'A 071 Studio',
-  slug: 'a-071-studio',
+  name: 'The12thHouse',
+  slug: 'new-wave',
   biography:
-    'A 071 Studio is a creative practice for music, image, motion, and code — a shared space where distinct disciplines meet without losing their individual voices.',
+    'The12thHouse is a creative platform for music, image, motion, and code — a shared space where distinct disciplines meet without losing their individual voices.',
   image_url: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=900&q=80',
   location: 'Brooklyn, NY',
   email: null,

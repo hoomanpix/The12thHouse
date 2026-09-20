@@ -9,7 +9,7 @@ export function ContactPage() {
         <p className="lede">For collaborations, commissions, and project enquiries, contact the appropriate studio member below.</p>
       </section>
 
-      <section className="contact-directory" aria-label="A 071 Studio contact members">
+      <section className="contact-directory" aria-label="The12thHouse contact members">
         <div className="contact-list">
           {siteConfig.contactMembers.map((member) => (
             <article className="contact-member" key={member.id}>

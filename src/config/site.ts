@@ -2,7 +2,7 @@ export const siteConfig = {
   brand: 'A 071 Studio',
   brandLines: ['A 071', 'Studio'],
   heroEyebrow: 'WELCOME TO',
-  introName: 'A 071 Studio',
+  introName: 'The12thHouse',
   contactMembers: [
     { id: 'contact-01', number: '01', name: 'Member 01 — [NAME]', email: '[EMAIL]' },
     { id: 'contact-02', number: '02', name: 'Member 02 — [NAME]', email: '[EMAIL]' },

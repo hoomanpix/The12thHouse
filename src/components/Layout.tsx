@@ -6,8 +6,8 @@ import { siteConfig } from '../config/site';
 const navItems = [
   { label: 'Home', to: publicRoutes.home },
   { label: 'Releases', to: publicRoutes.releases },
-  { label: 'About', to: publicRoutes.about },
   { label: 'Contact', to: publicRoutes.contact },
+  { label: 'About', to: publicRoutes.about },
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {

@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useAudioPlayer } from '../features/audio-player/AudioPlayerProvider';
-import { siteConfig } from '../config/site';
 
 export function GlobalAudioPlayer() {
   const { state, togglePlay, playPrevious, playNext, seek, setVolume } = useAudioPlayer();
@@ -13,7 +12,7 @@ export function GlobalAudioPlayer() {
 
   const progress = state.duration > 0 ? (state.currentTime / state.duration) * 100 : 0;
   const trackTitle = activeTrack?.title ?? 'No track selected';
-  const artistName = activeTrack?.releaseTitle ?? siteConfig.brand;
+  const artistName = activeTrack?.releaseTitle ?? 'The12thHouse';
   const remainingTime = Math.max(state.duration - state.currentTime, 0);
 
   useEffect(() => {
@@ -45,15 +44,18 @@ export function GlobalAudioPlayer() {
         >
           <button
             type="button"
-            className="player-button player-button--primary"
+            className="player-button player-button--primary player-strip__cover-button"
             onClick={(event) => {
               event.stopPropagation();
               togglePlay();
             }}
             aria-label={state.isPlaying ? 'Pause' : 'Play'}
           >
-            <span className="player-emoji" aria-hidden="true">{state.isPlaying ? '⏸️' : '▶️'}</span>
-            <PlayerIcon name={state.isPlaying ? 'pause' : 'play'} />
+            {activeTrack?.artworkUrl ? (
+              <img className="player-strip__cover" src={activeTrack.artworkUrl} alt="" aria-hidden="true" />
+            ) : (
+              <span className="player-strip__cover player-strip__cover--empty" aria-hidden="true" />
+            )}
           </button>
 
           <div className="player-strip__meta">
