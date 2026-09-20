@@ -1,16 +1,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 
 export interface InteractiveIntroProps { artistName: string; onComplete?: () => void; }
-type IntroCharacter = { id: number; char: string; x: number; y: number; angle: number; delay: number };
+type IntroCharacter = { id: number; char: string; x: number; y: number; angle: number };
 const BASE_PLACEMENT_DISTANCE = 42;
 const CHARACTER_CLEARANCE = 6;
-const COMPLETION_PAUSE_DURATION = 2667;
-const FADE_DURATION = 1067;
+const COMPLETION_PAUSE_DURATION = 700;
 
 export function InteractiveIntro({ artistName, onComplete }: InteractiveIntroProps) {
   const [isDismissed, setIsDismissed] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
-  const [isFading, setIsFading] = useState(false);
   const [revealedCharacters, setRevealedCharacters] = useState<IntroCharacter[]>([]);
   const displayName = useMemo(() => artistName.trim().split(/\s+/).map((word) => `${word.charAt(0).toUpperCase()}${word.slice(1).toLowerCase()}`).join(' '), [artistName]);
   const characters = useMemo(() => displayName.split(''), [displayName]);
@@ -51,9 +49,8 @@ export function InteractiveIntro({ artistName, onComplete }: InteractiveIntroPro
       const timer = window.setTimeout(triggerComplete, 160);
       return () => window.clearTimeout(timer);
     }
-    const fadeTimer = window.setTimeout(() => setIsFading(true), COMPLETION_PAUSE_DURATION);
-    const completionTimer = window.setTimeout(triggerComplete, COMPLETION_PAUSE_DURATION + FADE_DURATION);
-    return () => { window.clearTimeout(fadeTimer); window.clearTimeout(completionTimer); };
+    const completionTimer = window.setTimeout(triggerComplete, COMPLETION_PAUSE_DURATION);
+    return () => window.clearTimeout(completionTimer);
   }, [isComplete, isDismissed, triggerComplete]);
 
   useEffect(() => {
@@ -91,7 +88,6 @@ export function InteractiveIntro({ artistName, onComplete }: InteractiveIntroPro
           x,
           y,
           angle,
-          delay: newCharacters.length * 28,
         });
         revealedCountRef.current += 1;
         pathDistanceRef.current = 0;
@@ -103,7 +99,6 @@ export function InteractiveIntro({ artistName, onComplete }: InteractiveIntroPro
 
     const handlePointerMove = (event: PointerEvent) => handleMotion(event.clientX, event.clientY, event.movementX, event.movementY);
     const handleMouseMoveFallback = (event: MouseEvent) => handleMotion(event.clientX, event.clientY, event.movementX, event.movementY);
-    const handleWheel = (event: WheelEvent) => handleMotion(event.clientX || window.innerWidth / 2, event.clientY || window.innerHeight / 2, event.deltaX, event.deltaY);
     const handleTouchMove = (event: TouchEvent) => {
       const touch = event.touches[0] ?? event.changedTouches[0];
       if (!touch) return;
@@ -112,17 +107,15 @@ export function InteractiveIntro({ artistName, onComplete }: InteractiveIntroPro
 
     window.addEventListener('pointermove', handlePointerMove);
     if (typeof window.PointerEvent === 'undefined') window.addEventListener('mousemove', handleMouseMoveFallback);
-    window.addEventListener('wheel', handleWheel, { passive: true });
     window.addEventListener('touchmove', handleTouchMove, { passive: true });
     return () => {
       window.removeEventListener('pointermove', handlePointerMove);
       window.removeEventListener('mousemove', handleMouseMoveFallback);
-      window.removeEventListener('wheel', handleWheel);
       window.removeEventListener('touchmove', handleTouchMove);
     };
   }, [characters, completeIntro, getPlacementDistance, isComplete, isDismissed]);
 
-  return <div className={['intro-screen', isFading ? 'intro-screen--fading' : '', isDismissed ? 'intro-screen--hidden' : ''].filter(Boolean).join(' ')} role="dialog" aria-modal="true" aria-label={`${displayName} intro`} aria-hidden={isDismissed}>
-    <div className="intro-assembly" aria-hidden="true">{revealedCharacters.map((character) => { const characterStyle: CSSProperties = { left: `${character.x}px`, top: `${character.y}px`, transform: `translate(-50%, -50%) rotate(${character.angle}rad)`, '--intro-delay': `${character.delay}ms` } as CSSProperties; return <span key={`${character.id}-${character.char}`} className={['intro-character', character.char === ' ' ? 'intro-character--space' : ''].filter(Boolean).join(' ')} style={characterStyle}>{character.char}</span>; })}</div>
+  return <div className={['intro-screen', isDismissed ? 'intro-screen--hidden' : ''].filter(Boolean).join(' ')} role="dialog" aria-modal="true" aria-label={`${displayName} intro`} aria-hidden={isDismissed}>
+    <div className="intro-assembly" aria-hidden="true">{revealedCharacters.map((character) => { const characterStyle: CSSProperties = { left: `${character.x}px`, top: `${character.y}px`, transform: `translate(-50%, -50%) rotate(${character.angle}rad)` }; return <span key={`${character.id}-${character.char}`} className={['intro-character', character.char === ' ' ? 'intro-character--space' : ''].filter(Boolean).join(' ')} style={characterStyle}>{character.char}</span>; })}</div>
   </div>;
 }

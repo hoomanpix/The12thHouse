@@ -1434,31 +1434,11 @@ input[type='range'] {
   }
 }
 
-/* Intro motion refinement: readable rotation and staggered writing. */
+/* Intro writing: characters appear directly on the pointer path. */
 .intro-character {
-  opacity: 0;
-  animation: intro-character-write 420ms cubic-bezier(0.22, 0.72, 0.25, 1) var(--intro-delay, 0ms) both;
-  will-change: transform, left, top, opacity, filter;
-}
-
-@keyframes intro-character-write {
-  0% {
-    opacity: 0;
-    filter: blur(3px);
-  }
-  55% {
-    opacity: 0.72;
-    filter: blur(0.8px);
-  }
-  100% {
-    opacity: 1;
-    filter: blur(0);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .intro-character {
-    animation-duration: 1ms;
-    animation-delay: 0ms;
-  }
+  opacity: 1;
+  animation: none;
+  filter: none;
+  transition: none;
+  will-change: left, top, transform;
 }
