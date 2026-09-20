@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 
 export interface InteractiveIntroProps { artistName: string; onComplete?: () => void; }
-type IntroCharacter = { id: number; char: string; x: number; y: number; angle: number };
+type IntroCharacter = { id: number; char: string; x: number; y: number; angle: number; delay: number };
 const MIN_PLACEMENT_DISTANCE = 54;
 const COMPLETION_PAUSE_DURATION = 2667;
 const FADE_DURATION = 1067;
@@ -14,6 +14,7 @@ export function InteractiveIntro({ artistName, onComplete }: InteractiveIntroPro
   const displayName = useMemo(() => artistName.trim().split(/\s+/).map((word) => `${word.charAt(0).toUpperCase()}${word.slice(1).toLowerCase()}`).join(' '), [artistName]);
   const characters = useMemo(() => displayName.split(''), [displayName]);
   const pointerRef = useRef<{ x: number; y: number } | null>(null);
+  const velocityRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
   const pathDistanceRef = useRef(0);
   const revealedCountRef = useRef(0);
   const dismissedRef = useRef(false);
@@ -64,7 +65,12 @@ export function InteractiveIntro({ artistName, onComplete }: InteractiveIntroPro
       const segmentX = Number.isFinite(deltaX) && Math.abs(deltaX) > 0.1 ? deltaX : clientX - previous.x;
       const segmentY = Number.isFinite(deltaY) && Math.abs(deltaY) > 0.1 ? deltaY : clientY - previous.y;
       const segmentDistance = Math.hypot(segmentX, segmentY);
-      let angle = Math.atan2(segmentY, segmentX);
+      const velocity = {
+        x: velocityRef.current.x * 0.72 + segmentX * 0.28,
+        y: velocityRef.current.y * 0.72 + segmentY * 0.28,
+      };
+      velocityRef.current = velocity;
+      let angle = Math.atan2(velocity.y, velocity.x);
       if (angle > Math.PI / 2) angle -= Math.PI;
       if (angle < -Math.PI / 2) angle += Math.PI;
       pointerRef.current = { x: clientX, y: clientY };
@@ -78,7 +84,14 @@ export function InteractiveIntro({ artistName, onComplete }: InteractiveIntroPro
         const ratio = Math.min(1, consumed / segmentDistance);
         const x = previous.x + segmentX * ratio;
         const y = previous.y + segmentY * ratio;
-        newCharacters.push({ id: revealedCountRef.current, char: characters[revealedCountRef.current], x, y, angle });
+        newCharacters.push({
+          id: revealedCountRef.current,
+          char: characters[revealedCountRef.current],
+          x,
+          y,
+          angle,
+          delay: newCharacters.length * 28,
+        });
         revealedCountRef.current += 1;
         pathDistanceRef.current = 0;
       }
@@ -109,6 +122,6 @@ export function InteractiveIntro({ artistName, onComplete }: InteractiveIntroPro
   }, [characters, completeIntro, isComplete, isDismissed]);
 
   return <div className={['intro-screen', isFading ? 'intro-screen--fading' : '', isDismissed ? 'intro-screen--hidden' : ''].filter(Boolean).join(' ')} role="dialog" aria-modal="true" aria-label={`${displayName} intro`} aria-hidden={isDismissed}>
-    <div className="intro-assembly" aria-hidden="true">{revealedCharacters.map((character) => { const characterStyle: CSSProperties = { left: `${character.x}px`, top: `${character.y}px`, transform: `translate(-50%, -50%) rotate(${character.angle}rad)` }; return <span key={`${character.id}-${character.char}`} className={['intro-character', character.char === ' ' ? 'intro-character--space' : ''].filter(Boolean).join(' ')} style={characterStyle}>{character.char}</span>; })}</div>
+    <div className="intro-assembly" aria-hidden="true">{revealedCharacters.map((character) => { const characterStyle: CSSProperties = { left: `${character.x}px`, top: `${character.y}px`, transform: `translate(-50%, -50%) rotate(${character.angle}rad)`, '--intro-delay': `${character.delay}ms` } as CSSProperties; return <span key={`${character.id}-${character.char}`} className={['intro-character', character.char === ' ' ? 'intro-character--space' : ''].filter(Boolean).join(' ')} style={characterStyle}>{character.char}</span>; })}</div>
   </div>;
 }

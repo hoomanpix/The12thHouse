@@ -1433,3 +1433,32 @@ input[type='range'] {
     padding: 8px 18px 24px 39px;
   }
 }
+
+/* Intro motion refinement: spring-like reveal, readable rotation, and staggered writing. */
+.intro-character {
+  opacity: 0;
+  animation: intro-character-write 420ms cubic-bezier(0.22, 0.72, 0.25, 1) var(--intro-delay, 0ms) both;
+  will-change: transform, left, top, opacity, filter;
+}
+
+@keyframes intro-character-write {
+  0% {
+    opacity: 0;
+    filter: blur(3px);
+  }
+  55% {
+    opacity: 0.72;
+    filter: blur(0.8px);
+  }
+  100% {
+    opacity: 1;
+    filter: blur(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .intro-character {
+    animation-duration: 1ms;
+    animation-delay: 0ms;
+  }
+}
