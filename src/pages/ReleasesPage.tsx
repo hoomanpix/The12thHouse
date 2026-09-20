@@ -1,63 +1,90 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useCatalog } from '../features/catalog/CatalogProvider';
-import type { ReleaseContentType, ReleaseType } from '../types';
+import type { ReleaseContentType, ReleaseType, VisualType } from '../types';
 
 export function ReleasesPage() {
-  const [contentFilter, setContentFilter] = useState<'all' | ReleaseContentType>('all');
-  const [typeFilter, setTypeFilter] = useState<'all' | ReleaseType>('all');
+  const [category, setCategory] = useState<ReleaseContentType>('music');
+  const [musicFilter, setMusicFilter] = useState<'all' | ReleaseType>('all');
+  const [visualFilter, setVisualFilter] = useState<'all' | VisualType>('all');
   const { releases: allReleases } = useCatalog();
   const releases = allReleases.filter((release) => release.published);
 
-  const filteredReleases = useMemo(
-    () => releases.filter((release) =>
-      (contentFilter === 'all' || release.contentType === contentFilter)
-      && (typeFilter === 'all' || release.type === typeFilter),
-    ),
-    [contentFilter, releases, typeFilter],
-  );
+  const filteredReleases = useMemo(() => {
+    if (category === 'music') {
+      return releases.filter((release) =>
+        release.contentType === 'music' && (musicFilter === 'all' || release.type === musicFilter),
+      );
+    }
+
+    return releases.filter((release) =>
+      release.contentType === 'visual' && (visualFilter === 'all' || release.visualType === visualFilter),
+    );
+  }, [category, musicFilter, releases, visualFilter]);
+
+  const categoryTabs: Array<{ value: ReleaseContentType; label: string }> = [
+    { value: 'music', label: 'Music' },
+    { value: 'visual', label: 'Visual' },
+  ];
 
   return (
     <div className="page-section releases-page">
-      <div className="section-heading split">
-        <div>
-          <p className="eyebrow">Releases</p>
+      <div className="section-heading split releases-heading">
+        <div className="releases-heading__copy">
+          <div className="releases-heading__topline">
+            <p className="eyebrow">Releases</p>
+            <div className="release-categories" role="tablist" aria-label="Release categories">
+              {categoryTabs.map((tab) => (
+                <button
+                  key={tab.value}
+                  type="button"
+                  role="tab"
+                  aria-selected={category === tab.value}
+                  className={category === tab.value ? 'release-category is-active' : 'release-category'}
+                  onClick={() => setCategory(tab.value)}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+          </div>
           <h1>Selected work</h1>
         </div>
 
-        <div className="release-filter-groups" aria-label="Release filters">
-          <div className="filter-group" aria-label="Content type filter">
-            <span className="filter-group__label">Content</span>
-            <div className="filter-bar">
-              {(['all', 'music', 'visual'] as const).map((option) => (
-                <button
-                  key={option}
-                  type="button"
-                  className={contentFilter === option ? 'filter-pill active' : 'filter-pill'}
-                  onClick={() => setContentFilter(option)}
-                  aria-pressed={contentFilter === option}
-                >
-                  {option === 'all' ? 'All' : option}
-                </button>
-              ))}
+        <div className="release-filter-groups" aria-label={`${category} release filters`}>
+          {category === 'music' ? (
+            <div className="filter-group">
+              <div className="filter-bar">
+                {(['all', 'single', 'album'] as const).map((option) => (
+                  <button
+                    key={option}
+                    type="button"
+                    className={musicFilter === option ? 'filter-pill active' : 'filter-pill'}
+                    onClick={() => setMusicFilter(option)}
+                    aria-pressed={musicFilter === option}
+                  >
+                    {option === 'all' ? 'All' : option}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
-          <div className="filter-group" aria-label="Release format filter">
-            <span className="filter-group__label">Format</span>
-            <div className="filter-bar">
-              {(['all', 'single', 'album'] as const).map((option) => (
-                <button
-                  key={option}
-                  type="button"
-                  className={typeFilter === option ? 'filter-pill active' : 'filter-pill'}
-                  onClick={() => setTypeFilter(option)}
-                  aria-pressed={typeFilter === option}
-                >
-                  {option === 'all' ? 'All' : option}
-                </button>
-              ))}
+          ) : (
+            <div className="filter-group">
+              <div className="filter-bar">
+                {(['all', 'cover', 'animation'] as const).map((option) => (
+                  <button
+                    key={option}
+                    type="button"
+                    className={visualFilter === option ? 'filter-pill active' : 'filter-pill'}
+                    onClick={() => setVisualFilter(option)}
+                    aria-pressed={visualFilter === option}
+                  >
+                    {option === 'all' ? 'All' : option}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
 
@@ -81,7 +108,9 @@ export function ReleasesPage() {
           ))}
         </div>
       ) : (
-        <p className="release-empty" role="status">{contentFilter === 'visual' ? 'No visual projects yet.' : 'No releases match these filters.'}</p>
+        <p className="release-empty" role="status">
+          {category === 'visual' ? 'No visual projects yet.' : 'No releases match this filter.'}
+        </p>
       )}
     </div>
   );

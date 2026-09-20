@@ -223,3 +223,63 @@
     background: var(--panel-alt);
   }
 }
+
+/* Releases category switch: Music / Visual sits beside the section label. */
+.releases-heading__copy {
+  display: grid;
+  gap: 12px;
+}
+
+.releases-heading__topline {
+  display: flex;
+  align-items: baseline;
+  gap: 22px;
+}
+
+.release-categories {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 18px;
+}
+
+.release-category {
+  appearance: none;
+  border: 0;
+  border-bottom: 1px solid transparent;
+  border-radius: 0;
+  padding: 0 0 3px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.78rem;
+  letter-spacing: 0.14em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.release-category:hover,
+.release-category:focus-visible,
+.release-category.is-active {
+  color: var(--ink);
+}
+
+.release-category.is-active {
+  border-bottom-color: var(--ink);
+}
+
+.releases-heading .release-filter-groups {
+  align-self: end;
+}
+
+@media (max-width: 640px) {
+  .releases-heading__topline {
+    gap: 16px;
+  }
+
+  .release-categories {
+    gap: 14px;
+  }
+
+  .release-category {
+    font-size: 0.72rem;
+  }
+}
