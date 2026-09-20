@@ -1434,7 +1434,7 @@ input[type='range'] {
   }
 }
 
-/* Intro motion refinement: spring-like reveal, readable rotation, and staggered writing. */
+/* Intro motion refinement: readable rotation and staggered writing. */
 .intro-character {
   opacity: 0;
   animation: intro-character-write 420ms cubic-bezier(0.22, 0.72, 0.25, 1) var(--intro-delay, 0ms) both;

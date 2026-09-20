@@ -15,7 +15,6 @@ export function InteractiveIntro({ artistName, onComplete }: InteractiveIntroPro
   const displayName = useMemo(() => artistName.trim().split(/\s+/).map((word) => `${word.charAt(0).toUpperCase()}${word.slice(1).toLowerCase()}`).join(' '), [artistName]);
   const characters = useMemo(() => displayName.split(''), [displayName]);
   const pointerRef = useRef<{ x: number; y: number } | null>(null);
-  const velocityRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
   const pathDistanceRef = useRef(0);
   const revealedCountRef = useRef(0);
   const dismissedRef = useRef(false);
@@ -71,12 +70,7 @@ export function InteractiveIntro({ artistName, onComplete }: InteractiveIntroPro
       const segmentX = Number.isFinite(deltaX) && Math.abs(deltaX) > 0.1 ? deltaX : clientX - previous.x;
       const segmentY = Number.isFinite(deltaY) && Math.abs(deltaY) > 0.1 ? deltaY : clientY - previous.y;
       const segmentDistance = Math.hypot(segmentX, segmentY);
-      const velocity = {
-        x: velocityRef.current.x * 0.72 + segmentX * 0.28,
-        y: velocityRef.current.y * 0.72 + segmentY * 0.28,
-      };
-      velocityRef.current = velocity;
-      let angle = Math.atan2(velocity.y, velocity.x);
+      let angle = Math.atan2(segmentY, segmentX);
       if (angle > Math.PI / 2) angle -= Math.PI;
       if (angle < -Math.PI / 2) angle += Math.PI;
       pointerRef.current = { x: clientX, y: clientY };
