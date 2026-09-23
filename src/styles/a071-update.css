@@ -504,12 +504,12 @@
 
 /* Preserve the hand-written intro method; only the completed screen slides away. */
 .intro-screen {
-  transform: translateX(0);
+  transform: translateY(0);
   transition: transform 2.5s cubic-bezier(0.76, 0, 0.24, 1), opacity 2.5s ease, visibility 0s linear 2.5s;
 }
 
 .intro-screen--hidden {
-  transform: translateX(-100%);
+  transform: translateY(-100%);
   opacity: 1;
   visibility: visible;
   pointer-events: none;
@@ -575,6 +575,23 @@
 
 .release-card--placeholder .release-card-meta {
   opacity: 0.8;
+}
+
+.home-release-play {
+  appearance: none;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--ink);
+  padding: 0 0 2px;
+  font: inherit;
+  text-align: left;
+}
+
+.home-release-play:hover,
+.home-release-play:focus-visible {
+  border-color: var(--ink);
+  background: transparent;
 }
 
 /* Home release cards mirror the original rounded feature-card treatment. */
