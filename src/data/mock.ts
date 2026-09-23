@@ -1,5 +1,6 @@
 import rapShodeBaziCover from '../assets/rap-shode-bazi.jpeg';
 import shodeMahKamelCover from '../assets/shode-mah-kamel.jpeg';
+import glassHorizonCover from '../assets/glass-horizon-speaker.jpeg';
 
 export const mockArtist = {
   id: 'artist-1',
@@ -24,7 +25,7 @@ export const mockReleases = [
     release_date: '2025-01-18',
     description:
       'A quiet, luminous record about the architecture of moving on—slow-burn synths, spacious drums, and melodies that arrive like memory.',
-    artwork_url: 'https://images.unsplash.com/photo-1516280440614-37939bbacd81?auto=format&fit=crop&w=900&q=80',
+    artwork_url: glassHorizonCover,
     featured: true,
     published: true,
     tracks: [
