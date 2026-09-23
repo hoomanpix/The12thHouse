@@ -445,14 +445,14 @@
   }
 }
 
-/* About: compact profile rows while keeping the one-open-at-a-time interaction. */
+/* About: compact accordion rows; closed profiles must not reserve or leak detail content. */
 .member-directory {
   gap: clamp(20px, 4vw, 58px);
 }
 
 .member-tab {
   grid-template-columns: minmax(0, 1fr) auto;
-  gap: 8px 12px;
+  gap: 6px 12px;
   padding: 10px 0 11px;
 }
 
@@ -462,12 +462,14 @@
 
 .member-tab__name {
   font-size: clamp(0.86rem, 1.3vw, 1.05rem);
+  line-height: 1.2;
 }
 
 .member-tab__role {
   grid-column: 1;
-  margin-top: -2px;
+  margin-top: -1px;
   font-size: 0.58rem;
+  line-height: 1.2;
 }
 
 .member-tab__indicator {
@@ -477,63 +479,46 @@
 }
 
 .member-detail {
+  display: none;
   min-height: 0;
-  gap: 12px;
-  padding: 12px 0 10px clamp(16px, 3vw, 34px);
+  gap: 8px;
+  padding: 10px 0 12px clamp(16px, 3vw, 34px);
+  overflow: hidden;
+}
+
+.member-detail.is-open {
+  display: grid;
 }
 
 .member-detail h2 {
-  font-size: clamp(1.35rem, 3vw, 2.7rem);
+  max-width: 100%;
+  font-size: clamp(1rem, 1.9vw, 1.6rem);
+  line-height: 1.15;
 }
 
 .member-detail > p:not(.eyebrow) {
-  font-size: clamp(0.84rem, 1.2vw, 1rem);
+  max-width: 640px;
+  font-size: clamp(0.76rem, 1vw, 0.9rem);
+  line-height: 1.45;
 }
 
-/* Minimal 2.5-second sliding reveal. */
-.intro-screen--sliding {
-  display: grid;
-  place-items: center;
-  background: #ffffff;
+/* Preserve the hand-written intro method; only the completed screen slides away. */
+.intro-screen {
+  transform: translateX(0);
+  transition: transform 2.5s cubic-bezier(0.76, 0, 0.24, 1), opacity 2.5s ease, visibility 0s linear 2.5s;
+}
+
+.intro-screen--hidden {
+  transform: translateX(-100%);
   opacity: 1;
   visibility: visible;
-  transition: none;
-}
-
-.intro-slide-panel {
-  position: absolute;
-  inset: 0;
-  background: #090909;
-  transform: translateX(0);
-  animation: intro-slide-panel 900ms cubic-bezier(0.76, 0, 0.24, 1) 1600ms both;
-}
-
-.intro-slide-label {
-  position: relative;
-  z-index: 1;
-  margin: 0;
-  color: #ffffff;
-  font-size: clamp(1rem, 2vw, 1.5rem);
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  animation: intro-slide-label 900ms cubic-bezier(0.76, 0, 0.24, 1) 1600ms both;
-}
-
-@keyframes intro-slide-panel {
-  from { transform: translateX(0); }
-  to { transform: translateX(-100%); }
-}
-
-@keyframes intro-slide-label {
-  from { opacity: 1; transform: translateX(0); }
-  to { opacity: 0; transform: translateX(-24px); }
+  pointer-events: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .intro-slide-panel,
-  .intro-slide-label {
-    animation-duration: 1ms;
-    animation-delay: 0ms;
+  .intro-screen,
+  .intro-screen--hidden {
+    transition-duration: 1ms;
   }
 }
 
@@ -560,6 +545,36 @@
 .player-detail__controls .player-button--wide:focus-visible {
   background: var(--panel-alt);
   border-color: var(--ink);
+}
+
+.release-cover--placeholder {
+  display: grid;
+  align-content: end;
+  gap: 6px;
+  aspect-ratio: 1;
+  padding: clamp(14px, 2vw, 24px);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--panel-alt);
+  color: var(--muted);
+  text-transform: uppercase;
+}
+
+.release-cover--placeholder span {
+  font-size: 0.62rem;
+  letter-spacing: 0.14em;
+}
+
+.release-cover--placeholder strong {
+  color: var(--ink);
+  font-size: clamp(1rem, 1.6vw, 1.35rem);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  text-transform: none;
+}
+
+.release-card--placeholder .release-card-meta {
+  opacity: 0.8;
 }
 
 @media (max-width: 640px) {
@@ -600,7 +615,17 @@
   }
 
   .member-detail {
-    padding: 16px 0 8px;
+    gap: 6px;
+    padding: 10px 0 12px 18px;
+  }
+
+  .member-detail h2 {
+    font-size: 1rem;
+  }
+
+  .member-detail > p:not(.eyebrow) {
+    font-size: 0.76rem;
+    line-height: 1.4;
   }
 
   .player-detail__controls .player-button--wide,

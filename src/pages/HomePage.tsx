@@ -5,17 +5,28 @@ import { useAudioPlayer } from '../features/audio-player/AudioPlayerProvider';
 import { siteConfig } from '../config/site';
 import type { Release } from '../types';
 
+type HomeCard =
+  | { kind: 'release'; release: Release }
+  | { kind: 'placeholder'; title: string; type: 'single' | 'album' };
+
 export function HomePage() {
   const { setQueue, playTrack } = useAudioPlayer();
   const { artist: mockArtist, releases: mockReleases, recordPlay } = useCatalog();
   const visibleReleases = mockReleases.filter((release) => release.published);
   const featuredRelease = visibleReleases.find((release) => release.featured) ?? visibleReleases[0];
-  const homeReleaseCards = [
-    ...visibleReleases.filter((release) => release.type === 'single').slice(0, 2),
-    ...visibleReleases.filter((release) => release.type === 'album').slice(0, 1),
+  const singleRelease = visibleReleases.find((release) => release.type === 'single');
+  const albumRelease = visibleReleases.find((release) => release.type === 'album');
+  const homeCards: HomeCard[] = [
+    singleRelease
+      ? { kind: 'release', release: singleRelease }
+      : { kind: 'placeholder', title: 'Single 01', type: 'single' },
+    { kind: 'placeholder', title: 'Single 02', type: 'single' },
+    albumRelease
+      ? { kind: 'release', release: albumRelease }
+      : { kind: 'placeholder', title: 'Album', type: 'album' },
   ];
 
-  if (!featuredRelease || homeReleaseCards.length === 0) {
+  if (!featuredRelease) {
     return <div className="page-section"><p className="admin-empty">No releases are published yet.</p></div>;
   }
 
@@ -67,25 +78,46 @@ export function HomePage() {
           <h2 id="home-releases-title">A small collection of work.</h2>
         </div>
         <div className="release-grid home-release-grid">
-          {homeReleaseCards.map((release) => (
-            <article key={release.id} className="release-card">
-              <Link to={`/releases/${release.slug}`} className="release-cover">
-                <img src={release.artwork_url ?? ''} alt={release.title} />
-              </Link>
-              <div className="release-card-meta">
-                <div>
-                  <p className="eyebrow subtle release-type">{release.type}</p>
-                  <h3>{release.title}</h3>
+          {homeCards.map((card, index) => {
+            if (card.kind === 'placeholder') {
+              return (
+                <article key={`placeholder-${card.type}-${index}`} className="release-card release-card--placeholder">
+                  <div className="release-cover release-cover--placeholder" aria-label={`${card.title} placeholder`}>
+                    <span>{card.type}</span>
+                    <strong>{card.title}</strong>
+                  </div>
+                  <div className="release-card-meta">
+                    <div>
+                      <p className="eyebrow subtle release-type">{card.type}</p>
+                      <h3>{card.title}</h3>
+                    </div>
+                    <time>Coming soon</time>
+                  </div>
+                </article>
+              );
+            }
+
+            const release = card.release;
+            return (
+              <article key={release.id} className="release-card">
+                <Link to={`/releases/${release.slug}`} className="release-cover">
+                  <img src={release.artwork_url ?? ''} alt={release.title} />
+                </Link>
+                <div className="release-card-meta">
+                  <div>
+                    <p className="eyebrow subtle release-type">{release.type}</p>
+                    <h3>{release.title}</h3>
+                  </div>
+                  <time dateTime={release.release_date}>
+                    {new Date(release.release_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                  </time>
                 </div>
-                <time dateTime={release.release_date}>
-                  {new Date(release.release_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                </time>
-              </div>
-              <button type="button" className="text-link home-release-play" onClick={() => playRelease(release)}>
-                Play selection
-              </button>
-            </article>
-          ))}
+                <button type="button" className="text-link home-release-play" onClick={() => playRelease(release)}>
+                  Play selection
+                </button>
+              </article>
+            );
+          })}
         </div>
       </section>
     </div>
