@@ -14,13 +14,15 @@ export function HomePage() {
   const { artist: mockArtist, releases: mockReleases, recordPlay } = useCatalog();
   const visibleReleases = mockReleases.filter((release) => release.published);
   const featuredRelease = visibleReleases.find((release) => release.featured) ?? visibleReleases[0];
-  const singleRelease = visibleReleases.find((release) => release.type === 'single');
+  const singleReleases = visibleReleases.filter((release) => release.type === 'single').slice(0, 2);
   const albumRelease = visibleReleases.find((release) => release.type === 'album');
   const homeCards: HomeCard[] = [
-    singleRelease
-      ? { kind: 'release', release: singleRelease }
+    singleReleases[0]
+      ? { kind: 'release', release: singleReleases[0] }
       : { kind: 'placeholder', title: 'Single 01', type: 'single' },
-    { kind: 'placeholder', title: 'Single 02', type: 'single' },
+    singleReleases[1]
+      ? { kind: 'release', release: singleReleases[1] }
+      : { kind: 'placeholder', title: 'Single 02', type: 'single' },
     albumRelease
       ? { kind: 'release', release: albumRelease }
       : { kind: 'placeholder', title: 'Album', type: 'album' },
