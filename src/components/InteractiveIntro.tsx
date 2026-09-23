@@ -4,7 +4,7 @@ export interface InteractiveIntroProps { artistName: string; onComplete?: () => 
 type IntroCharacter = { id: number; char: string; x: number; y: number; angle: number };
 const BASE_PLACEMENT_DISTANCE = 42;
 const CHARACTER_CLEARANCE = 6;
-const COMPLETION_PAUSE_DURATION = 700;
+const COMPLETION_PAUSE_DURATION = 2500;
 
 export function InteractiveIntro({ artistName, onComplete }: InteractiveIntroProps) {
   const [isDismissed, setIsDismissed] = useState(false);
@@ -18,6 +18,7 @@ export function InteractiveIntro({ artistName, onComplete }: InteractiveIntroPro
   const dismissedRef = useRef(false);
   const completionStartedRef = useRef(false);
   const prefersReducedMotionRef = useRef(false);
+  const transitionTimerRef = useRef<number | null>(null);
 
   const getPlacementDistance = useCallback(() => {
     const viewportFontSize = Math.min(42, Math.max(26, window.innerWidth * 0.02));
@@ -28,8 +29,12 @@ export function InteractiveIntro({ artistName, onComplete }: InteractiveIntroPro
     if (dismissedRef.current) return;
     dismissedRef.current = true;
     setIsDismissed(true);
-    onComplete?.();
+    transitionTimerRef.current = window.setTimeout(() => onComplete?.(), COMPLETION_PAUSE_DURATION);
   }, [onComplete]);
+
+  useEffect(() => () => {
+    if (transitionTimerRef.current !== null) window.clearTimeout(transitionTimerRef.current);
+  }, []);
 
   const completeIntro = useCallback(() => {
     if (completionStartedRef.current || dismissedRef.current) return;

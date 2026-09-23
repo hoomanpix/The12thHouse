@@ -24,13 +24,33 @@ function normalizeReleases(releases: Release[]) {
   return releases.map((release) => ({ ...release, contentType: release.contentType ?? 'music' }));
 }
 
+function mergeSeedReleases(savedReleases: Release[]) {
+  const savedById = new Map(savedReleases.map((release) => [release.id, release]));
+  const seeded = (mockReleases as Release[]).map((seed) => {
+    const saved = savedById.get(seed.id);
+    if (!saved) return seed;
+
+    // Keep Admin metadata edits, but always refresh the seed artwork/title when a new cover ships.
+    const artworkChanged = seed.artwork_url && saved.artwork_url !== seed.artwork_url;
+    const titleChanged = seed.id === 'release-2' && saved.title === 'Low Tide Memory';
+    return {
+      ...seed,
+      ...saved,
+      ...(artworkChanged ? { artwork_url: seed.artwork_url } : {}),
+      ...(titleChanged ? { title: seed.title, slug: seed.slug, tracks: seed.tracks } : {}),
+    };
+  });
+  const seededIds = new Set(seeded.map((release) => release.id));
+  return [...seeded, ...savedReleases.filter((release) => !seededIds.has(release.id))];
+}
+
 function getInitialReleases() {
   if (typeof window === 'undefined') return normalizeReleases(mockReleases as Release[]);
   const saved = window.localStorage.getItem(storageKey);
   if (!saved) return normalizeReleases(mockReleases as Release[]);
 
   try {
-    return normalizeReleases(JSON.parse(saved) as Release[]);
+    return normalizeReleases(mergeSeedReleases(JSON.parse(saved) as Release[]));
   } catch {
     return normalizeReleases(mockReleases as Release[]);
   }

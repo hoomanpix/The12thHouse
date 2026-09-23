@@ -118,7 +118,6 @@ export function GlobalAudioPlayer() {
               <div className="player-detail__controls">
                 <button type="button" className="player-button player-button--wide" onClick={playPrevious} aria-label="Previous track" title="Previous track">
                   <span className="player-emoji" aria-hidden="true">⏮️</span>
-                  <PlayerIcon name="previous" />
                 </button>
                 <button
                   type="button"
@@ -128,11 +127,9 @@ export function GlobalAudioPlayer() {
                   title={state.isPlaying ? 'Pause' : 'Play'}
                 >
                   <span className="player-emoji" aria-hidden="true">{state.isPlaying ? '⏸️' : '▶️'}</span>
-                  <PlayerIcon name={state.isPlaying ? 'pause' : 'play'} />
                 </button>
                 <button type="button" className="player-button player-button--wide" onClick={playNext} aria-label="Next track" title="Next track">
                   <span className="player-emoji" aria-hidden="true">⏭️</span>
-                  <PlayerIcon name="next" />
                 </button>
               </div>
 

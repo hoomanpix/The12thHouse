@@ -1,3 +1,6 @@
+import rapShodeBaziCover from '../assets/rap-shode-bazi.jpeg';
+import shodeMahKamelCover from '../assets/shode-mah-kamel.jpeg';
+
 export const mockArtist = {
   id: 'artist-1',
   name: 'The12thHouse',
@@ -38,22 +41,38 @@ export const mockReleases = [
   {
     id: 'release-2',
     artist_id: 'artist-1',
-    title: 'Low Tide Memory',
-    slug: 'low-tide-memory',
+    title: 'Rap Shode Bazi',
+    slug: 'rap-shode-bazi',
     type: 'single',
     contentType: 'music',
     release_date: '2025-03-04',
-    description:
-      'The first chapter of a new season: low-slung percussion and a vocal take that never pushes too hard.',
-    artwork_url: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=900&q=80',
+    description: 'Rap Shode Bazi — a new single from The12thHouse.',
+    artwork_url: rapShodeBaziCover,
     featured: false,
     published: true,
     tracks: [
-      { id: 'track-4', title: 'Low Tide Memory', audio_url: null, duration: 197, order: 1, published: true },
+      { id: 'track-4', title: 'Rap Shode Bazi', audio_url: null, duration: 197, order: 1, published: true },
     ],
     platform_links: [
       { id: 'link-4', platform: 'soundcloud', label: 'SoundCloud', url: 'https://soundcloud.com', order: 1 },
       { id: 'link-5', platform: 'youtube_music', label: 'YouTube Music', url: 'https://music.youtube.com', order: 2 },
     ],
+  },
+  {
+    id: 'release-3',
+    artist_id: 'artist-1',
+    title: 'Shode Mah Kamel',
+    slug: 'shode-mah-kamel',
+    type: 'single',
+    contentType: 'music',
+    release_date: '2025-04-04',
+    description: 'Shode Mah Kamel — a new single from The12thHouse.',
+    artwork_url: shodeMahKamelCover,
+    featured: false,
+    published: true,
+    tracks: [
+      { id: 'track-5', title: 'Shode Mah Kamel', audio_url: null, duration: 197, order: 1, published: true },
+    ],
+    platform_links: [],
   },
 ];

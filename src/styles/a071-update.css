@@ -359,3 +359,387 @@
     letter-spacing: 0.16em;
   }
 }
+
+/* 2026-09-23 specification pass: scoped layout and control updates. */
+
+/* Contact: four clean name/email rows, with no numbering or dividers. */
+.contact-list {
+  display: grid;
+  gap: 8px;
+  border-top: 0;
+}
+
+.contact-member {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(180px, 0.55fr);
+  align-items: baseline;
+  gap: 24px;
+  padding: 11px 0;
+  border-bottom: 0;
+}
+
+.contact-member h2,
+.contact-member a {
+  margin: 0;
+  font-size: clamp(0.92rem, 1.4vw, 1.15rem);
+  line-height: 1.25;
+}
+
+.contact-member h2 {
+  font-weight: 500;
+}
+
+.contact-member a {
+  color: var(--muted);
+  border-bottom: 0;
+}
+
+.contact-member__number {
+  display: none;
+}
+
+/* Desktop Home: the hero artwork is replaced by the shared release-card collection. */
+@media (min-width: 901px) {
+  .home-page .hero-block {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .home-page .hero-visual {
+    display: none;
+  }
+
+  .home-release-collection {
+    display: grid;
+    gap: 24px;
+  }
+
+  .home-release-grid {
+    align-items: start;
+  }
+
+  .home-release-grid .release-card {
+    justify-items: start;
+  }
+
+.home-release-grid .release-cover,
+.home-release-grid .release-card-meta,
+.home-release-grid .home-release-play {
+  width: 100%;
+}
+
+.home-release-play {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  padding: 0 0 2px;
+  text-align: left;
+}
+
+  /* Release covers are intentionally 55% of their previous desktop footprint. */
+  .releases-page .release-grid .release-cover {
+    width: 55%;
+  }
+
+  .releases-page .release-grid .release-card-meta {
+    width: 55%;
+  }
+}
+
+/* About: compact accordion rows; closed profiles must not reserve or leak detail content. */
+.member-directory {
+  gap: clamp(20px, 4vw, 58px);
+}
+
+.member-tab {
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 6px 12px;
+  padding: 10px 0 11px;
+}
+
+.member-tab__number {
+  display: none;
+}
+
+.member-tab__name {
+  font-size: clamp(0.86rem, 1.3vw, 1.05rem);
+  line-height: 1.2;
+}
+
+.member-tab__role {
+  grid-column: 1;
+  margin-top: -1px;
+  font-size: 0.58rem;
+  line-height: 1.2;
+}
+
+.member-tab__indicator {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  align-self: center;
+}
+
+.member-detail {
+  display: none;
+  min-height: 0;
+  gap: 8px;
+  padding: 10px 0 12px clamp(16px, 3vw, 34px);
+  overflow: hidden;
+}
+
+.member-detail.is-open {
+  display: grid;
+}
+
+.member-detail h2 {
+  max-width: 100%;
+  font-size: clamp(1rem, 1.9vw, 1.6rem);
+  line-height: 1.15;
+}
+
+.member-detail > p:not(.eyebrow) {
+  max-width: 640px;
+  font-size: clamp(0.76rem, 1vw, 0.9rem);
+  line-height: 1.45;
+}
+
+/* Preserve the hand-written intro method; only the completed screen slides away. */
+.intro-screen {
+  transform: translateY(0);
+  transition: transform 2.5s cubic-bezier(0.76, 0, 0.24, 1), opacity 2.5s ease, visibility 0s linear 2.5s;
+}
+
+.intro-screen--hidden {
+  transform: translateY(-100%);
+  opacity: 1;
+  visibility: visible;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .intro-screen,
+  .intro-screen--hidden {
+    transition-duration: 1ms;
+  }
+}
+
+/* Emoji controls: same outlined circular language on desktop and mobile. */
+.player-emoji {
+  display: inline;
+  font-size: 1.05rem;
+  line-height: 1;
+}
+
+.player-detail__controls .player-button--wide,
+.player-detail__controls .player-button--primary.player-button--wide {
+  min-width: 48px;
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  border: 1px solid var(--ink);
+  border-radius: 50%;
+  background: transparent;
+  color: var(--ink);
+}
+
+.player-detail__controls .player-button--wide:hover,
+.player-detail__controls .player-button--wide:focus-visible {
+  background: var(--panel-alt);
+  border-color: var(--ink);
+}
+
+.release-cover--placeholder {
+  display: grid;
+  align-content: end;
+  gap: 6px;
+  aspect-ratio: 1;
+  padding: clamp(14px, 2vw, 24px);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--panel-alt);
+  color: var(--muted);
+  text-transform: uppercase;
+}
+
+.release-cover--placeholder span {
+  font-size: 0.62rem;
+  letter-spacing: 0.14em;
+}
+
+.release-cover--placeholder strong {
+  color: var(--ink);
+  font-size: clamp(1rem, 1.6vw, 1.35rem);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  text-transform: none;
+}
+
+.release-card--placeholder .release-card-meta {
+  opacity: 0.8;
+}
+
+.home-release-play {
+  appearance: none;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--ink);
+  padding: 0 0 2px;
+  font: inherit;
+  text-align: left;
+}
+
+.home-release-play:hover,
+.home-release-play:focus-visible {
+  border-color: var(--ink);
+  background: transparent;
+}
+
+/* Home release cards mirror the original rounded feature-card treatment. */
+.home-release-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+}
+
+.home-feature-card {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: start;
+  min-width: 0;
+  padding: clamp(18px, 3vw, 32px);
+  border-radius: calc(var(--radius) + 10px);
+}
+
+.home-feature-card .feature-artwork {
+  width: min(100%, 420px);
+  box-shadow: none;
+}
+
+.home-feature-card .feature-artwork img {
+  aspect-ratio: 1 / 1;
+  border-radius: var(--radius);
+}
+
+.home-feature-card .feature-copy {
+  align-content: start;
+  gap: 14px;
+  min-width: 0;
+}
+
+.home-feature-card .feature-copy h3 {
+  font-size: clamp(1.8rem, 4vw, 4.6rem);
+  line-height: 0.98;
+}
+
+.home-feature-card .feature-copy > p:not(.release-type):not(.release-date) {
+  max-width: 34rem;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.home-feature-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px 24px;
+  align-items: center;
+}
+
+.home-feature-placeholder-artwork {
+  display: grid;
+  align-content: end;
+  gap: 8px;
+  aspect-ratio: 1;
+  padding: clamp(18px, 3vw, 32px);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel-alt);
+  color: var(--muted);
+  text-transform: uppercase;
+}
+
+.home-feature-placeholder-artwork span {
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
+}
+
+.home-feature-placeholder-artwork strong {
+  color: var(--ink);
+  font-size: clamp(1.4rem, 3vw, 3rem);
+  font-weight: 500;
+  letter-spacing: -0.03em;
+  text-transform: none;
+}
+
+@media (max-width: 640px) {
+  .contact-member {
+    grid-template-columns: minmax(0, 1fr) minmax(132px, 0.8fr);
+    gap: 12px;
+    padding: 9px 0;
+  }
+
+  .contact-member h2,
+  .contact-member a {
+    font-size: 0.84rem;
+  }
+
+  .home-release-collection {
+    display: grid;
+    gap: 18px;
+  }
+
+  .home-release-grid {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+
+  .home-feature-card {
+    grid-template-columns: 1fr;
+    gap: 20px;
+    padding: 18px;
+  }
+
+  .home-feature-card .feature-artwork {
+    order: -1;
+    width: min(58vw, 330px);
+    max-width: 100%;
+  }
+
+  .home-feature-card .feature-copy h3 {
+    font-size: clamp(1.8rem, 8vw, 3rem);
+  }
+
+  .home-release-grid .release-cover {
+    width: var(--a071-mobile-card-artwork);
+    max-width: 100%;
+  }
+
+  .home-release-grid .release-card-meta,
+  .home-release-grid .home-release-play {
+    width: var(--a071-mobile-card-artwork);
+    max-width: 100%;
+  }
+
+  .member-tab {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .member-detail {
+    gap: 6px;
+    padding: 10px 0 12px 18px;
+  }
+
+  .member-detail h2 {
+    font-size: 1rem;
+  }
+
+  .member-detail > p:not(.eyebrow) {
+    font-size: 0.76rem;
+    line-height: 1.4;
+  }
+
+  .player-detail__controls .player-button--wide,
+  .player-detail__controls .player-button--primary.player-button--wide {
+    min-width: 44px;
+    width: 44px;
+    height: 44px;
+  }
+}

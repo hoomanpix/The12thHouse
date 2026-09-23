@@ -29,14 +29,12 @@ export function AboutPage() {
                   aria-controls={`panel-${member.id}`}
                   onClick={() => setActiveMemberId(isActive ? null : member.id)}
                 >
-                  <span className="member-tab__number">{member.number}</span>
                   <span className="member-tab__name">{member.name}</span>
                   <span className="member-tab__role">{member.role}</span>
                   <span className="member-tab__indicator" aria-hidden="true">{isActive ? '−' : '+'}</span>
                 </button>
 
                 <div id={`panel-${member.id}`} className={`member-detail${isActive ? ' is-open' : ''}`} aria-hidden={!isActive} aria-label={`${member.name} profile`}>
-                  <p className="eyebrow">{member.role}</p>
                   <h2>{member.name}</h2>
                   <p>{member.about}</p>
                   <div className="member-social-links" aria-label={`${member.name} social links`}>

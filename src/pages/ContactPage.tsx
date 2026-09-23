@@ -13,13 +13,10 @@ export function ContactPage() {
         <div className="contact-list">
           {siteConfig.contactMembers.map((member) => (
             <article className="contact-member" key={member.id}>
-              <span className="contact-member__number">{member.number}</span>
-              <div className="contact-member__identity">
-                <h2>{member.name}</h2>
-                <a href={`mailto:${member.email}`} aria-label={`Email ${member.name}`}>
-                  {member.email}
-                </a>
-              </div>
+              <h2>{member.name}</h2>
+              <a href={`mailto:${member.email}`} aria-label={`Email ${member.name}`}>
+                {member.email}
+              </a>
             </article>
           ))}
         </div>
