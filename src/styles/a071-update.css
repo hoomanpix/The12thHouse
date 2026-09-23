@@ -359,3 +359,254 @@
     letter-spacing: 0.16em;
   }
 }
+
+/* 2026-09-23 specification pass: scoped layout and control updates. */
+
+/* Contact: four clean name/email rows, with no numbering or dividers. */
+.contact-list {
+  display: grid;
+  gap: 8px;
+  border-top: 0;
+}
+
+.contact-member {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(180px, 0.55fr);
+  align-items: baseline;
+  gap: 24px;
+  padding: 11px 0;
+  border-bottom: 0;
+}
+
+.contact-member h2,
+.contact-member a {
+  margin: 0;
+  font-size: clamp(0.92rem, 1.4vw, 1.15rem);
+  line-height: 1.25;
+}
+
+.contact-member h2 {
+  font-weight: 500;
+}
+
+.contact-member a {
+  color: var(--muted);
+  border-bottom: 0;
+}
+
+.contact-member__number {
+  display: none;
+}
+
+/* Desktop Home: the hero artwork is replaced by the shared release-card collection. */
+@media (min-width: 901px) {
+  .home-page .hero-block {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .home-page .hero-visual {
+    display: none;
+  }
+
+  .home-release-collection {
+    display: grid;
+    gap: 24px;
+  }
+
+  .home-release-grid {
+    align-items: start;
+  }
+
+  .home-release-grid .release-card {
+    justify-items: start;
+  }
+
+.home-release-grid .release-cover,
+.home-release-grid .release-card-meta,
+.home-release-grid .home-release-play {
+  width: 100%;
+}
+
+.home-release-play {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  padding: 0 0 2px;
+  text-align: left;
+}
+
+  /* Release covers are intentionally 55% of their previous desktop footprint. */
+  .releases-page .release-grid .release-cover {
+    width: 55%;
+  }
+
+  .releases-page .release-grid .release-card-meta {
+    width: 55%;
+  }
+}
+
+/* About: compact profile rows while keeping the one-open-at-a-time interaction. */
+.member-directory {
+  gap: clamp(20px, 4vw, 58px);
+}
+
+.member-tab {
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px 12px;
+  padding: 10px 0 11px;
+}
+
+.member-tab__number {
+  display: none;
+}
+
+.member-tab__name {
+  font-size: clamp(0.86rem, 1.3vw, 1.05rem);
+}
+
+.member-tab__role {
+  grid-column: 1;
+  margin-top: -2px;
+  font-size: 0.58rem;
+}
+
+.member-tab__indicator {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  align-self: center;
+}
+
+.member-detail {
+  min-height: 0;
+  gap: 12px;
+  padding: 12px 0 10px clamp(16px, 3vw, 34px);
+}
+
+.member-detail h2 {
+  font-size: clamp(1.35rem, 3vw, 2.7rem);
+}
+
+.member-detail > p:not(.eyebrow) {
+  font-size: clamp(0.84rem, 1.2vw, 1rem);
+}
+
+/* Minimal 2.5-second sliding reveal. */
+.intro-screen--sliding {
+  display: grid;
+  place-items: center;
+  background: #ffffff;
+  opacity: 1;
+  visibility: visible;
+  transition: none;
+}
+
+.intro-slide-panel {
+  position: absolute;
+  inset: 0;
+  background: #090909;
+  transform: translateX(0);
+  animation: intro-slide-panel 900ms cubic-bezier(0.76, 0, 0.24, 1) 1600ms both;
+}
+
+.intro-slide-label {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  color: #ffffff;
+  font-size: clamp(1rem, 2vw, 1.5rem);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  animation: intro-slide-label 900ms cubic-bezier(0.76, 0, 0.24, 1) 1600ms both;
+}
+
+@keyframes intro-slide-panel {
+  from { transform: translateX(0); }
+  to { transform: translateX(-100%); }
+}
+
+@keyframes intro-slide-label {
+  from { opacity: 1; transform: translateX(0); }
+  to { opacity: 0; transform: translateX(-24px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .intro-slide-panel,
+  .intro-slide-label {
+    animation-duration: 1ms;
+    animation-delay: 0ms;
+  }
+}
+
+/* Emoji controls: same outlined circular language on desktop and mobile. */
+.player-emoji {
+  display: inline;
+  font-size: 1.05rem;
+  line-height: 1;
+}
+
+.player-detail__controls .player-button--wide,
+.player-detail__controls .player-button--primary.player-button--wide {
+  min-width: 48px;
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  border: 1px solid var(--ink);
+  border-radius: 50%;
+  background: transparent;
+  color: var(--ink);
+}
+
+.player-detail__controls .player-button--wide:hover,
+.player-detail__controls .player-button--wide:focus-visible {
+  background: var(--panel-alt);
+  border-color: var(--ink);
+}
+
+@media (max-width: 640px) {
+  .contact-member {
+    grid-template-columns: minmax(0, 1fr) minmax(132px, 0.8fr);
+    gap: 12px;
+    padding: 9px 0;
+  }
+
+  .contact-member h2,
+  .contact-member a {
+    font-size: 0.84rem;
+  }
+
+  .home-release-collection {
+    display: grid;
+    gap: 18px;
+  }
+
+  .home-release-grid {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+
+  .home-release-grid .release-cover {
+    width: var(--a071-mobile-card-artwork);
+    max-width: 100%;
+  }
+
+  .home-release-grid .release-card-meta,
+  .home-release-grid .home-release-play {
+    width: var(--a071-mobile-card-artwork);
+    max-width: 100%;
+  }
+
+  .member-tab {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .member-detail {
+    padding: 16px 0 8px;
+  }
+
+  .player-detail__controls .player-button--wide,
+  .player-detail__controls .player-button--primary.player-button--wide {
+    min-width: 44px;
+    width: 44px;
+    height: 44px;
+  }
+}

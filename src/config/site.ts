@@ -7,6 +7,7 @@ export const siteConfig = {
     { id: 'contact-01', number: '01', name: 'Member 01 — [NAME]', email: '[EMAIL]' },
     { id: 'contact-02', number: '02', name: 'Member 02 — [NAME]', email: '[EMAIL]' },
     { id: 'contact-03', number: '03', name: 'Member 03 — [NAME]', email: '[EMAIL]' },
+    { id: 'contact-04', number: '04', name: 'Member 04 — [NAME]', email: '[EMAIL]' },
   ],
 } as const;
 
