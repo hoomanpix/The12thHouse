@@ -77,21 +77,20 @@ export function HomePage() {
           <p className="eyebrow">Selected releases</p>
           <h2 id="home-releases-title">A small collection of work.</h2>
         </div>
-        <div className="release-grid home-release-grid">
+        <div className="home-release-grid">
           {homeCards.map((card, index) => {
             if (card.kind === 'placeholder') {
               return (
-                <article key={`placeholder-${card.type}-${index}`} className="release-card release-card--placeholder">
-                  <div className="release-cover release-cover--placeholder" aria-label={`${card.title} placeholder`}>
+                <article key={`placeholder-${card.type}-${index}`} className="feature-card home-feature-card home-feature-card--placeholder">
+                  <div className="feature-artwork home-feature-placeholder-artwork" aria-label={`${card.title} placeholder`}>
                     <span>{card.type}</span>
                     <strong>{card.title}</strong>
                   </div>
-                  <div className="release-card-meta">
-                    <div>
-                      <p className="eyebrow subtle release-type">{card.type}</p>
-                      <h3>{card.title}</h3>
-                    </div>
-                    <time>Coming soon</time>
+                  <div className="feature-copy">
+                    <p className="release-type">{card.type}</p>
+                    <h3>{card.title}</h3>
+                    <time className="release-date">Coming soon</time>
+                    <p>New work from The12thHouse will appear here.</p>
                   </div>
                 </article>
               );
@@ -99,22 +98,26 @@ export function HomePage() {
 
             const release = card.release;
             return (
-              <article key={release.id} className="release-card">
-                <Link to={`/releases/${release.slug}`} className="release-cover">
-                  <img src={release.artwork_url ?? ''} alt={release.title} />
-                </Link>
-                <div className="release-card-meta">
-                  <div>
-                    <p className="eyebrow subtle release-type">{release.type}</p>
-                    <h3>{release.title}</h3>
-                  </div>
-                  <time dateTime={release.release_date}>
+              <article key={release.id} className="feature-card home-feature-card">
+                <div className="feature-artwork">
+                  <Link to={`/releases/${release.slug}`} aria-label={`View ${release.title}`}>
+                    <img src={release.artwork_url ?? ''} alt={release.title} />
+                  </Link>
+                </div>
+                <div className="feature-copy">
+                  <p className="release-type">{release.type}</p>
+                  <h3>{release.title}</h3>
+                  <time className="release-date" dateTime={release.release_date}>
                     {new Date(release.release_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                   </time>
+                  <p>{release.description}</p>
+                  <div className="home-feature-actions">
+                    <Link to={`/releases/${release.slug}`} className="text-link">View release</Link>
+                    <button type="button" className="text-link home-release-play" onClick={() => playRelease(release)}>
+                      Play selection
+                    </button>
+                  </div>
                 </div>
-                <button type="button" className="text-link home-release-play" onClick={() => playRelease(release)}>
-                  Play selection
-                </button>
               </article>
             );
           })}

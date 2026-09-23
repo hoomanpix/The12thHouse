@@ -577,6 +577,81 @@
   opacity: 0.8;
 }
 
+/* Home release cards mirror the original rounded feature-card treatment. */
+.home-release-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+}
+
+.home-feature-card {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: start;
+  min-width: 0;
+  padding: clamp(18px, 3vw, 32px);
+  border-radius: calc(var(--radius) + 10px);
+}
+
+.home-feature-card .feature-artwork {
+  width: min(100%, 420px);
+  box-shadow: none;
+}
+
+.home-feature-card .feature-artwork img {
+  aspect-ratio: 1 / 1;
+  border-radius: var(--radius);
+}
+
+.home-feature-card .feature-copy {
+  align-content: start;
+  gap: 14px;
+  min-width: 0;
+}
+
+.home-feature-card .feature-copy h3 {
+  font-size: clamp(1.8rem, 4vw, 4.6rem);
+  line-height: 0.98;
+}
+
+.home-feature-card .feature-copy > p:not(.release-type):not(.release-date) {
+  max-width: 34rem;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.home-feature-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px 24px;
+  align-items: center;
+}
+
+.home-feature-placeholder-artwork {
+  display: grid;
+  align-content: end;
+  gap: 8px;
+  aspect-ratio: 1;
+  padding: clamp(18px, 3vw, 32px);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel-alt);
+  color: var(--muted);
+  text-transform: uppercase;
+}
+
+.home-feature-placeholder-artwork span {
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
+}
+
+.home-feature-placeholder-artwork strong {
+  color: var(--ink);
+  font-size: clamp(1.4rem, 3vw, 3rem);
+  font-weight: 500;
+  letter-spacing: -0.03em;
+  text-transform: none;
+}
+
 @media (max-width: 640px) {
   .contact-member {
     grid-template-columns: minmax(0, 1fr) minmax(132px, 0.8fr);
@@ -597,6 +672,22 @@
   .home-release-grid {
     grid-template-columns: 1fr;
     gap: 28px;
+  }
+
+  .home-feature-card {
+    grid-template-columns: 1fr;
+    gap: 20px;
+    padding: 18px;
+  }
+
+  .home-feature-card .feature-artwork {
+    order: -1;
+    width: min(58vw, 330px);
+    max-width: 100%;
+  }
+
+  .home-feature-card .feature-copy h3 {
+    font-size: clamp(1.8rem, 8vw, 3rem);
   }
 
   .home-release-grid .release-cover {
