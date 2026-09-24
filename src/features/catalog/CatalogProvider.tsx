@@ -10,7 +10,7 @@ interface CatalogContextValue {
   releases: Release[];
   homeCardIds: string[];
   updateRelease: (releaseId: string, update: Partial<Release>) => void;
-  addRelease: (release: Omit<Release, 'id' | 'created_at' | 'updated_at'>) => void;
+  addRelease: (release: Omit<Release, 'id' | 'created_at' | 'updated_at'>) => string;
   updateHomeCard: (slot: number, releaseId: string) => void;
   addTrack: (releaseId: string, track: Omit<Track, 'id' | 'release_id' | 'order'>) => void;
   removeTrack: (releaseId: string, trackId: string) => void;
@@ -84,7 +84,9 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const addRelease = useCallback((release: Omit<Release, 'id' | 'created_at' | 'updated_at'>) => {
-    setReleases((current) => [...current, { ...release, id: `release-${Date.now()}` }]);
+    const id = `release-${Date.now()}`;
+    setReleases((current) => [...current, { ...release, id, tracks: (release.tracks ?? []).map((track) => ({ ...track, release_id: id })) }]);
+    return id;
   }, []);
 
   const updateHomeCard = useCallback((slot: number, releaseId: string) => {

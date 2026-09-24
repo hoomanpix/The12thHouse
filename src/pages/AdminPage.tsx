@@ -40,7 +40,11 @@ export function AdminPage() {
   const [newReleaseTitle, setNewReleaseTitle] = useState('');
   const [newReleaseType, setNewReleaseType] = useState<'single' | 'album'>('single');
   const [newReleaseContent, setNewReleaseContent] = useState<ReleaseContentType>('music');
+  const [newReleaseDate, setNewReleaseDate] = useState(new Date().toISOString().slice(0, 10));
+  const [newReleaseDescription, setNewReleaseDescription] = useState('');
   const [newReleaseArtwork, setNewReleaseArtwork] = useState<string | null>(null);
+  const [newReleaseTrackTitle, setNewReleaseTrackTitle] = useState('');
+  const [newReleaseAudio, setNewReleaseAudio] = useState<string | null>(null);
 
   const selectedRelease = releases.find((release) => release.id === selectedReleaseId) ?? releases[0];
   const totalPlays = useMemo(() => releases.reduce((total, release) => total + (release.tracks ?? []).reduce((sum, track) => sum + (track.play_count ?? 0), 0), 0), [releases]);
@@ -74,8 +78,15 @@ export function AdminPage() {
     const title = newReleaseTitle.trim();
     if (!title) return;
     const draft = emptyRelease(title, newReleaseType, newReleaseContent);
-    addRelease({ ...draft, artwork_url: newReleaseArtwork });
-    setNewReleaseTitle(''); setNewReleaseArtwork(null);
+    const releaseId = addRelease({
+      ...draft,
+      release_date: newReleaseDate,
+      description: newReleaseDescription.trim(),
+      artwork_url: newReleaseArtwork,
+      tracks: newReleaseTrackTitle.trim() ? [{ id: `track-${Date.now() + 1}`, release_id: '', title: newReleaseTrackTitle.trim(), audio_url: newReleaseAudio, duration: 0, published: Boolean(newReleaseAudio), play_count: 0, order: 1 }] : [],
+    });
+    setSelectedReleaseId(releaseId);
+    setNewReleaseTitle(''); setNewReleaseDate(new Date().toISOString().slice(0, 10)); setNewReleaseDescription(''); setNewReleaseArtwork(null); setNewReleaseTrackTitle(''); setNewReleaseAudio(null);
   };
 
   return (
@@ -93,14 +104,18 @@ export function AdminPage() {
 
       <section className="admin-panel admin-panel--single">
         <div className="admin-section-heading"><div><p className="eyebrow">Catalog</p><h2>Add a single, album or visual</h2></div></div>
-        <form className="admin-grid-form" onSubmit={createRelease}>
-          <input value={newReleaseTitle} onChange={(event) => setNewReleaseTitle(event.target.value)} placeholder="Release title" aria-label="Release title" required />
-          <select value={newReleaseType} onChange={(event) => setNewReleaseType(event.target.value as 'single' | 'album')} aria-label="Release type"><option value="single">Single</option><option value="album">Album</option></select>
-          <select value={newReleaseContent} onChange={(event) => setNewReleaseContent(event.target.value as ReleaseContentType)} aria-label="Content type"><option value="music">Music</option><option value="visual">Visual</option></select>
+        <form className="admin-grid-form admin-new-release-form" onSubmit={createRelease}>
+          <label>Title<input value={newReleaseTitle} onChange={(event) => setNewReleaseTitle(event.target.value)} placeholder="Release title" aria-label="Release title" required /></label>
+          <label>Release date<input type="date" value={newReleaseDate} onChange={(event) => setNewReleaseDate(event.target.value)} aria-label="Release date" required /></label>
+          <label>Type<select value={newReleaseType} onChange={(event) => setNewReleaseType(event.target.value as 'single' | 'album')} aria-label="Release type"><option value="single">Single</option><option value="album">Album</option></select></label>
+          <label>Content<select value={newReleaseContent} onChange={(event) => setNewReleaseContent(event.target.value as ReleaseContentType)} aria-label="Content type"><option value="music">Music</option><option value="visual">Visual</option></select></label>
           <label className="admin-file-input">{newReleaseArtwork ? 'Cover selected' : 'Upload cover'}<input type="file" accept="image/*" onChange={(event) => { const file = event.target.files?.[0]; if (file) readFileAsDataUrl(file, setNewReleaseArtwork); }} /></label>
+          <label>Description<textarea value={newReleaseDescription} onChange={(event) => setNewReleaseDescription(event.target.value)} placeholder="Release description" rows={2} /></label>
+          <label>First track title<input value={newReleaseTrackTitle} onChange={(event) => setNewReleaseTrackTitle(event.target.value)} placeholder="Optional for visual releases" /></label>
+          <label className="admin-file-input">{newReleaseAudio ? 'Audio selected' : 'Upload first audio file'}<input type="file" accept="audio/*" onChange={(event) => { const file = event.target.files?.[0]; if (file) readFileAsDataUrl(file, setNewReleaseAudio); }} /></label>
           <button type="submit" className="button primary">Create release</button>
         </form>
-        <p className="admin-help">Uploaded files are stored in this browser for the current prototype. Connect Supabase Storage before multi-user production use.</p>
+        <p className="admin-help">اثر جدید همراه با تاریخ انتشار، کاور و در صورت انتخاب، اولین فایل صوتی ساخته می‌شود. برای آلبوم می‌توانید ترک‌های بعدی را در Audio manager اضافه کنید.</p>
       </section>
 
       <section className="admin-panel admin-panel--single">
