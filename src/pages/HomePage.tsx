@@ -11,20 +11,22 @@ type HomeCard =
 
 export function HomePage() {
   const { setQueue, playTrack } = useAudioPlayer();
-  const { artist: mockArtist, releases: mockReleases, recordPlay } = useCatalog();
+  const { artist: mockArtist, releases: mockReleases, homeCardIds, recordPlay } = useCatalog();
   const visibleReleases = mockReleases.filter((release) => release.published);
   const featuredRelease = visibleReleases.find((release) => release.featured) ?? visibleReleases[0];
+  const configuredCards = homeCardIds.map((id) => visibleReleases.find((release) => release.id === id));
   const singleReleases = visibleReleases.filter((release) => release.type === 'single').slice(0, 2);
   const albumRelease = visibleReleases.find((release) => release.type === 'album');
+  const selectedCards = [configuredCards[0] ?? singleReleases[0], configuredCards[1] ?? singleReleases[1], configuredCards[2] ?? albumRelease];
   const homeCards: HomeCard[] = [
-    singleReleases[0]
-      ? { kind: 'release', release: singleReleases[0] }
+    selectedCards[0]
+      ? { kind: 'release', release: selectedCards[0] }
       : { kind: 'placeholder', title: 'Single 01', type: 'single' },
-    singleReleases[1]
-      ? { kind: 'release', release: singleReleases[1] }
+    selectedCards[1]
+      ? { kind: 'release', release: selectedCards[1] }
       : { kind: 'placeholder', title: 'Single 02', type: 'single' },
-    albumRelease
-      ? { kind: 'release', release: albumRelease }
+    selectedCards[2]
+      ? { kind: 'release', release: selectedCards[2] }
       : { kind: 'placeholder', title: 'Album', type: 'album' },
   ];
 
