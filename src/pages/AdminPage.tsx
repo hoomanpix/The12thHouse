@@ -11,6 +11,8 @@ const platformOptions: Array<{ value: PlatformType; label: string }> = [
   { value: 'custom', label: 'Custom link' },
 ];
 
+const approvedAdminEmail = 'kamielkhajehpour@gmail.com';
+
 function readFileAsDataUrl(file: File, onRead: (dataUrl: string) => void) {
   const reader = new FileReader();
   reader.addEventListener('load', () => onRead(String(reader.result ?? '')));
@@ -82,12 +84,17 @@ export function AdminPage() {
   const submitAuth = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setAuthError('');
+    if (authMode === 'signup' && authEmail.trim().toLowerCase() !== approvedAdminEmail) {
+      setAuthError(`Only ${approvedAdminEmail} can create the artist account.`);
+      return;
+    }
     const result = authMode === 'signin' ? await signIn(authEmail, authPassword) : await signUp(authEmail, authPassword);
     if (result.error) setAuthError(result.error);
   };
 
   if (!isReady) return <div className="admin-auth-card"><p className="eyebrow">Connecting</p><h1>Loading control room…</h1><p>Connecting to the shared catalog.</p></div>;
-  if (isRemote && !user) return <div className="admin-auth-card"><p className="eyebrow">The12thHouse Admin</p><h1>{authMode === 'signin' ? 'Sign in to control room' : 'Create artist account'}</h1><p>Changes made here are published to Home and Releases for every visitor.</p><form onSubmit={submitAuth} className="admin-auth-form"><label>Email<input type="email" value={authEmail} onChange={(event) => setAuthEmail(event.target.value)} required /></label><label>Password<input type="password" minLength={6} value={authPassword} onChange={(event) => setAuthPassword(event.target.value)} required /></label>{authError && <p className="admin-auth-error" role="alert">{authError}</p>}<button className="button primary" type="submit">{authMode === 'signin' ? 'Sign in' : 'Create account'}</button></form><button type="button" className="button text-button" onClick={() => { setAuthMode(authMode === 'signin' ? 'signup' : 'signin'); setAuthError(''); }}>{authMode === 'signin' ? 'Create a new account' : 'Back to sign in'}</button></div>;
+  if (isRemote && !user) return <div className="admin-auth-card"><p className="eyebrow">The12thHouse Admin</p><h1>{authMode === 'signin' ? 'Sign in to control room' : 'Create artist account'}</h1><p>Only the approved artist email can access this area.</p><form onSubmit={submitAuth} className="admin-auth-form"><label>Email<input type="email" value={authEmail} onChange={(event) => setAuthEmail(event.target.value)} required /></label><label>Password<input type="password" minLength={6} value={authPassword} onChange={(event) => setAuthPassword(event.target.value)} required /></label>{authError && <p className="admin-auth-error" role="alert">{authError}</p>}<button className="button primary" type="submit">{authMode === 'signin' ? 'Sign in' : 'Create account'}</button></form><button type="button" className="button text-button" onClick={() => { setAuthMode(authMode === 'signin' ? 'signup' : 'signin'); setAuthError(''); }}>{authMode === 'signin' ? 'Create a new account' : 'Back to sign in'}</button></div>;
+  if (isRemote && user && user.email?.toLowerCase() !== approvedAdminEmail) return <div className="admin-auth-card"><p className="eyebrow">Access denied</p><h1>Admin access is restricted</h1><p>This account is not the approved artist account.</p><button type="button" className="button primary" onClick={() => void signOut()}>Sign out</button></div>;
 
   if (!selectedRelease) return <p className="admin-empty">No releases are available yet.</p>;
 
