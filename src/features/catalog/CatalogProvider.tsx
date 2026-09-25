@@ -80,7 +80,10 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
   const [releases, setReleases] = useState<Release[]>(fallbackReleases);
   const [homeCardIds, setHomeCardIds] = useState<string[]>([]);
   const [user, setUser] = useState<{ id: string; email?: string } | null>(null);
-  const [isRecoveringPassword, setIsRecoveringPassword] = useState(false);
+  const [isRecoveringPassword, setIsRecoveringPassword] = useState(() => {
+    const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+    return hashParams.get('type') === 'recovery' || new URLSearchParams(window.location.search).get('type') === 'recovery';
+  });
   const [isReady, setIsReady] = useState(!isSupabaseConfigured);
 
   const loadRemote = useCallback(async (authenticated = false) => {
@@ -139,7 +142,10 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
 
   const updatePassword = useCallback(async (password: string) => {
     const { error } = await supabase.auth.updateUser({ password });
-    if (!error) setIsRecoveringPassword(false);
+    if (!error) {
+      setIsRecoveringPassword(false);
+      window.history.replaceState(null, '', `${window.location.pathname}#/admin`);
+    }
     return error ? { error: error.message } : {};
   }, []);
 

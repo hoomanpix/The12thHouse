@@ -17,7 +17,9 @@ import { siteConfig } from './config/site';
 export default function App() {
   const [introComplete, setIntroComplete] = useState(false);
   const location = useLocation();
-  const isAdminRoute = location.pathname === publicRoutes.admin;
+  const recoveryParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+  const isPasswordRecoveryRoute = recoveryParams.get('type') === 'recovery' || new URLSearchParams(window.location.search).get('type') === 'recovery';
+  const isAdminRoute = location.pathname === publicRoutes.admin || isPasswordRecoveryRoute;
 
   return (
     <>
