@@ -55,7 +55,11 @@ export function ReleaseDetailPage() {
     <div className="page-section release-detail">
       <div className="detail-header">
         <div className="detail-cover">
-          <img src={release.artwork_url ?? ''} alt={release.title} />
+          {release.contentType === 'visual' && release.visual_url ? (
+            <video src={release.visual_url} poster={release.artwork_url ?? undefined} controls playsInline aria-label={release.title} />
+          ) : (
+            <img src={release.artwork_url ?? ''} alt={release.title} />
+          )}
         </div>
 
         <div className="detail-copy">
