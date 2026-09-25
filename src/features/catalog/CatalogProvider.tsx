@@ -4,13 +4,19 @@ import type { Artist, PlatformLink, Release, Track } from '../../types';
 
 const storageKey = 'new-wave-catalog';
 const homeCardsStorageKey = 'new-wave-home-cards';
+const upcomingStorageKey = 'new-wave-upcoming-releases';
 
 interface CatalogContextValue {
   artist: Artist;
   releases: Release[];
+  upcomingReleases: Release[];
   homeCardIds: string[];
   updateRelease: (releaseId: string, update: Partial<Release>) => void;
   addRelease: (release: Omit<Release, 'id' | 'created_at' | 'updated_at'>) => string;
+  addUpcomingRelease: (release: Omit<Release, 'id' | 'created_at' | 'updated_at'>) => string;
+  updateUpcomingRelease: (releaseId: string, update: Partial<Release>) => void;
+  publishUpcomingRelease: (releaseId: string) => string | null;
+  removeUpcomingRelease: (releaseId: string) => void;
   updateHomeCard: (slot: number, releaseId: string) => void;
   addTrack: (releaseId: string, track: Omit<Track, 'id' | 'release_id' | 'order'>) => void;
   removeTrack: (releaseId: string, trackId: string) => void;
@@ -67,8 +73,19 @@ function getInitialHomeCardIds() {
   }
 }
 
+function getInitialUpcomingReleases() {
+  if (typeof window === 'undefined') return [];
+  try {
+    const saved = JSON.parse(window.localStorage.getItem(upcomingStorageKey) ?? '[]');
+    return Array.isArray(saved) ? normalizeReleases(saved as Release[]) : [];
+  } catch {
+    return [];
+  }
+}
+
 export function CatalogProvider({ children }: { children: React.ReactNode }) {
   const [releases, setReleases] = useState<Release[]>(getInitialReleases);
+  const [upcomingReleases, setUpcomingReleases] = useState<Release[]>(getInitialUpcomingReleases);
   const [homeCardIds, setHomeCardIds] = useState<string[]>(getInitialHomeCardIds);
 
   useEffect(() => {
@@ -79,6 +96,10 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
     window.localStorage.setItem(homeCardsStorageKey, JSON.stringify(homeCardIds));
   }, [homeCardIds]);
 
+  useEffect(() => {
+    window.localStorage.setItem(upcomingStorageKey, JSON.stringify(upcomingReleases));
+  }, [upcomingReleases]);
+
   const updateRelease = useCallback((releaseId: string, update: Partial<Release>) => {
     setReleases((current) => current.map((release) => (release.id === releaseId ? { ...release, ...update } : release)));
   }, []);
@@ -87,6 +108,31 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
     const id = `release-${Date.now()}`;
     setReleases((current) => [...current, { ...release, id, tracks: (release.tracks ?? []).map((track) => ({ ...track, release_id: id })) }]);
     return id;
+  }, []);
+
+  const addUpcomingRelease = useCallback((release: Omit<Release, 'id' | 'created_at' | 'updated_at'>) => {
+    const id = `upcoming-${Date.now()}`;
+    setUpcomingReleases((current) => [...current, { ...release, id, published: false, tracks: (release.tracks ?? []).map((track) => ({ ...track, release_id: id })) }]);
+    return id;
+  }, []);
+
+  const updateUpcomingRelease = useCallback((releaseId: string, update: Partial<Release>) => {
+    setUpcomingReleases((current) => current.map((release) => release.id === releaseId ? { ...release, ...update } : release));
+  }, []);
+
+  const publishUpcomingRelease = useCallback((releaseId: string) => {
+    let publishedId: string | null = null;
+    setUpcomingReleases((current) => current.filter((release) => {
+      if (release.id !== releaseId) return true;
+      publishedId = `release-${Date.now()}`;
+      setReleases((catalog) => [...catalog, { ...release, id: publishedId as string, published: true, tracks: (release.tracks ?? []).map((track) => ({ ...track, release_id: publishedId as string })) }]);
+      return false;
+    }));
+    return publishedId;
+  }, []);
+
+  const removeUpcomingRelease = useCallback((releaseId: string) => {
+    setUpcomingReleases((current) => current.filter((release) => release.id !== releaseId));
   }, []);
 
   const updateHomeCard = useCallback((slot: number, releaseId: string) => {
@@ -151,9 +197,14 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
   const value = useMemo(() => ({
     artist: mockArtist as Artist,
     releases,
+    upcomingReleases,
     homeCardIds,
     updateRelease,
     addRelease,
+    addUpcomingRelease,
+    updateUpcomingRelease,
+    publishUpcomingRelease,
+    removeUpcomingRelease,
     updateHomeCard,
     addTrack,
     removeTrack,
@@ -163,7 +214,7 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
     removePlatformLink,
     recordPlay,
     resetCatalog,
-  }), [releases, homeCardIds, updateRelease, addRelease, updateHomeCard, addTrack, removeTrack, updateTrack, addPlatformLink, updatePlatformLink, removePlatformLink, recordPlay, resetCatalog]);
+  }), [releases, upcomingReleases, homeCardIds, updateRelease, addRelease, addUpcomingRelease, updateUpcomingRelease, publishUpcomingRelease, removeUpcomingRelease, updateHomeCard, addTrack, removeTrack, updateTrack, addPlatformLink, updatePlatformLink, removePlatformLink, recordPlay, resetCatalog]);
 
   return <CatalogContext.Provider value={value}>{children}</CatalogContext.Provider>;
 }

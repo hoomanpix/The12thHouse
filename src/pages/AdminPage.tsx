@@ -28,7 +28,7 @@ function emptyRelease(title: string, type: 'single' | 'album', contentType: Rele
 
 export function AdminPage() {
   const {
-    releases, homeCardIds, addRelease, updateHomeCard, updateRelease, addTrack, removeTrack, updateTrack,
+    releases, upcomingReleases, homeCardIds, addRelease, addUpcomingRelease, updateUpcomingRelease, publishUpcomingRelease, removeUpcomingRelease, updateHomeCard, updateRelease, addTrack, removeTrack, updateTrack,
     addPlatformLink, updatePlatformLink, removePlatformLink, resetCatalog,
   } = useCatalog();
   const [selectedReleaseId, setSelectedReleaseId] = useState(releases[0]?.id ?? '');
@@ -45,6 +45,23 @@ export function AdminPage() {
   const [newReleaseArtwork, setNewReleaseArtwork] = useState<string | null>(null);
   const [newReleaseTrackTitle, setNewReleaseTrackTitle] = useState('');
   const [newReleaseAudio, setNewReleaseAudio] = useState<string | null>(null);
+  const [comingSoonTitle, setComingSoonTitle] = useState('');
+  const [comingSoonType, setComingSoonType] = useState<'single' | 'album'>('single');
+  const [comingSoonDate, setComingSoonDate] = useState(new Date().toISOString().slice(0, 10));
+  const [comingSoonDescription, setComingSoonDescription] = useState('');
+  const [comingSoonArtwork, setComingSoonArtwork] = useState<string | null>(null);
+  const [comingSoonTrackCount, setComingSoonTrackCount] = useState(1);
+  const [comingSoonTrackNames, setComingSoonTrackNames] = useState<string[]>(['']);
+  const [uploadMode, setUploadMode] = useState<'upcoming' | 'new'>('upcoming');
+  const [uploadUpcomingId, setUploadUpcomingId] = useState('');
+  const [directTrackCount, setDirectTrackCount] = useState(1);
+  const [directTrackNames, setDirectTrackNames] = useState<string[]>(['']);
+  const [directTrackFiles, setDirectTrackFiles] = useState<Array<string | null>>([null]);
+  const [directTitle, setDirectTitle] = useState('');
+  const [directType, setDirectType] = useState<'single' | 'album'>('single');
+  const [directDate, setDirectDate] = useState(new Date().toISOString().slice(0, 10));
+  const [directDescription, setDirectDescription] = useState('');
+  const [directArtwork, setDirectArtwork] = useState<string | null>(null);
 
   const selectedRelease = releases.find((release) => release.id === selectedReleaseId) ?? releases[0];
   const totalPlays = useMemo(() => releases.reduce((total, release) => total + (release.tracks ?? []).reduce((sum, track) => sum + (track.play_count ?? 0), 0), 0), [releases]);
@@ -89,6 +106,30 @@ export function AdminPage() {
     setNewReleaseTitle(''); setNewReleaseDate(new Date().toISOString().slice(0, 10)); setNewReleaseDescription(''); setNewReleaseArtwork(null); setNewReleaseTrackTitle(''); setNewReleaseAudio(null);
   };
 
+  const createComingSoon = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!comingSoonTitle.trim()) return;
+    const draft = emptyRelease(comingSoonTitle, comingSoonType, 'music');
+    addUpcomingRelease({ ...draft, release_date: comingSoonDate, description: comingSoonDescription.trim(), artwork_url: comingSoonArtwork, tracks: comingSoonTrackNames.slice(0, comingSoonType === 'album' ? comingSoonTrackCount : 1).filter((name) => name.trim()).map((name, index) => ({ id: `track-${Date.now()}-${index}`, release_id: '', title: name.trim(), audio_url: null, duration: 0, published: false, play_count: 0, order: index + 1 })) });
+    setComingSoonTitle(''); setComingSoonDescription(''); setComingSoonArtwork(null); setComingSoonTrackNames(['']); setComingSoonTrackCount(1);
+  };
+
+  const saveUpcomingAudio = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const upcoming = upcomingReleases.find((release) => release.id === uploadUpcomingId);
+    if (!upcoming) return;
+    const hasAudio = (upcoming.tracks ?? []).some((track) => Boolean(track.audio_url));
+    if (hasAudio) publishUpcomingRelease(upcoming.id);
+  };
+
+  const createDirectUploadRelease = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!directTitle.trim()) return;
+    const draft = emptyRelease(directTitle, directType, 'music');
+    const releaseId = addRelease({ ...draft, release_date: directDate, description: directDescription.trim(), artwork_url: directArtwork, published: true, tracks: directTrackNames.slice(0, directType === 'album' ? directTrackCount : 1).filter((name) => name.trim()).map((name, index) => ({ id: `track-${Date.now()}-${index}`, release_id: '', title: name.trim(), audio_url: directTrackFiles[index] ?? null, duration: 0, published: Boolean(directTrackFiles[index]), play_count: 0, order: index + 1 })) });
+    setSelectedReleaseId(releaseId); setDirectTitle(''); setDirectDescription(''); setDirectArtwork(null); setDirectTrackNames(['']); setDirectTrackFiles([null]); setDirectTrackCount(1);
+  };
+
   return (
     <div className="page-section admin-page">
       <div className="section-heading split">
@@ -116,6 +157,37 @@ export function AdminPage() {
           <button type="submit" className="button primary">Create release</button>
         </form>
         <p className="admin-help">اثر جدید همراه با تاریخ انتشار، کاور و در صورت انتخاب، اولین فایل صوتی ساخته می‌شود. برای آلبوم می‌توانید ترک‌های بعدی را در Audio manager اضافه کنید.</p>
+      </section>
+
+      <section className="admin-panel admin-panel--single">
+        <div className="admin-section-heading"><div><p className="eyebrow">Coming soon</p><h2>Prepare a future release</h2></div></div>
+        <form className="admin-grid-form admin-new-release-form" onSubmit={createComingSoon}>
+          <label>Title<input value={comingSoonTitle} onChange={(event) => setComingSoonTitle(event.target.value)} placeholder="Future release title" required /></label>
+          <label>Release date<input type="date" value={comingSoonDate} onChange={(event) => setComingSoonDate(event.target.value)} required /></label>
+          <label>Type<select value={comingSoonType} onChange={(event) => { const type = event.target.value as 'single' | 'album'; setComingSoonType(type); setComingSoonTrackCount(type === 'album' ? Math.max(2, comingSoonTrackCount) : 1); setComingSoonTrackNames((names) => type === 'album' ? names : [names[0] ?? '']); }}><option value="single">Single track</option><option value="album">Album</option></select></label>
+          <label className="admin-file-input">{comingSoonArtwork ? 'Cover selected' : 'Upload cover'}<input type="file" accept="image/*" onChange={(event) => { const file = event.target.files?.[0]; if (file) readFileAsDataUrl(file, setComingSoonArtwork); }} /></label>
+          <label>Description<textarea value={comingSoonDescription} onChange={(event) => setComingSoonDescription(event.target.value)} rows={2} placeholder="What is coming?" /></label>
+          {comingSoonType === 'album' && <label>Number of tracks<input type="number" min="1" max="50" value={comingSoonTrackCount} onChange={(event) => { const count = Math.max(1, Number(event.target.value)); setComingSoonTrackCount(count); setComingSoonTrackNames((names) => Array.from({ length: count }, (_, index) => names[index] ?? '')); }} /></label>}
+          <div className="admin-track-name-grid">{Array.from({ length: comingSoonType === 'album' ? comingSoonTrackCount : 1 }, (_, index) => <label key={index}>Track {index + 1}<input value={comingSoonTrackNames[index] ?? ''} onChange={(event) => setComingSoonTrackNames((names) => names.map((name, nameIndex) => nameIndex === index ? event.target.value : name))} placeholder="Track name" required /></label>)}</div>
+          <button type="submit" className="button primary">Save coming soon</button>
+        </form>
+        <div className="admin-upcoming-list">{upcomingReleases.length === 0 ? <p className="admin-help">No coming-soon releases yet.</p> : upcomingReleases.map((release) => <div className="admin-upcoming-row" key={release.id}><div><strong>{release.title}</strong><span>{release.type} · {release.release_date} · {(release.tracks ?? []).length} tracks</span></div><button type="button" className="button text-button" onClick={() => removeUpcomingRelease(release.id)}>Remove</button></div>)}</div>
+      </section>
+
+      <section className="admin-panel admin-panel--single">
+        <div className="admin-section-heading"><div><p className="eyebrow">Upload files</p><h2>Attach audio to a coming release or create new</h2></div></div>
+        <div className="admin-mode-switch"><label><input type="radio" name="upload-mode" checked={uploadMode === 'upcoming'} onChange={() => setUploadMode('upcoming')} /> Use coming soon list</label><label><input type="radio" name="upload-mode" checked={uploadMode === 'new'} onChange={() => setUploadMode('new')} /> Create new release</label></div>
+        {uploadMode === 'upcoming' ? <form className="admin-upload-form" onSubmit={saveUpcomingAudio}>
+          <label>Coming-soon release<select value={uploadUpcomingId} onChange={(event) => setUploadUpcomingId(event.target.value)}><option value="">Select a prepared release</option>{upcomingReleases.map((release) => <option key={release.id} value={release.id}>{release.title} · {release.type}</option>)}</select></label>
+          {upcomingReleases.find((release) => release.id === uploadUpcomingId)?.tracks?.map((track) => { const current = upcomingReleases.find((release) => release.id === uploadUpcomingId); return <div className="admin-upload-track" key={track.id}><div><strong>{track.title}</strong><span>{track.audio_url ? 'Audio uploaded' : 'Waiting for file'}</span></div><label className="admin-file-input">{track.audio_url ? 'Replace file' : 'Upload file'}<input type="file" accept="audio/*" onChange={(event) => { const file = event.target.files?.[0]; if (!file || !current) return; readFileAsDataUrl(file, (audio_url) => updateUpcomingRelease(current.id, { tracks: (current.tracks ?? []).map((item) => item.id === track.id ? { ...item, audio_url, published: true } : item) })); }} /></label></div>; })}
+          <button type="submit" className="button primary" disabled={!uploadUpcomingId}>Publish uploaded release</button><p className="admin-help">هر فایل مستقیماً به نام ترک از قبل تعریف‌شده متصل می‌شود.</p>
+        </form> : <form className="admin-upload-form" onSubmit={createDirectUploadRelease}>
+          <div className="admin-edit-grid"><label>Title<input value={directTitle} onChange={(event) => setDirectTitle(event.target.value)} placeholder="Release title" required /></label><label>Release date<input type="date" value={directDate} onChange={(event) => setDirectDate(event.target.value)} required /></label><label>Type<select value={directType} onChange={(event) => { const type = event.target.value as 'single' | 'album'; setDirectType(type); setDirectTrackCount(type === 'album' ? Math.max(2, directTrackCount) : 1); setDirectTrackNames((names) => type === 'album' ? names : [names[0] ?? '']); setDirectTrackFiles((files) => type === 'album' ? files : [files[0] ?? null]); }}><option value="single">Single track</option><option value="album">Album</option></select></label></div>
+          <label className="admin-file-input">{directArtwork ? 'Cover selected' : 'Upload cover'}<input type="file" accept="image/*" onChange={(event) => { const file = event.target.files?.[0]; if (file) readFileAsDataUrl(file, setDirectArtwork); }} /></label><label className="admin-textarea-label">Description<textarea value={directDescription} onChange={(event) => setDirectDescription(event.target.value)} rows={2} /></label>
+          {directType === 'album' && <label>Number of tracks<input type="number" min="1" max="50" value={directTrackCount} onChange={(event) => { const count = Math.max(1, Number(event.target.value)); setDirectTrackCount(count); setDirectTrackNames((names) => Array.from({ length: count }, (_, index) => names[index] ?? '')); setDirectTrackFiles((files) => Array.from({ length: count }, (_, index) => files[index] ?? null)); }} /></label>}
+          <div className="admin-upload-track-list">{Array.from({ length: directType === 'album' ? directTrackCount : 1 }, (_, index) => <div className="admin-upload-track" key={index}><input value={directTrackNames[index] ?? ''} onChange={(event) => setDirectTrackNames((names) => names.map((name, nameIndex) => nameIndex === index ? event.target.value : name))} placeholder={`Track ${index + 1} name`} required /><label className="admin-file-input">{directTrackFiles[index] ? 'File selected' : 'Upload audio'}<input type="file" accept="audio/*" onChange={(event) => { const file = event.target.files?.[0]; if (file) readFileAsDataUrl(file, (audio_url) => setDirectTrackFiles((files) => files.map((item, itemIndex) => itemIndex === index ? audio_url : item))); }} /></label></div>)}</div>
+          <button type="submit" className="button primary">Create and publish release</button>
+        </form>}
       </section>
 
       <section className="admin-panel admin-panel--single">
