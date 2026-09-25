@@ -100,6 +100,37 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
     window.localStorage.setItem(upcomingStorageKey, JSON.stringify(upcomingReleases));
   }, [upcomingReleases]);
 
+  useEffect(() => {
+    const handleStorageUpdate = (event: StorageEvent) => {
+      if (event.key === storageKey && event.newValue) {
+        try {
+          setReleases(normalizeReleases(mergeSeedReleases(JSON.parse(event.newValue) as Release[])));
+        } catch {
+          // Ignore malformed data from another tab and keep the current catalog.
+        }
+      }
+      if (event.key === homeCardsStorageKey && event.newValue) {
+        try {
+          const next = JSON.parse(event.newValue);
+          if (Array.isArray(next)) setHomeCardIds(next.filter((id): id is string => typeof id === 'string'));
+        } catch {
+          // Ignore malformed home-card data from another tab.
+        }
+      }
+      if (event.key === upcomingStorageKey && event.newValue) {
+        try {
+          const next = JSON.parse(event.newValue);
+          if (Array.isArray(next)) setUpcomingReleases(normalizeReleases(next as Release[]));
+        } catch {
+          // Ignore malformed draft data from another tab.
+        }
+      }
+    };
+
+    window.addEventListener('storage', handleStorageUpdate);
+    return () => window.removeEventListener('storage', handleStorageUpdate);
+  }, []);
+
   const updateRelease = useCallback((releaseId: string, update: Partial<Release>) => {
     setReleases((current) => current.map((release) => (release.id === releaseId ? { ...release, ...update } : release)));
   }, []);
