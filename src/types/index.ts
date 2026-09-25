@@ -41,6 +41,7 @@ export interface Release {
   release_date: string;
   description: string;
   artwork_url: string | null;
+  visual_url?: string | null;
   featured: boolean;
   published: boolean;
   created_at?: string;

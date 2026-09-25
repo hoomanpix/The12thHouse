@@ -1642,3 +1642,29 @@ input[type='range'] {
     flex-direction: column;
   }
 }
+
+
+.admin-header-actions {
+  display: flex;
+  align-items: end;
+  gap: 12px;
+}
+
+.admin-content-choice {
+  display: grid;
+  gap: 5px;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.admin-content-choice > div {
+  display: flex;
+  gap: 8px;
+}
+
+@media (max-width: 760px) {
+  .admin-header-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}
