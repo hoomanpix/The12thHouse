@@ -32,7 +32,7 @@ export function AdminPage() {
   const {
     releases, upcomingReleases, homeCardIds, addRelease, addUpcomingRelease, updateUpcomingRelease, publishUpcomingRelease, removeUpcomingRelease, updateHomeCard, updateRelease, addTrack, removeTrack, updateTrack,
     addPlatformLink, updatePlatformLink, removePlatformLink, resetCatalog,
-    user, isReady, isRemote, signIn, signUp, signOut,
+    user, isReady, isRemote, isRecoveringPassword, signIn, signUp, resetPassword, updatePassword, signOut,
   } = useCatalog();
   const [selectedReleaseId, setSelectedReleaseId] = useState(releases[0]?.id ?? '');
   const [newTrackTitle, setNewTrackTitle] = useState('');
@@ -75,6 +75,7 @@ export function AdminPage() {
   const [authPassword, setAuthPassword] = useState('');
   const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
   const [authError, setAuthError] = useState('');
+  const [newPassword, setNewPassword] = useState('');
 
   const selectedRelease = releases.find((release) => release.id === selectedReleaseId) ?? releases[0];
   const totalPlays = useMemo(() => releases.reduce((total, release) => total + (release.tracks ?? []).reduce((sum, track) => sum + (track.play_count ?? 0), 0), 0), [releases]);
@@ -92,8 +93,24 @@ export function AdminPage() {
     if (result.error) setAuthError(result.error);
   };
 
+  const requestPasswordReset = async () => {
+    setAuthError('');
+    const result = await resetPassword(authEmail);
+    setAuthError(result.error ?? 'Password reset email sent. Check your inbox and spam folder.');
+  };
+
+  const saveNewPassword = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setAuthError('');
+    if (newPassword.length < 6) { setAuthError('Password must be at least 6 characters.'); return; }
+    const result = await updatePassword(newPassword);
+    if (result.error) setAuthError(result.error);
+    else setAuthError('Password updated. You can now use it on any device or browser.');
+  };
+
   if (!isReady) return <div className="admin-auth-card"><p className="eyebrow">Connecting</p><h1>Loading control room…</h1><p>Connecting to the shared catalog.</p></div>;
-  if (isRemote && !user) return <div className="admin-auth-card"><p className="eyebrow">The12thHouse Admin</p><h1>{authMode === 'signin' ? 'Sign in to control room' : 'Create artist account'}</h1><p>Only the approved artist email can access this area.</p><form onSubmit={submitAuth} className="admin-auth-form"><label>Email<input type="email" value={authEmail} onChange={(event) => setAuthEmail(event.target.value)} required /></label><label>Password<input type="password" minLength={6} value={authPassword} onChange={(event) => setAuthPassword(event.target.value)} required /></label>{authError && <p className="admin-auth-error" role="alert">{authError}</p>}<button className="button primary" type="submit">{authMode === 'signin' ? 'Sign in' : 'Create account'}</button></form><button type="button" className="button text-button" onClick={() => { setAuthMode(authMode === 'signin' ? 'signup' : 'signin'); setAuthError(''); }}>{authMode === 'signin' ? 'Create a new account' : 'Back to sign in'}</button></div>;
+  if (isRemote && isRecoveringPassword) return <div className="admin-auth-card"><p className="eyebrow">The12thHouse Admin</p><h1>Set a new password</h1><p>Choose a password for the approved artist account.</p><form onSubmit={saveNewPassword} className="admin-auth-form"><label>New password<input type="password" minLength={6} value={newPassword} onChange={(event) => setNewPassword(event.target.value)} required /></label>{authError && <p className="admin-auth-error" role="alert">{authError}</p>}<button className="button primary" type="submit">Save new password</button></form></div>;
+  if (isRemote && !user) return <div className="admin-auth-card"><p className="eyebrow">The12thHouse Admin</p><h1>{authMode === 'signin' ? 'Sign in to control room' : 'Create artist account'}</h1><p>Only the approved artist email can access this area from any device or browser.</p><form onSubmit={submitAuth} className="admin-auth-form"><label>Email<input type="email" value={authEmail} onChange={(event) => setAuthEmail(event.target.value)} required /></label><label>Password<input type="password" minLength={6} value={authPassword} onChange={(event) => setAuthPassword(event.target.value)} required /></label>{authError && <p className="admin-auth-error" role="alert">{authError}</p>}<button className="button primary" type="submit">{authMode === 'signin' ? 'Sign in' : 'Create account'}</button></form>{authMode === 'signin' && <button type="button" className="button text-button" onClick={() => void requestPasswordReset()}>Forgot password? Send reset email</button>}<button type="button" className="button text-button" onClick={() => { setAuthMode(authMode === 'signin' ? 'signup' : 'signin'); setAuthError(''); }}>{authMode === 'signin' ? 'Create a new account' : 'Back to sign in'}</button></div>;
   if (isRemote && user && user.email?.toLowerCase() !== approvedAdminEmail) return <div className="admin-auth-card"><p className="eyebrow">Access denied</p><h1>Admin access is restricted</h1><p>This account is not the approved artist account.</p><button type="button" className="button primary" onClick={() => void signOut()}>Sign out</button></div>;
 
   if (!selectedRelease) return <p className="admin-empty">No releases are available yet.</p>;

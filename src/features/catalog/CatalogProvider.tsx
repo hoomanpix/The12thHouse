@@ -10,10 +10,13 @@ interface CatalogContextValue {
   upcomingReleases: Release[];
   homeCardIds: string[];
   user: { id: string; email?: string } | null;
+  isRecoveringPassword: boolean;
   isReady: boolean;
   isRemote: boolean;
   signIn: (email: string, password: string) => Promise<{ error?: string }>;
   signUp: (email: string, password: string) => Promise<{ error?: string }>;
+  resetPassword: (email: string) => Promise<{ error?: string }>;
+  updatePassword: (password: string) => Promise<{ error?: string }>;
   signOut: () => Promise<void>;
   updateRelease: (releaseId: string, update: Partial<Release>) => void;
   addRelease: (release: ReleaseInput) => string;
@@ -77,6 +80,7 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
   const [releases, setReleases] = useState<Release[]>(fallbackReleases);
   const [homeCardIds, setHomeCardIds] = useState<string[]>([]);
   const [user, setUser] = useState<{ id: string; email?: string } | null>(null);
+  const [isRecoveringPassword, setIsRecoveringPassword] = useState(false);
   const [isReady, setIsReady] = useState(!isSupabaseConfigured);
 
   const loadRemote = useCallback(async (authenticated = false) => {
@@ -100,7 +104,8 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
       if (mounted && data.session?.user) setUser({ id: data.session.user.id, email: data.session.user.email });
       loadRemote(Boolean(data.session?.user));
     });
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'PASSWORD_RECOVERY') setIsRecoveringPassword(true);
       if (session?.user) { setUser({ id: session.user.id, email: session.user.email }); loadRemote(true); }
       else setUser(null);
     });
@@ -108,17 +113,34 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
   }, [loadRemote]);
 
   const signIn = useCallback(async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const normalizedEmail = email.trim().toLowerCase();
+    if (normalizedEmail !== 'kamielkhajehpour@gmail.com') return { error: 'Only the approved artist email can access the admin panel.' };
+    const { error } = await supabase.auth.signInWithPassword({ email: normalizedEmail, password });
     if (error) return { error: error.message };
     await loadRemote(true);
     return {};
   }, [loadRemote]);
 
   const signUp = useCallback(async (email: string, password: string) => {
-    const { data, error } = await supabase.auth.signUp({ email, password });
+    const normalizedEmail = email.trim().toLowerCase();
+    if (normalizedEmail !== 'kamielkhajehpour@gmail.com') return { error: 'Only the approved artist email can create the artist account.' };
+    const { data, error } = await supabase.auth.signUp({ email: normalizedEmail, password });
     if (error) return { error: error.message };
     if (data.user && !data.session) return { error: 'Account created. Check your email for confirmation, then sign in.' };
     return {};
+  }, []);
+
+  const resetPassword = useCallback(async (email: string) => {
+    const normalizedEmail = email.trim().toLowerCase();
+    if (normalizedEmail !== 'kamielkhajehpour@gmail.com') return { error: 'Only the approved artist email can reset the admin password.' };
+    const { error } = await supabase.auth.resetPasswordForEmail(normalizedEmail, { redirectTo: 'https://hoomanpix.github.io/The12thHouse/' });
+    return error ? { error: error.message } : {};
+  }, []);
+
+  const updatePassword = useCallback(async (password: string) => {
+    const { error } = await supabase.auth.updateUser({ password });
+    if (!error) setIsRecoveringPassword(false);
+    return error ? { error: error.message } : {};
   }, []);
 
   const signOut = useCallback(async () => { await supabase.auth.signOut(); setUser(null); }, []);
@@ -166,7 +188,7 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
   const recordPlay = useCallback((releaseId: string, trackId: string) => { setReleases((current) => current.map((release) => release.id === releaseId ? { ...release, tracks: (release.tracks ?? []).map((track) => track.id === trackId ? { ...track, play_count: (track.play_count ?? 0) + 1 } : track) } : release)); if (isSupabaseConfigured) void supabase.rpc('increment_track_play', { p_track_id: trackId }); }, []);
   const resetCatalog = useCallback(() => setReleases(fallbackReleases), []);
 
-  const value = useMemo(() => ({ artist, releases, upcomingReleases: releases.filter((release) => !release.published), homeCardIds, user, isReady, isRemote: isSupabaseConfigured, signIn, signUp, signOut, updateRelease, addRelease, addUpcomingRelease, updateUpcomingRelease, publishUpcomingRelease, removeUpcomingRelease, updateHomeCard, addTrack, removeTrack, updateTrack, addPlatformLink, updatePlatformLink, removePlatformLink, recordPlay, resetCatalog }), [artist, releases, homeCardIds, user, isReady, signIn, signUp, signOut, updateRelease, addRelease, addUpcomingRelease, updateUpcomingRelease, publishUpcomingRelease, removeUpcomingRelease, updateHomeCard, addTrack, removeTrack, updateTrack, addPlatformLink, updatePlatformLink, removePlatformLink, recordPlay, resetCatalog]);
+  const value = useMemo(() => ({ artist, releases, upcomingReleases: releases.filter((release) => !release.published), homeCardIds, user, isRecoveringPassword, isReady, isRemote: isSupabaseConfigured, signIn, signUp, resetPassword, updatePassword, signOut, updateRelease, addRelease, addUpcomingRelease, updateUpcomingRelease, publishUpcomingRelease, removeUpcomingRelease, updateHomeCard, addTrack, removeTrack, updateTrack, addPlatformLink, updatePlatformLink, removePlatformLink, recordPlay, resetCatalog }), [artist, releases, homeCardIds, user, isRecoveringPassword, isReady, signIn, signUp, resetPassword, updatePassword, signOut, updateRelease, addRelease, addUpcomingRelease, updateUpcomingRelease, publishUpcomingRelease, removeUpcomingRelease, updateHomeCard, addTrack, removeTrack, updateTrack, addPlatformLink, updatePlatformLink, removePlatformLink, recordPlay, resetCatalog]);
   return <CatalogContext.Provider value={value}>{children}</CatalogContext.Provider>;
 }
 
