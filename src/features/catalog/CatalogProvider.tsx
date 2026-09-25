@@ -1,19 +1,23 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { mockArtist, mockReleases } from '../../data/mock';
+import { isSupabaseConfigured, supabase } from '../../lib/supabase';
 import type { Artist, PlatformLink, Release, Track } from '../../types';
 
-const storageKey = 'new-wave-catalog';
-const homeCardsStorageKey = 'new-wave-home-cards';
-const upcomingStorageKey = 'new-wave-upcoming-releases';
-
+type ReleaseInput = Omit<Release, 'id' | 'created_at' | 'updated_at'>;
 interface CatalogContextValue {
   artist: Artist;
   releases: Release[];
   upcomingReleases: Release[];
   homeCardIds: string[];
+  user: { id: string; email?: string } | null;
+  isReady: boolean;
+  isRemote: boolean;
+  signIn: (email: string, password: string) => Promise<{ error?: string }>;
+  signUp: (email: string, password: string) => Promise<{ error?: string }>;
+  signOut: () => Promise<void>;
   updateRelease: (releaseId: string, update: Partial<Release>) => void;
-  addRelease: (release: Omit<Release, 'id' | 'created_at' | 'updated_at'>) => string;
-  addUpcomingRelease: (release: Omit<Release, 'id' | 'created_at' | 'updated_at'>) => string;
+  addRelease: (release: ReleaseInput) => string;
+  addUpcomingRelease: (release: ReleaseInput) => string;
   updateUpcomingRelease: (releaseId: string, update: Partial<Release>) => void;
   publishUpcomingRelease: (releaseId: string) => string | null;
   removeUpcomingRelease: (releaseId: string) => void;
@@ -29,224 +33,140 @@ interface CatalogContextValue {
 }
 
 const CatalogContext = createContext<CatalogContextValue | null>(null);
+const fallbackReleases = mockReleases as Release[];
+const makeId = () => typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : `00000000-0000-4000-8000-${Date.now().toString().padStart(12, '0')}`;
 
-function normalizeReleases(releases: Release[]) {
-  return releases.map((release) => ({ ...release, contentType: release.contentType ?? 'music' }));
+function normalizeRelease(row: any): Release {
+  return {
+    ...row,
+    artist_id: row.artist_id ?? row.created_by ?? 'artist-1',
+    type: row.release_type ?? row.type ?? 'album',
+    contentType: row.content_type ?? row.contentType ?? 'music',
+    visualType: row.visual_type ?? row.visualType,
+    artwork_url: row.artwork_url ?? row.cover_url ?? null,
+    visual_url: row.visual_url ?? null,
+    tracks: (row.tracks ?? []).map((track: any) => ({ ...track, release_id: track.release_id ?? track.album_id, duration: track.duration ?? 0, order: track.track_order ?? track.order ?? 1 })),
+    platform_links: (row.platform_links ?? []).map((link: any) => ({ ...link, order: link.link_order ?? link.order ?? 1 })),
+  };
 }
 
-function mergeSeedReleases(savedReleases: Release[]) {
-  const savedById = new Map(savedReleases.map((release) => [release.id, release]));
-  const seeded = (mockReleases as Release[]).map((seed) => {
-    const saved = savedById.get(seed.id);
-    if (!saved) return seed;
-    const artworkChanged = seed.artwork_url && saved.artwork_url !== seed.artwork_url;
-    const titleChanged = seed.id === 'release-2' && saved.title === 'Low Tide Memory';
-    return {
-      ...seed,
-      ...saved,
-      ...(artworkChanged ? { artwork_url: seed.artwork_url } : {}),
-      ...(titleChanged ? { title: seed.title, slug: seed.slug, tracks: seed.tracks } : {}),
-    };
-  });
-  const seededIds = new Set(seeded.map((release) => release.id));
-  return [...seeded, ...savedReleases.filter((release) => !seededIds.has(release.id))];
+function releaseRow(release: Partial<Release>) {
+  const row: Record<string, unknown> = {};
+  const fields: Array<[keyof Release, string]> = [
+    ['title', 'title'], ['slug', 'slug'], ['release_date', 'release_date'], ['description', 'description'],
+    ['featured', 'featured'], ['published', 'published'], ['visual_url', 'visual_url'],
+  ];
+  fields.forEach(([from, to]) => { if (from in release) row[to] = release[from]; });
+  if ('type' in release) row.release_type = release.type;
+  if ('artwork_url' in release) row.cover_url = release.artwork_url;
+  if ('contentType' in release) row.content_type = release.contentType;
+  if ('visualType' in release) row.visual_type = release.visualType;
+  return row;
 }
 
-function getInitialReleases() {
-  if (typeof window === 'undefined') return normalizeReleases(mockReleases as Release[]);
-  const saved = window.localStorage.getItem(storageKey);
-  if (!saved) return normalizeReleases(mockReleases as Release[]);
-  try {
-    return normalizeReleases(mergeSeedReleases(JSON.parse(saved) as Release[]));
-  } catch {
-    return normalizeReleases(mockReleases as Release[]);
-  }
+function trackRow(releaseId: string, track: Partial<Track>) {
+  return { album_id: releaseId, title: track.title, audio_url: track.audio_url ?? null, published: track.published ?? false, play_count: track.play_count ?? 0, track_order: track.order ?? 1 };
 }
 
-function getInitialHomeCardIds() {
-  if (typeof window === 'undefined') return [];
-  try {
-    const saved = JSON.parse(window.localStorage.getItem(homeCardsStorageKey) ?? '[]');
-    return Array.isArray(saved) ? saved.filter((id): id is string => typeof id === 'string') : [];
-  } catch {
-    return [];
-  }
-}
-
-function getInitialUpcomingReleases() {
-  if (typeof window === 'undefined') return [];
-  try {
-    const saved = JSON.parse(window.localStorage.getItem(upcomingStorageKey) ?? '[]');
-    return Array.isArray(saved) ? normalizeReleases(saved as Release[]) : [];
-  } catch {
-    return [];
-  }
+function linkRow(releaseId: string, link: Partial<PlatformLink>) {
+  return { album_id: releaseId, platform: link.platform, label: link.label, url: link.url, link_order: link.order ?? 1 };
 }
 
 export function CatalogProvider({ children }: { children: React.ReactNode }) {
-  const [releases, setReleases] = useState<Release[]>(getInitialReleases);
-  const [upcomingReleases, setUpcomingReleases] = useState<Release[]>(getInitialUpcomingReleases);
-  const [homeCardIds, setHomeCardIds] = useState<string[]>(getInitialHomeCardIds);
+  const [artist] = useState<Artist>(mockArtist as Artist);
+  const [releases, setReleases] = useState<Release[]>(fallbackReleases);
+  const [homeCardIds, setHomeCardIds] = useState<string[]>([]);
+  const [user, setUser] = useState<{ id: string; email?: string } | null>(null);
+  const [isReady, setIsReady] = useState(!isSupabaseConfigured);
 
-  useEffect(() => {
-    window.localStorage.setItem(storageKey, JSON.stringify(releases));
-  }, [releases]);
-
-  useEffect(() => {
-    window.localStorage.setItem(homeCardsStorageKey, JSON.stringify(homeCardIds));
-  }, [homeCardIds]);
-
-  useEffect(() => {
-    window.localStorage.setItem(upcomingStorageKey, JSON.stringify(upcomingReleases));
-  }, [upcomingReleases]);
-
-  useEffect(() => {
-    const handleStorageUpdate = (event: StorageEvent) => {
-      if (event.key === storageKey && event.newValue) {
-        try {
-          setReleases(normalizeReleases(mergeSeedReleases(JSON.parse(event.newValue) as Release[])));
-        } catch {
-          // Ignore malformed data from another tab and keep the current catalog.
-        }
-      }
-      if (event.key === homeCardsStorageKey && event.newValue) {
-        try {
-          const next = JSON.parse(event.newValue);
-          if (Array.isArray(next)) setHomeCardIds(next.filter((id): id is string => typeof id === 'string'));
-        } catch {
-          // Ignore malformed home-card data from another tab.
-        }
-      }
-      if (event.key === upcomingStorageKey && event.newValue) {
-        try {
-          const next = JSON.parse(event.newValue);
-          if (Array.isArray(next)) setUpcomingReleases(normalizeReleases(next as Release[]));
-        } catch {
-          // Ignore malformed draft data from another tab.
-        }
-      }
-    };
-
-    window.addEventListener('storage', handleStorageUpdate);
-    return () => window.removeEventListener('storage', handleStorageUpdate);
+  const loadRemote = useCallback(async (authenticated = false) => {
+    if (!isSupabaseConfigured) { setIsReady(true); return; }
+    const query = supabase.from('albums').select('*, tracks(*), platform_links(*)').order('release_date', { ascending: false });
+    const { data, error } = await query;
+    if (!error && data) setReleases(data.map(normalizeRelease));
+    const cards = await supabase.from('home_cards').select('slot, album_id').order('slot');
+    if (!cards.error && cards.data) setHomeCardIds(cards.data.map((card) => card.album_id).filter((id): id is string => Boolean(id)));
+    if (authenticated) {
+      const current = await supabase.auth.getUser();
+      if (current.data.user) setUser({ id: current.data.user.id, email: current.data.user.email });
+    }
+    setIsReady(true);
   }, []);
+
+  useEffect(() => {
+    if (!isSupabaseConfigured) return;
+    let mounted = true;
+    supabase.auth.getSession().then(({ data }) => {
+      if (mounted && data.session?.user) setUser({ id: data.session.user.id, email: data.session.user.email });
+      loadRemote(Boolean(data.session?.user));
+    });
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) { setUser({ id: session.user.id, email: session.user.email }); loadRemote(true); }
+      else setUser(null);
+    });
+    return () => { mounted = false; listener.subscription.unsubscribe(); };
+  }, [loadRemote]);
+
+  const signIn = useCallback(async (email: string, password: string) => {
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) return { error: error.message };
+    await loadRemote(true);
+    return {};
+  }, [loadRemote]);
+
+  const signUp = useCallback(async (email: string, password: string) => {
+    const { data, error } = await supabase.auth.signUp({ email, password });
+    if (error) return { error: error.message };
+    if (data.user && !data.session) return { error: 'Account created. Check your email for confirmation, then sign in.' };
+    return {};
+  }, []);
+
+  const signOut = useCallback(async () => { await supabase.auth.signOut(); setUser(null); }, []);
 
   const updateRelease = useCallback((releaseId: string, update: Partial<Release>) => {
-    setReleases((current) => current.map((release) => (release.id === releaseId ? { ...release, ...update } : release)));
+    setReleases((current) => current.map((release) => release.id === releaseId ? { ...release, ...update } : release));
+    if (isSupabaseConfigured) void supabase.from('albums').update(releaseRow(update)).eq('id', releaseId);
   }, []);
 
-  const addRelease = useCallback((release: Omit<Release, 'id' | 'created_at' | 'updated_at'>) => {
-    const id = `release-${Date.now()}`;
-    setReleases((current) => [...current, { ...release, id, tracks: (release.tracks ?? []).map((track) => ({ ...track, release_id: id })) }]);
+  const addRelease = useCallback((release: ReleaseInput) => {
+    const id = makeId();
+    const next = { ...release, id, tracks: (release.tracks ?? []).map((track) => ({ ...track, id: makeId(), release_id: id })), platform_links: (release.platform_links ?? []).map((link) => ({ ...link, id: makeId(), release_id: id })) } as Release;
+    setReleases((current) => [...current, next]);
+    if (isSupabaseConfigured) {
+      void supabase.from('albums').insert({ id, ...releaseRow(release) });
+      void Promise.all((next.tracks ?? []).map((track) => supabase.from('tracks').insert({ id: track.id, ...trackRow(id, track) })));
+      void Promise.all((next.platform_links ?? []).map((link) => supabase.from('platform_links').insert({ id: link.id, ...linkRow(id, link) })));
+    }
     return id;
   }, []);
 
-  const addUpcomingRelease = useCallback((release: Omit<Release, 'id' | 'created_at' | 'updated_at'>) => {
-    const id = `upcoming-${Date.now()}`;
-    setUpcomingReleases((current) => [...current, { ...release, id, published: false, tracks: (release.tracks ?? []).map((track) => ({ ...track, release_id: id })) }]);
-    return id;
-  }, []);
+  const addUpcomingRelease = useCallback((release: ReleaseInput) => addRelease({ ...release, published: false }), [addRelease]);
 
-  const updateUpcomingRelease = useCallback((releaseId: string, update: Partial<Release>) => {
-    setUpcomingReleases((current) => current.map((release) => release.id === releaseId ? { ...release, ...update } : release));
-  }, []);
-
-  const publishUpcomingRelease = useCallback((releaseId: string) => {
-    let publishedId: string | null = null;
-    setUpcomingReleases((current) => current.filter((release) => {
-      if (release.id !== releaseId) return true;
-      publishedId = `release-${Date.now()}`;
-      setReleases((catalog) => [...catalog, { ...release, id: publishedId as string, published: true, tracks: (release.tracks ?? []).map((track) => ({ ...track, release_id: publishedId as string })) }]);
-      return false;
-    }));
-    return publishedId;
-  }, []);
-
-  const removeUpcomingRelease = useCallback((releaseId: string) => {
-    setUpcomingReleases((current) => current.filter((release) => release.id !== releaseId));
-  }, []);
+  const updateUpcomingRelease = useCallback((releaseId: string, update: Partial<Release>) => updateRelease(releaseId, update), [updateRelease]);
+  const publishUpcomingRelease = useCallback((releaseId: string) => { updateRelease(releaseId, { published: true }); return releaseId; }, [updateRelease]);
+  const removeUpcomingRelease = useCallback((releaseId: string) => { setReleases((current) => current.filter((release) => release.id !== releaseId)); if (isSupabaseConfigured) void supabase.from('albums').delete().eq('id', releaseId); }, []);
 
   const updateHomeCard = useCallback((slot: number, releaseId: string) => {
-    setHomeCardIds((current) => {
-      const next = [...current];
-      next[slot] = releaseId;
-      return next;
-    });
+    setHomeCardIds((current) => { const next = [...current]; next[slot] = releaseId; return next; });
+    if (isSupabaseConfigured) void supabase.from('home_cards').upsert({ slot, album_id: releaseId }, { onConflict: 'slot' });
   }, []);
 
   const addTrack = useCallback((releaseId: string, track: Omit<Track, 'id' | 'release_id' | 'order'>) => {
-    setReleases((current) => current.map((release) => {
-      if (release.id !== releaseId) return release;
-      const tracks = release.tracks ?? [];
-      return { ...release, tracks: [...tracks, { ...track, id: `track-${Date.now()}`, release_id: releaseId, order: tracks.length + 1 }] };
-    }));
+    const id = makeId();
+    setReleases((current) => current.map((release) => release.id === releaseId ? { ...release, tracks: [...(release.tracks ?? []), { ...track, id, release_id: releaseId, order: (release.tracks ?? []).length + 1 }] } : release));
+    if (isSupabaseConfigured) void supabase.from('tracks').insert({ id, ...trackRow(releaseId, { ...track, order: 1 }) });
   }, []);
 
-  const removeTrack = useCallback((releaseId: string, trackId: string) => {
-    setReleases((current) => current.map((release) => release.id === releaseId
-      ? { ...release, tracks: (release.tracks ?? []).filter((track) => track.id !== trackId) }
-      : release));
-  }, []);
+  const removeTrack = useCallback((releaseId: string, trackId: string) => { setReleases((current) => current.map((release) => release.id === releaseId ? { ...release, tracks: (release.tracks ?? []).filter((track) => track.id !== trackId) } : release)); if (isSupabaseConfigured) void supabase.from('tracks').delete().eq('id', trackId); }, []);
+  const updateTrack = useCallback((releaseId: string, trackId: string, update: Partial<Track>) => { setReleases((current) => current.map((release) => release.id === releaseId ? { ...release, tracks: (release.tracks ?? []).map((track) => track.id === trackId ? { ...track, ...update } : track) } : release)); if (isSupabaseConfigured) void supabase.from('tracks').update(trackRow(releaseId, update)).eq('id', trackId); }, []);
 
-  const updateTrack = useCallback((releaseId: string, trackId: string, update: Partial<Track>) => {
-    setReleases((current) => current.map((release) => release.id === releaseId
-      ? { ...release, tracks: (release.tracks ?? []).map((track) => track.id === trackId ? { ...track, ...update } : track) }
-      : release));
-  }, []);
+  const addPlatformLink = useCallback((releaseId: string, link: Omit<PlatformLink, 'id' | 'order'>) => { const id = makeId(); setReleases((current) => current.map((release) => release.id === releaseId ? { ...release, platform_links: [...(release.platform_links ?? []), { ...link, id, order: (release.platform_links ?? []).length + 1 }] } : release)); if (isSupabaseConfigured) void supabase.from('platform_links').insert({ id, ...linkRow(releaseId, { ...link, order: 1 }) }); }, []);
+  const updatePlatformLink = useCallback((releaseId: string, linkId: string, update: Partial<PlatformLink>) => { setReleases((current) => current.map((release) => release.id === releaseId ? { ...release, platform_links: (release.platform_links ?? []).map((link) => link.id === linkId ? { ...link, ...update } : link) } : release)); if (isSupabaseConfigured) void supabase.from('platform_links').update(linkRow(releaseId, update)).eq('id', linkId); }, []);
+  const removePlatformLink = useCallback((releaseId: string, linkId: string) => { setReleases((current) => current.map((release) => release.id === releaseId ? { ...release, platform_links: (release.platform_links ?? []).filter((link) => link.id !== linkId) } : release)); if (isSupabaseConfigured) void supabase.from('platform_links').delete().eq('id', linkId); }, []);
+  const recordPlay = useCallback((releaseId: string, trackId: string) => { setReleases((current) => current.map((release) => release.id === releaseId ? { ...release, tracks: (release.tracks ?? []).map((track) => track.id === trackId ? { ...track, play_count: (track.play_count ?? 0) + 1 } : track) } : release)); if (isSupabaseConfigured) void supabase.rpc('increment_track_play', { p_track_id: trackId }); }, []);
+  const resetCatalog = useCallback(() => setReleases(fallbackReleases), []);
 
-  const addPlatformLink = useCallback((releaseId: string, link: Omit<PlatformLink, 'id' | 'order'>) => {
-    setReleases((current) => current.map((release) => {
-      if (release.id !== releaseId) return release;
-      const links = release.platform_links ?? [];
-      return { ...release, platform_links: [...links, { ...link, id: `link-${Date.now()}`, order: links.length + 1 }] };
-    }));
-  }, []);
-
-  const updatePlatformLink = useCallback((releaseId: string, linkId: string, update: Partial<PlatformLink>) => {
-    setReleases((current) => current.map((release) => release.id === releaseId
-      ? { ...release, platform_links: (release.platform_links ?? []).map((link) => link.id === linkId ? { ...link, ...update } : link) }
-      : release));
-  }, []);
-
-  const removePlatformLink = useCallback((releaseId: string, linkId: string) => {
-    setReleases((current) => current.map((release) => release.id === releaseId
-      ? { ...release, platform_links: (release.platform_links ?? []).filter((link) => link.id !== linkId) }
-      : release));
-  }, []);
-
-  const recordPlay = useCallback((releaseId: string, trackId: string) => {
-    setReleases((current) => current.map((release) => release.id === releaseId
-      ? { ...release, tracks: (release.tracks ?? []).map((track) => track.id === trackId ? { ...track, play_count: (track.play_count ?? 0) + 1 } : track) }
-      : release));
-  }, []);
-
-  const resetCatalog = useCallback(() => {
-    setReleases(normalizeReleases(mockReleases as Release[]));
-    setHomeCardIds([]);
-  }, []);
-
-  const value = useMemo(() => ({
-    artist: mockArtist as Artist,
-    releases,
-    upcomingReleases,
-    homeCardIds,
-    updateRelease,
-    addRelease,
-    addUpcomingRelease,
-    updateUpcomingRelease,
-    publishUpcomingRelease,
-    removeUpcomingRelease,
-    updateHomeCard,
-    addTrack,
-    removeTrack,
-    updateTrack,
-    addPlatformLink,
-    updatePlatformLink,
-    removePlatformLink,
-    recordPlay,
-    resetCatalog,
-  }), [releases, upcomingReleases, homeCardIds, updateRelease, addRelease, addUpcomingRelease, updateUpcomingRelease, publishUpcomingRelease, removeUpcomingRelease, updateHomeCard, addTrack, removeTrack, updateTrack, addPlatformLink, updatePlatformLink, removePlatformLink, recordPlay, resetCatalog]);
-
+  const value = useMemo(() => ({ artist, releases, upcomingReleases: releases.filter((release) => !release.published), homeCardIds, user, isReady, isRemote: isSupabaseConfigured, signIn, signUp, signOut, updateRelease, addRelease, addUpcomingRelease, updateUpcomingRelease, publishUpcomingRelease, removeUpcomingRelease, updateHomeCard, addTrack, removeTrack, updateTrack, addPlatformLink, updatePlatformLink, removePlatformLink, recordPlay, resetCatalog }), [artist, releases, homeCardIds, user, isReady, signIn, signUp, signOut, updateRelease, addRelease, addUpcomingRelease, updateUpcomingRelease, publishUpcomingRelease, removeUpcomingRelease, updateHomeCard, addTrack, removeTrack, updateTrack, addPlatformLink, updatePlatformLink, removePlatformLink, recordPlay, resetCatalog]);
   return <CatalogContext.Provider value={value}>{children}</CatalogContext.Provider>;
 }
 

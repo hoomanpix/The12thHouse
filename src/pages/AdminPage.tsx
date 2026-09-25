@@ -30,6 +30,7 @@ export function AdminPage() {
   const {
     releases, upcomingReleases, homeCardIds, addRelease, addUpcomingRelease, updateUpcomingRelease, publishUpcomingRelease, removeUpcomingRelease, updateHomeCard, updateRelease, addTrack, removeTrack, updateTrack,
     addPlatformLink, updatePlatformLink, removePlatformLink, resetCatalog,
+    user, isReady, isRemote, signIn, signUp, signOut,
   } = useCatalog();
   const [selectedReleaseId, setSelectedReleaseId] = useState(releases[0]?.id ?? '');
   const [newTrackTitle, setNewTrackTitle] = useState('');
@@ -68,11 +69,25 @@ export function AdminPage() {
   const [directArtwork, setDirectArtwork] = useState<string | null>(null);
   const [directVisualType, setDirectVisualType] = useState<'cover' | 'animation'>('cover');
   const [directVisualFile, setDirectVisualFile] = useState<string | null>(null);
+  const [authEmail, setAuthEmail] = useState('');
+  const [authPassword, setAuthPassword] = useState('');
+  const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
+  const [authError, setAuthError] = useState('');
 
   const selectedRelease = releases.find((release) => release.id === selectedReleaseId) ?? releases[0];
   const totalPlays = useMemo(() => releases.reduce((total, release) => total + (release.tracks ?? []).reduce((sum, track) => sum + (track.play_count ?? 0), 0), 0), [releases]);
   const playableTracks = releases.reduce((total, release) => total + (release.tracks ?? []).filter((track) => track.published !== false && Boolean(track.audio_url)).length, 0);
   const visibleReleases = releases.filter((release) => release.published);
+
+  const submitAuth = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setAuthError('');
+    const result = authMode === 'signin' ? await signIn(authEmail, authPassword) : await signUp(authEmail, authPassword);
+    if (result.error) setAuthError(result.error);
+  };
+
+  if (!isReady) return <div className="admin-auth-card"><p className="eyebrow">Connecting</p><h1>Loading control room…</h1><p>Connecting to the shared catalog.</p></div>;
+  if (isRemote && !user) return <div className="admin-auth-card"><p className="eyebrow">The12thHouse Admin</p><h1>{authMode === 'signin' ? 'Sign in to control room' : 'Create artist account'}</h1><p>Changes made here are published to Home and Releases for every visitor.</p><form onSubmit={submitAuth} className="admin-auth-form"><label>Email<input type="email" value={authEmail} onChange={(event) => setAuthEmail(event.target.value)} required /></label><label>Password<input type="password" minLength={6} value={authPassword} onChange={(event) => setAuthPassword(event.target.value)} required /></label>{authError && <p className="admin-auth-error" role="alert">{authError}</p>}<button className="button primary" type="submit">{authMode === 'signin' ? 'Sign in' : 'Create account'}</button></form><button type="button" className="button text-button" onClick={() => { setAuthMode(authMode === 'signin' ? 'signup' : 'signin'); setAuthError(''); }}>{authMode === 'signin' ? 'Create a new account' : 'Back to sign in'}</button></div>;
 
   if (!selectedRelease) return <p className="admin-empty">No releases are available yet.</p>;
 
@@ -140,7 +155,7 @@ export function AdminPage() {
     <div className="page-section admin-page">
       <div className="section-heading split">
         <div><p className="eyebrow">Independent content administration</p><h1>Control room</h1><p className="admin-intro">Manage releases, audio, visuals, platform links and the three featured cards on Home.</p></div>
-        <div className="admin-header-actions"><label className="admin-release-picker"><span className="eyebrow">Editing release</span><select value={selectedRelease.id} onChange={(event) => setSelectedReleaseId(event.target.value)}>{releases.map((release) => <option key={release.id} value={release.id}>{release.title}</option>)}</select></label><button type="button" className="button secondary" onClick={() => document.getElementById('edit-release-settings')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>Edit release</button></div>
+        <div className="admin-header-actions"><label className="admin-release-picker"><span className="eyebrow">Editing release</span><select value={selectedRelease.id} onChange={(event) => setSelectedReleaseId(event.target.value)}>{releases.map((release) => <option key={release.id} value={release.id}>{release.title}</option>)}</select></label><button type="button" className="button secondary" onClick={() => document.getElementById('edit-release-settings')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>Edit release</button><button type="button" className="button text-button" onClick={() => void signOut()}>Sign out</button></div>
       </div>
 
       <div className="admin-stats" aria-label="Catalog statistics">
