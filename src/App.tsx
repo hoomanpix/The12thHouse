@@ -19,7 +19,7 @@ export default function App() {
   const location = useLocation();
   const recoveryParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
   const isPasswordRecoveryRoute = recoveryParams.get('type') === 'recovery' || new URLSearchParams(window.location.search).get('type') === 'recovery';
-  const isAdminRoute = location.pathname === publicRoutes.admin || isPasswordRecoveryRoute;
+  const isAdminRoute = location.pathname === publicRoutes.admin || location.pathname === publicRoutes.adminRecovery || isPasswordRecoveryRoute;
 
   return (
     <>
