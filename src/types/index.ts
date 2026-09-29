@@ -1,6 +1,7 @@
 export type ReleaseType = 'single' | 'album';
 export type ReleaseContentType = 'music' | 'visual';
 export type VisualType = 'cover' | 'animation';
+export type ReleaseStatus = 'DRAFT' | 'UPCOMING' | 'PUBLISHED';
 
 export type PlatformType =
   | 'spotify'

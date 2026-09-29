@@ -5,16 +5,21 @@ import { useAudioPlayer } from '../features/audio-player/AudioPlayerProvider';
 import { siteConfig } from '../config/site';
 import type { Release } from '../types';
 
+function isUpcoming(release: Release) {
+  return !release.published && Boolean(release.release_date) && release.release_date > new Date().toISOString().slice(0, 10);
+}
+
 export function HomePage() {
   const { setQueue, playTrack } = useAudioPlayer();
   const { artist: mockArtist, releases: mockReleases, homeCardIds, recordPlay } = useCatalog();
   const visibleReleases = mockReleases.filter((release) => release.published);
+  const homeVisibleReleases = mockReleases.filter((release) => release.published || isUpcoming(release));
   // A featured flag can intentionally exist on a draft while the artist is preparing it.
   // Never let that unpublished flag blank the public Home: use the newest published release
   // until a published Featured release is available.
   const featuredRelease = visibleReleases.find((release) => release.featured) ?? visibleReleases[0];
   const homeCards = homeCardIds
-    .map((id) => visibleReleases.find((release) => release.id === id))
+    .map((id) => homeVisibleReleases.find((release) => release.id === id))
     .filter((release): release is Release => Boolean(release));
 
   if (!featuredRelease) {
@@ -78,7 +83,7 @@ export function HomePage() {
                   </Link>
                 </div>
                 <div className="feature-copy">
-                  <p className="release-type">{release.type}</p>
+                  <p className="release-type">{isUpcoming(release) ? 'Coming soon' : release.type}</p>
                   <h3>{release.title}</h3>
                   <time className="release-date" dateTime={release.release_date}>
                     {new Date(release.release_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
@@ -86,9 +91,9 @@ export function HomePage() {
                   <p>{release.description}</p>
                   <div className="home-feature-actions">
                     <Link to={`/releases/${release.slug}`} className="text-link">View release</Link>
-                    <button type="button" className="text-link home-release-play" onClick={() => playRelease(release)}>
+                    {release.published && <button type="button" className="text-link home-release-play" onClick={() => playRelease(release)}>
                       Play selection
-                    </button>
+                    </button>}
                   </div>
                 </div>
               </article>
