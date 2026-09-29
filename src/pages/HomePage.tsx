@@ -9,7 +9,10 @@ export function HomePage() {
   const { setQueue, playTrack } = useAudioPlayer();
   const { artist: mockArtist, releases: mockReleases, homeCardIds, recordPlay } = useCatalog();
   const visibleReleases = mockReleases.filter((release) => release.published);
-  const featuredRelease = visibleReleases.find((release) => release.featured);
+  // A featured flag can intentionally exist on a draft while the artist is preparing it.
+  // Never let that unpublished flag blank the public Home: use the newest published release
+  // until a published Featured release is available.
+  const featuredRelease = visibleReleases.find((release) => release.featured) ?? visibleReleases[0];
   const homeCards = homeCardIds
     .map((id) => visibleReleases.find((release) => release.id === id))
     .filter((release): release is Release => Boolean(release));
