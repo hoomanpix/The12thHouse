@@ -5,4 +5,5 @@ export const publicRoutes = {
   about: '/about',
   contact: '/contact',
   admin: '/admin',
+  adminRecovery: '/admin/change-password',
 };

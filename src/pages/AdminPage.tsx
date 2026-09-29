@@ -58,6 +58,9 @@ export function AdminPage() {
   const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
   const [authError, setAuthError] = useState('');
   const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [isSavingPassword, setIsSavingPassword] = useState(false);
+  const [passwordSuccess, setPasswordSuccess] = useState(false);
   const [newTitle, setNewTitle] = useState('');
   const [newType, setNewType] = useState<'single' | 'album'>('single');
   const [newContent, setNewContent] = useState<ReleaseContentType>('music');
@@ -71,7 +74,8 @@ export function AdminPage() {
   const [newLinkUrl, setNewLinkUrl] = useState('');
 
   const selectedRelease = releases.find((release) => release.id === selectedReleaseId) ?? releases[0];
-  const recoveryFromUrl = new URLSearchParams(window.location.hash.replace(/^#/, '')).get('type') === 'recovery' || new URLSearchParams(window.location.search).get('type') === 'recovery';
+  const isChangePasswordRoute = window.location.hash.includes('#/admin/change-password') || window.location.pathname.endsWith('/admin/change-password');
+  const recoveryFromUrl = isChangePasswordRoute || new URLSearchParams(window.location.hash.replace(/^#/, '')).get('type') === 'recovery' || new URLSearchParams(window.location.search).get('type') === 'recovery';
   const publishedReleases = releases.filter((release) => statusOf(release) === 'PUBLISHED');
   const upcomingReleases = releases.filter((release) => statusOf(release) === 'UPCOMING');
   const draftReleases = releases.filter((release) => statusOf(release) === 'DRAFT');
@@ -92,7 +96,17 @@ export function AdminPage() {
     if (result.error) setAuthError(result.error);
   };
   const requestPasswordReset = async () => { setAuthError(''); const result = await resetPassword(authEmail); setAuthError(result.error ?? 'Reset email sent. Check your inbox.'); };
-  const saveNewPassword = async (event: React.FormEvent<HTMLFormElement>) => { event.preventDefault(); setAuthError(''); if (newPassword.length < 6) { setAuthError('Use at least 6 characters.'); return; } const result = await updatePassword(newPassword); if (result.error) setAuthError(result.error); else setAuthError('Password updated successfully.'); };
+  const saveNewPassword = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault(); setAuthError(''); setPasswordSuccess(false);
+    if (newPassword.length < 6) { setAuthError('Use at least 6 characters.'); return; }
+    if (newPassword !== confirmPassword) { setAuthError('Passwords do not match.'); return; }
+    setIsSavingPassword(true);
+    const result = await updatePassword(newPassword);
+    setIsSavingPassword(false);
+    if (result.error) setAuthError(`Password update failed: ${result.error}`);
+    else { setPasswordSuccess(true); setNewPassword(''); setConfirmPassword(''); }
+  };
+  const returnToAdminLogin = async () => { await signOut(); window.location.hash = '#/admin'; };
 
   const createRelease = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -106,7 +120,7 @@ export function AdminPage() {
   const addNewTrack = (event: React.FormEvent<HTMLFormElement>) => { event.preventDefault(); if (!selectedRelease || !trackTitle.trim()) return; mutate(() => { addTrack(selectedRelease.id, { title: trackTitle.trim(), audio_url: trackUrl.trim() || null, duration: 0, published: Boolean(trackUrl.trim()), play_count: 0 }); setTrackTitle(''); setTrackUrl(''); }, 'Track added.'); };
   const addNewLink = (event: React.FormEvent<HTMLFormElement>) => { event.preventDefault(); if (!selectedRelease || !newLinkUrl.trim()) return; mutate(() => { addPlatformLink(selectedRelease.id, { platform: newLinkPlatform, label: platformOptions.find((item) => item.value === newLinkPlatform)?.label ?? 'Platform', url: newLinkUrl.trim() }); setNewLinkUrl(''); }, 'Platform link added.'); };
 
-  if (isRemote && (isRecoveringPassword || recoveryFromUrl)) return <div className="admin-auth-card"><p className="eyebrow">The12thHouse Admin</p><h1>Set a new password</h1><p>Choose a password for the approved artist account.</p><form onSubmit={saveNewPassword} className="admin-auth-form"><label htmlFor="new-admin-password">New password<input id="new-admin-password" autoComplete="new-password" type="password" minLength={6} value={newPassword} onChange={(event) => setNewPassword(event.target.value)} required /></label>{authError && <p className="admin-auth-error" role="alert">{authError}</p>}<button className="button primary" type="submit">Save new password</button></form></div>;
+  if (isRemote && (isRecoveringPassword || recoveryFromUrl)) return <div className="admin-auth-card"><p className="eyebrow">The12thHouse Admin · Password recovery</p><h1>Set a new password</h1><p>This secure recovery page requires a valid Supabase recovery session.</p>{passwordSuccess ? <div className="admin-auth-success" role="status"><strong>Password updated successfully.</strong><p>You can now return to Admin Login and sign in with your new password.</p><button type="button" className="button primary" onClick={() => void returnToAdminLogin()}>Return to Admin Login</button></div> : <form onSubmit={saveNewPassword} className="admin-auth-form"><label htmlFor="new-admin-password">New password<input id="new-admin-password" autoComplete="new-password" type="password" minLength={6} value={newPassword} onChange={(event) => setNewPassword(event.target.value)} required /></label><label htmlFor="confirm-admin-password">Confirm password<input id="confirm-admin-password" autoComplete="new-password" type="password" minLength={6} value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} required /></label>{authError && <p className="admin-auth-error" role="alert">{authError}</p>}<button className="button primary" type="submit" disabled={isSavingPassword}>{isSavingPassword ? 'Saving…' : 'Save new password'}</button></form>}</div>;
   if (!isReady) return <div className="admin-auth-card"><p className="eyebrow">Connecting</p><h1>Loading control room…</h1><p>Connecting to the shared catalog.</p></div>;
   if (isRemote && !user) return <div className="admin-auth-card"><p className="eyebrow">The12thHouse Admin</p><h1>{authMode === 'signin' ? 'Sign in to control room' : 'Create artist account'}</h1><p>Only the approved artist email can access this area from any device or browser.</p><form onSubmit={submitAuth} className="admin-auth-form"><label htmlFor="admin-email">Email<input id="admin-email" autoComplete="email" type="email" value={authEmail} onChange={(event) => setAuthEmail(event.target.value)} required /></label><label htmlFor="admin-password">Password<input id="admin-password" autoComplete={authMode === 'signin' ? 'current-password' : 'new-password'} type="password" minLength={6} value={authPassword} onChange={(event) => setAuthPassword(event.target.value)} required /></label>{authError && <p className="admin-auth-error" role="alert">{authError}</p>}<button className="button primary" type="submit">{authMode === 'signin' ? 'Sign in' : 'Create account'}</button></form>{authMode === 'signin' && <button type="button" className="button text-button" onClick={() => void requestPasswordReset()}>Forgot password?</button>}<button type="button" className="button text-button" onClick={() => { setAuthMode(authMode === 'signin' ? 'signup' : 'signin'); setAuthError(''); }}>{authMode === 'signin' ? 'Create account' : 'Back to sign in'}</button></div>;
   if (isRemote && user?.email?.toLowerCase() !== approvedAdminEmail) return <div className="admin-auth-card"><p className="eyebrow">Access denied</p><h1>Admin access is restricted</h1><button type="button" className="button primary" onClick={() => void signOut()}>Sign out</button></div>;

@@ -137,7 +137,8 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
   const resetPassword = useCallback(async (email: string) => {
     const normalizedEmail = email.trim().toLowerCase();
     if (normalizedEmail !== 'kamielkhajehpour@gmail.com') return { error: 'Only the approved artist email can reset the admin password.' };
-    const { error } = await supabase.auth.resetPasswordForEmail(normalizedEmail, { redirectTo: 'https://hoomanpix.github.io/The12thHouse/' });
+    const redirectTo = import.meta.env.VITE_AUTH_REDIRECT_URL || new URL(`${import.meta.env.BASE_URL}#/admin/change-password`, window.location.origin).toString();
+    const { error } = await supabase.auth.resetPasswordForEmail(normalizedEmail, { redirectTo });
     return error ? { error: error.message } : {};
   }, []);
 
