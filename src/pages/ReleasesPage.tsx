@@ -1,14 +1,18 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useCatalog } from '../features/catalog/CatalogProvider';
-import type { ReleaseContentType, ReleaseType, VisualType } from '../types';
+import type { Release, ReleaseContentType, ReleaseType, VisualType } from '../types';
+
+function isUpcoming(release: Release) {
+  return !release.published && Boolean(release.release_date) && release.release_date > new Date().toISOString().slice(0, 10);
+}
 
 export function ReleasesPage() {
   const [category, setCategory] = useState<ReleaseContentType>('music');
   const [musicFilter, setMusicFilter] = useState<'all' | ReleaseType>('all');
   const [visualFilter, setVisualFilter] = useState<'all' | VisualType>('all');
   const { releases: allReleases } = useCatalog();
-  const releases = allReleases.filter((release) => release.published);
+  const releases = allReleases.filter((release) => release.published || isUpcoming(release));
 
   const filteredReleases = useMemo(() => {
     if (category === 'music') {
@@ -92,18 +96,19 @@ export function ReleasesPage() {
         <div className="release-grid">
           {filteredReleases.map((release) => (
             <article key={release.id} className="release-card">
-              <Link to={`/releases/${release.slug}`} className="release-cover">
+              <Link to={`/releases/${release.slug}`} className="release-cover" aria-label={`View ${release.title}`}>
                 <img src={release.artwork_url ?? ''} alt={release.title} />
               </Link>
               <div className="release-card-meta">
                 <div>
-                  <p className="eyebrow subtle release-type">{release.type}</p>
+                  <p className="eyebrow subtle release-type">{isUpcoming(release) ? 'Coming soon' : release.type}</p>
                   <h3>{release.title}</h3>
                 </div>
                 <time dateTime={release.release_date}>
                   {new Date(release.release_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                 </time>
               </div>
+              {isUpcoming(release) && <p className="release-upcoming-note">Available on release day.</p>}
             </article>
           ))}
         </div>
