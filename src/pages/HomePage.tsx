@@ -5,30 +5,14 @@ import { useAudioPlayer } from '../features/audio-player/AudioPlayerProvider';
 import { siteConfig } from '../config/site';
 import type { Release } from '../types';
 
-type HomeCard =
-  | { kind: 'release'; release: Release }
-  | { kind: 'placeholder'; title: string; type: 'single' | 'album' };
-
 export function HomePage() {
   const { setQueue, playTrack } = useAudioPlayer();
   const { artist: mockArtist, releases: mockReleases, homeCardIds, recordPlay } = useCatalog();
   const visibleReleases = mockReleases.filter((release) => release.published);
-  const featuredRelease = visibleReleases.find((release) => release.featured) ?? visibleReleases[0];
-  const configuredCards = homeCardIds.map((id) => visibleReleases.find((release) => release.id === id));
-  const singleReleases = visibleReleases.filter((release) => release.type === 'single').slice(0, 2);
-  const albumRelease = visibleReleases.find((release) => release.type === 'album');
-  const selectedCards = [configuredCards[0] ?? singleReleases[0], configuredCards[1] ?? singleReleases[1], configuredCards[2] ?? albumRelease];
-  const homeCards: HomeCard[] = [
-    selectedCards[0]
-      ? { kind: 'release', release: selectedCards[0] }
-      : { kind: 'placeholder', title: 'Single 01', type: 'single' },
-    selectedCards[1]
-      ? { kind: 'release', release: selectedCards[1] }
-      : { kind: 'placeholder', title: 'Single 02', type: 'single' },
-    selectedCards[2]
-      ? { kind: 'release', release: selectedCards[2] }
-      : { kind: 'placeholder', title: 'Album', type: 'album' },
-  ];
+  const featuredRelease = visibleReleases.find((release) => release.featured);
+  const homeCards = homeCardIds
+    .map((id) => visibleReleases.find((release) => release.id === id))
+    .filter((release): release is Release => Boolean(release));
 
   if (!featuredRelease) {
     return <div className="page-section"><p className="admin-empty">No releases are published yet.</p></div>;
@@ -82,25 +66,7 @@ export function HomePage() {
           <h2 id="home-releases-title">A small collection of work.</h2>
         </div>
         <div className="home-release-grid">
-          {homeCards.map((card, index) => {
-            if (card.kind === 'placeholder') {
-              return (
-                <article key={`placeholder-${card.type}-${index}`} className="feature-card home-feature-card home-feature-card--placeholder">
-                  <div className="feature-artwork home-feature-placeholder-artwork" aria-label={`${card.title} placeholder`}>
-                    <span>{card.type}</span>
-                    <strong>{card.title}</strong>
-                  </div>
-                  <div className="feature-copy">
-                    <p className="release-type">{card.type}</p>
-                    <h3>{card.title}</h3>
-                    <time className="release-date">Coming soon</time>
-                    <p>New work from The12thHouse will appear here.</p>
-                  </div>
-                </article>
-              );
-            }
-
-            const release = card.release;
+          {homeCards.map((release) => {
             return (
               <article key={release.id} className="feature-card home-feature-card">
                 <div className="feature-artwork">

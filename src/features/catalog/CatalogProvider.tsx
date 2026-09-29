@@ -34,6 +34,8 @@ interface CatalogContextValue {
   removeArtwork: (releaseId: string) => Promise<MutationResult>;
   saveTrackAudio: (releaseId: string, trackId: string, file: File) => Promise<MutationResult>;
   removeTrackAudio: (releaseId: string, trackId: string) => Promise<MutationResult>;
+  saveVisualMedia: (releaseId: string, file: File) => Promise<MutationResult>;
+  removeVisualMedia: (releaseId: string) => Promise<MutationResult>;
   addPlatformLink: (releaseId: string, link: Omit<PlatformLink, 'id' | 'order'>) => Promise<MutationResult & { id?: string }>;
   updatePlatformLink: (releaseId: string, linkId: string, update: Partial<PlatformLink>) => Promise<MutationResult>;
   removePlatformLink: (releaseId: string, linkId: string) => Promise<MutationResult>;
@@ -325,6 +327,28 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
     return loadRemote(Boolean(user));
   }, [loadRemote, releases, user]);
 
+
+  const saveVisualMedia = useCallback(async (releaseId: string, file: File) => {
+    if (!isSupabaseConfigured) return { error: 'Supabase Storage is not configured.' };
+    const extension = file.name.split('.').pop()?.toLowerCase().replace(/[^a-z0-9]/g, '') || 'bin';
+    const path = `visuals/${releaseId}/${Date.now()}.${extension}`;
+    const upload = await supabase.storage.from('artist-assets').upload(path, file, { upsert: true, contentType: file.type || undefined });
+    if (upload.error) return { error: upload.error.message };
+    const { data } = supabase.storage.from('artist-assets').getPublicUrl(path);
+    const update = await supabase.from('albums').update({ visual_url: data.publicUrl }).eq('id', releaseId);
+    if (update.error) { await supabase.storage.from('artist-assets').remove([path]); return { error: update.error.message }; }
+    return loadRemote(Boolean(user));
+  }, [loadRemote, user]);
+
+  const removeVisualMedia = useCallback(async (releaseId: string) => {
+    const release = releases.find((item) => item.id === releaseId);
+    const update = await supabase.from('albums').update({ visual_url: null }).eq('id', releaseId);
+    if (update.error) return { error: update.error.message };
+    const path = storagePathFromReference(release?.visual_url, 'artist-assets');
+    if (path) { const removed = await supabase.storage.from('artist-assets').remove([path]); if (removed.error) return { error: removed.error.message }; }
+    return loadRemote(Boolean(user));
+  }, [loadRemote, releases, user]);
+
   const addPlatformLink = useCallback(async (releaseId: string, link: Omit<PlatformLink, 'id' | 'order'>) => {
     const id = makeId();
     const release = releases.find((item) => item.id === releaseId);
@@ -353,7 +377,7 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
   }, []);
   const resetCatalog = useCallback(() => setReleases(fallbackReleases), []);
 
-  const value = useMemo(() => ({ artist, releases, upcomingReleases: releases.filter((release) => !release.published), homeCardIds, user, isRecoveringPassword, isReady, isRemote: isSupabaseConfigured, signIn, signUp, resetPassword, updatePassword, signOut, reloadCatalog, updateRelease, addRelease, removeRelease, updateHomeCard, addTrack, removeTrack, updateTrack, saveTrackOrder, saveArtwork, removeArtwork, saveTrackAudio, removeTrackAudio, addPlatformLink, updatePlatformLink, removePlatformLink, recordPlay, resetCatalog }), [artist, releases, homeCardIds, user, isRecoveringPassword, isReady, signIn, signUp, resetPassword, updatePassword, signOut, reloadCatalog, updateRelease, addRelease, removeRelease, updateHomeCard, addTrack, removeTrack, updateTrack, saveTrackOrder, saveArtwork, removeArtwork, saveTrackAudio, removeTrackAudio, addPlatformLink, updatePlatformLink, removePlatformLink, recordPlay, resetCatalog]);
+  const value = useMemo(() => ({ artist, releases, upcomingReleases: releases.filter((release) => !release.published), homeCardIds, user, isRecoveringPassword, isReady, isRemote: isSupabaseConfigured, signIn, signUp, resetPassword, updatePassword, signOut, reloadCatalog, updateRelease, addRelease, removeRelease, updateHomeCard, addTrack, removeTrack, updateTrack, saveTrackOrder, saveArtwork, removeArtwork, saveTrackAudio, removeTrackAudio, saveVisualMedia, removeVisualMedia, addPlatformLink, updatePlatformLink, removePlatformLink, recordPlay, resetCatalog }), [artist, releases, homeCardIds, user, isRecoveringPassword, isReady, signIn, signUp, resetPassword, updatePassword, signOut, reloadCatalog, updateRelease, addRelease, removeRelease, updateHomeCard, addTrack, removeTrack, updateTrack, saveTrackOrder, saveArtwork, removeArtwork, saveTrackAudio, removeTrackAudio, saveVisualMedia, removeVisualMedia, addPlatformLink, updatePlatformLink, removePlatformLink, recordPlay, resetCatalog]);
   return <CatalogContext.Provider value={value}>{children}</CatalogContext.Provider>;
 }
 
