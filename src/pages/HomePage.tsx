@@ -22,7 +22,7 @@ export function HomePage() {
     .map((id) => homeVisibleReleases.find((release) => release.id === id))
     .filter((release): release is Release => Boolean(release));
 
-  if (!featuredRelease) {
+  if (!featuredRelease && homeCards.length === 0) {
     return <div className="page-section"><p className="admin-empty">No releases are published yet.</p></div>;
   }
 
@@ -54,9 +54,9 @@ export function HomePage() {
             Sculpted atmospheres, slow-burn rhythm, and intimate songs for the edge of the night.
           </p>
           <div className="hero-actions">
-            <button type="button" className="button primary" onClick={() => playRelease(featuredRelease)}>
+            {featuredRelease && <button type="button" className="button primary" onClick={() => playRelease(featuredRelease)}>
               Play latest
-            </button>
+            </button>}
             <Link to={publicRoutes.releases} className="button secondary">
               Browse releases
             </Link>
@@ -64,7 +64,7 @@ export function HomePage() {
         </div>
 
         <div className="hero-visual">
-          <img src={featuredRelease.artwork_url ?? ''} alt={featuredRelease.title} />
+          {featuredRelease ? <img src={featuredRelease.artwork_url ?? ''} alt={featuredRelease.title} /> : <div className="hero-visual-placeholder" aria-label="Upcoming releases are being prepared" />}
         </div>
       </section>
 

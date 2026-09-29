@@ -315,12 +315,18 @@ h3 {
 }
 
 .hero-visual img,
+.hero-visual-placeholder,
 .feature-artwork img,
 .detail-cover img,
 .about-image img,
 .release-cover img {
   aspect-ratio: 1 / 1.1;
   object-fit: cover;
+}
+
+.hero-visual-placeholder {
+  min-height: 280px;
+  background: linear-gradient(135deg, var(--panel-alt), var(--line));
 }
 
 .feature-card,
