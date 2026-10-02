@@ -4,16 +4,13 @@ import { publicRoutes } from '../config/routes';
 import { useAudioPlayer } from '../features/audio-player/AudioPlayerProvider';
 import { siteConfig } from '../config/site';
 import type { Release } from '../types';
-
-function isUpcoming(release: Release) {
-  return !release.published && Boolean(release.release_date) && release.release_date > new Date().toISOString().slice(0, 10);
-}
+import { formatReleaseDate, isPublished, isUpcoming } from '../lib/releaseStatus';
 
 export function HomePage() {
   const { setQueue, playTrack } = useAudioPlayer();
   const { artist: mockArtist, releases: mockReleases, homeCardIds, recordPlay } = useCatalog();
-  const visibleReleases = mockReleases.filter((release) => release.published);
-  const homeVisibleReleases = mockReleases.filter((release) => release.published || isUpcoming(release));
+  const visibleReleases = mockReleases.filter(isPublished);
+  const homeVisibleReleases = mockReleases.filter((release) => isPublished(release) || isUpcoming(release));
   // A featured flag can intentionally exist on a draft while the artist is preparing it.
   // Never let that unpublished flag blank the public Home: use the newest published release
   // until a published Featured release is available.
@@ -85,13 +82,13 @@ export function HomePage() {
                 <div className="feature-copy">
                   <p className="release-type">{isUpcoming(release) ? 'Coming soon' : release.type}</p>
                   <h3>{release.title}</h3>
-                  <time className="release-date" dateTime={release.release_date}>
-                    {new Date(release.release_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                  <time className="release-date" dateTime={release.release_date ?? undefined}>
+                    {formatReleaseDate(release.release_date)}
                   </time>
                   <p>{release.description}</p>
                   <div className="home-feature-actions">
                     <Link to={`/releases/${release.slug}`} className="text-link">View release</Link>
-                    {release.published && <button type="button" className="text-link home-release-play" onClick={() => playRelease(release)}>
+                    {isPublished(release) && <button type="button" className="text-link home-release-play" onClick={() => playRelease(release)}>
                       Play selection
                     </button>}
                   </div>

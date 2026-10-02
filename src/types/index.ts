@@ -1,7 +1,7 @@
 export type ReleaseType = 'single' | 'album';
 export type ReleaseContentType = 'music' | 'visual';
 export type VisualType = 'cover' | 'animation';
-export type ReleaseStatus = 'DRAFT' | 'UPCOMING' | 'PUBLISHED';
+export type ReleaseStatus = 'draft' | 'upcoming' | 'published';
 
 export type PlatformType =
   | 'spotify'
@@ -39,7 +39,8 @@ export interface Release {
   type: ReleaseType;
   contentType: ReleaseContentType;
   visualType?: VisualType;
-  release_date: string;
+  release_date: string | null;
+  status: ReleaseStatus;
   description: string;
   artwork_url: string | null;
   visual_url?: string | null;

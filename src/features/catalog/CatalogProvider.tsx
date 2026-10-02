@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import { mockArtist, mockReleases } from '../../data/mock';
 import { isSupabaseConfigured, supabase } from '../../lib/supabase';
 import type { Artist, PlatformLink, Release, Track } from '../../types';
+import { normalizeReleaseStatus } from '../../lib/releaseStatus';
 
 type ReleaseInput = Omit<Release, 'id' | 'created_at' | 'updated_at'>;
 type MutationResult = { error?: string };
@@ -63,6 +64,8 @@ function normalizeRelease(row: any): Release {
     visualType: row.visual_type ?? row.visualType,
     artwork_url: row.artwork_url ?? row.cover_url ?? null,
     visual_url: row.visual_url ?? null,
+    release_date: row.release_date ?? null,
+    status: normalizeReleaseStatus(row.status, Boolean(row.published), row.release_date ?? null),
     tracks: (row.tracks ?? []).map((track: any) => ({
       ...track,
       release_id: track.release_id ?? track.album_id,
@@ -80,7 +83,7 @@ function releaseRow(release: Partial<Release>) {
   const row: Record<string, unknown> = {};
   const fields: Array<[keyof Release, string]> = [
     ['title', 'title'], ['slug', 'slug'], ['release_date', 'release_date'], ['description', 'description'],
-    ['featured', 'featured'], ['published', 'published'], ['visual_url', 'visual_url'],
+    ['featured', 'featured'], ['published', 'published'], ['status', 'status'], ['visual_url', 'visual_url'],
   ];
   fields.forEach(([from, to]) => { if (from in release) row[to] = release[from]; });
   if ('type' in release) row.release_type = release.type;
@@ -143,7 +146,7 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
   const loadRemote = useCallback(async (authenticated = false): Promise<MutationResult> => {
     if (!isSupabaseConfigured) { setIsReady(true); return {}; }
     try {
-      const { data, error } = await supabase.from('albums').select('*, tracks(*), platform_links(*)').order('release_date', { ascending: false });
+      const { data, error } = await supabase.from('albums').select('*, tracks(*), platform_links(*)').order('release_date', { ascending: false, nullsFirst: false });
       if (error) { setIsReady(true); return { error: error.message }; }
       const normalized = await resolveAudioReferences((data ?? []).map(normalizeRelease));
       setReleases(normalized);

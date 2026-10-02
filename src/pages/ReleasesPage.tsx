@@ -1,18 +1,15 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useCatalog } from '../features/catalog/CatalogProvider';
-import type { Release, ReleaseContentType, ReleaseType, VisualType } from '../types';
-
-function isUpcoming(release: Release) {
-  return !release.published && Boolean(release.release_date) && release.release_date > new Date().toISOString().slice(0, 10);
-}
+import type { ReleaseContentType, ReleaseType, VisualType } from '../types';
+import { formatReleaseDate, isPublished, isUpcoming } from '../lib/releaseStatus';
 
 export function ReleasesPage() {
   const [category, setCategory] = useState<ReleaseContentType>('music');
   const [musicFilter, setMusicFilter] = useState<'all' | ReleaseType>('all');
   const [visualFilter, setVisualFilter] = useState<'all' | VisualType>('all');
   const { releases: allReleases } = useCatalog();
-  const releases = allReleases.filter((release) => release.published || isUpcoming(release));
+  const releases = allReleases.filter((release) => isPublished(release) || isUpcoming(release));
 
   const filteredReleases = useMemo(() => {
     if (category === 'music') {
@@ -104,8 +101,8 @@ export function ReleasesPage() {
                   <p className="eyebrow subtle release-type">{isUpcoming(release) ? 'Coming soon' : release.type}</p>
                   <h3>{release.title}</h3>
                 </div>
-                <time dateTime={release.release_date}>
-                  {new Date(release.release_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                <time dateTime={release.release_date ?? undefined}>
+                  {formatReleaseDate(release.release_date)}
                 </time>
               </div>
               {isUpcoming(release) && <p className="release-upcoming-note">Available on release day.</p>}

@@ -23,6 +23,7 @@ export const mockReleases = [
     type: 'album',
     contentType: 'music',
     release_date: '2025-01-18',
+    status: 'published',
     description:
       'A quiet, luminous record about the architecture of moving on—slow-burn synths, spacious drums, and melodies that arrive like memory.',
     artwork_url: glassHorizonCover,
@@ -47,6 +48,7 @@ export const mockReleases = [
     type: 'single',
     contentType: 'music',
     release_date: '2025-03-04',
+    status: 'published',
     description: 'Rap Shode Bazi — a new single from The12thHouse.',
     artwork_url: rapShodeBaziCover,
     featured: false,
@@ -67,6 +69,7 @@ export const mockReleases = [
     type: 'single',
     contentType: 'music',
     release_date: '2025-04-04',
+    status: 'published',
     description: 'Shode Mah Kamel — a new single from The12thHouse.',
     artwork_url: shodeMahKamelCover,
     featured: false,
