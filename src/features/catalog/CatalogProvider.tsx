@@ -264,10 +264,22 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
 
   const removeTrack = useCallback(async (releaseId: string, trackId: string) => {
     if (!isSupabaseConfigured) { setReleases((current) => current.map((release) => release.id === releaseId ? { ...release, tracks: (release.tracks ?? []).filter((track) => track.id !== trackId) } : release)); return {}; }
+    const existing = releases.flatMap((release) => release.tracks ?? []).find((track) => track.id === trackId);
     const { error } = await supabase.from('tracks').delete().eq('id', trackId).eq('album_id', releaseId);
     if (error) return { error: error.message };
+    const audioPath = storagePathFromReference(existing?.audio_url, 'audio');
+    if (audioPath) {
+      const removed = await supabase.storage.from('audio').remove([audioPath]);
+      if (removed.error) return { error: removed.error.message };
+    }
+    const remaining = await supabase.from('tracks').select('id').eq('album_id', releaseId).order('track_order');
+    if (remaining.error) return { error: remaining.error.message };
+    for (const [index, track] of (remaining.data ?? []).entries()) {
+      const normalized = await supabase.from('tracks').update({ track_order: index + 1 }).eq('id', track.id).eq('album_id', releaseId);
+      if (normalized.error) return { error: normalized.error.message };
+    }
     return loadRemote(Boolean(user));
-  }, [loadRemote, user]);
+  }, [loadRemote, releases, user]);
 
   const updateTrack = useCallback(async (releaseId: string, trackId: string, update: Partial<Track>) => {
     if (!isSupabaseConfigured) { setReleases((current) => current.map((release) => release.id === releaseId ? { ...release, tracks: (release.tracks ?? []).map((track) => track.id === trackId ? { ...track, ...update } : track) } : release)); return {}; }
