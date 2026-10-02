@@ -24,6 +24,10 @@ export function isPublished(release: Release) {
   return statusOf(release) === 'PUBLISHED';
 }
 
+export function shouldShowReleaseDate(release: Release) {
+  return !isUpcoming(release) || release.show_release_date !== false;
+}
+
 export function formatReleaseDate(releaseDate: string | null, options?: Intl.DateTimeFormatOptions) {
   if (!releaseDate) return 'RELEASE DATE TBA';
   return new Date(`${releaseDate}T00:00:00`).toLocaleDateString('en-US', options ?? { month: 'short', day: 'numeric', year: 'numeric' });

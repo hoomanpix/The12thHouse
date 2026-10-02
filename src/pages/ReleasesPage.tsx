@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useCatalog } from '../features/catalog/CatalogProvider';
 import type { ReleaseContentType, ReleaseType, VisualType } from '../types';
-import { formatReleaseDate, isPublished, isUpcoming } from '../lib/releaseStatus';
+import { formatReleaseDate, isPublished, isUpcoming, shouldShowReleaseDate } from '../lib/releaseStatus';
 
 export function ReleasesPage() {
   const [category, setCategory] = useState<ReleaseContentType>('music');
@@ -102,7 +102,7 @@ export function ReleasesPage() {
                   <h3>{release.title}</h3>
                 </div>
                 <time dateTime={release.release_date ?? undefined}>
-                  {formatReleaseDate(release.release_date)}
+                  {formatReleaseDate(shouldShowReleaseDate(release) ? release.release_date : null)}
                 </time>
               </div>
               {isUpcoming(release) && <p className="release-upcoming-note">Available on release day.</p>}

@@ -66,6 +66,7 @@ function normalizeRelease(row: any): Release {
     visual_url: row.visual_url ?? null,
     release_date: row.release_date ?? null,
     status: normalizeReleaseStatus(row.status, Boolean(row.published), row.release_date ?? null),
+    show_release_date: row.show_release_date !== false,
     tracks: (row.tracks ?? []).map((track: any) => ({
       ...track,
       release_id: track.release_id ?? track.album_id,
@@ -83,7 +84,7 @@ function releaseRow(release: Partial<Release>) {
   const row: Record<string, unknown> = {};
   const fields: Array<[keyof Release, string]> = [
     ['title', 'title'], ['slug', 'slug'], ['release_date', 'release_date'], ['description', 'description'],
-    ['featured', 'featured'], ['published', 'published'], ['status', 'status'], ['visual_url', 'visual_url'],
+    ['featured', 'featured'], ['published', 'published'], ['status', 'status'], ['show_release_date', 'show_release_date'], ['visual_url', 'visual_url'],
   ];
   fields.forEach(([from, to]) => { if (from in release) row[to] = release[from]; });
   if ('type' in release) row.release_type = release.type;

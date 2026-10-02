@@ -4,7 +4,7 @@ import { publicRoutes } from '../config/routes';
 import { useAudioPlayer } from '../features/audio-player/AudioPlayerProvider';
 import { siteConfig } from '../config/site';
 import type { Release } from '../types';
-import { formatReleaseDate, isPublished, isUpcoming } from '../lib/releaseStatus';
+import { formatReleaseDate, isPublished, isUpcoming, shouldShowReleaseDate } from '../lib/releaseStatus';
 
 export function HomePage() {
   const { setQueue, playTrack } = useAudioPlayer();
@@ -83,7 +83,7 @@ export function HomePage() {
                   <p className="release-type">{isUpcoming(release) ? 'Coming soon' : release.type}</p>
                   <h3>{release.title}</h3>
                   <time className="release-date" dateTime={release.release_date ?? undefined}>
-                    {formatReleaseDate(release.release_date)}
+                    {formatReleaseDate(shouldShowReleaseDate(release) ? release.release_date : null)}
                   </time>
                   <p>{release.description}</p>
                   <div className="home-feature-actions">

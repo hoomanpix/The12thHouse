@@ -41,6 +41,7 @@ export interface Release {
   visualType?: VisualType;
   release_date: string | null;
   status: ReleaseStatus;
+  show_release_date: boolean;
   description: string;
   artwork_url: string | null;
   visual_url?: string | null;

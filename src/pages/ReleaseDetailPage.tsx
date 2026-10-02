@@ -2,7 +2,7 @@ import { Link, useParams } from 'react-router-dom';
 import { useCatalog } from '../features/catalog/CatalogProvider';
 import { useAudioPlayer } from '../features/audio-player/AudioPlayerProvider';
 import { publicRoutes } from '../config/routes';
-import { formatReleaseDate, isUpcoming } from '../lib/releaseStatus';
+import { formatReleaseDate, isUpcoming, shouldShowReleaseDate } from '../lib/releaseStatus';
 
 export function ReleaseDetailPage() {
   const { id } = useParams();
@@ -67,7 +67,7 @@ export function ReleaseDetailPage() {
           <p className="eyebrow">{release.type}</p>
           <h1>{release.title}</h1>
           <p className="detail-date">
-            {isUpcoming(release) ? `Coming soon · ${formatReleaseDate(release.release_date)}` : formatReleaseDate(release.release_date)}
+            {isUpcoming(release) ? `Coming soon · ${formatReleaseDate(shouldShowReleaseDate(release) ? release.release_date : null)}` : formatReleaseDate(shouldShowReleaseDate(release) ? release.release_date : null)}
           </p>
           <p>{release.description}</p>
 
