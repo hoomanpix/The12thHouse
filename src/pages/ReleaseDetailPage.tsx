@@ -66,7 +66,9 @@ export function ReleaseDetailPage() {
           <p className="eyebrow">{release.type}</p>
           <h1>{release.title}</h1>
           <p className="detail-date">
-            {new Date(release.release_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+            {!release.release_date || release.show_release_date === false
+              ? 'TBA'
+              : new Date(release.release_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
           </p>
           <p>{release.description}</p>
 

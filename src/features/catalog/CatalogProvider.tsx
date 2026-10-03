@@ -63,6 +63,8 @@ function normalizeRelease(row: any): Release {
     visualType: row.visual_type ?? row.visualType,
     artwork_url: row.artwork_url ?? row.cover_url ?? null,
     visual_url: row.visual_url ?? null,
+    status: row.status ?? (row.published ? 'published' : 'draft'),
+    show_release_date: row.show_release_date ?? true,
     tracks: (row.tracks ?? []).map((track: any) => ({
       ...track,
       release_id: track.release_id ?? track.album_id,
@@ -81,12 +83,14 @@ function releaseRow(release: Partial<Release>) {
   const fields: Array<[keyof Release, string]> = [
     ['title', 'title'], ['slug', 'slug'], ['release_date', 'release_date'], ['description', 'description'],
     ['featured', 'featured'], ['published', 'published'], ['visual_url', 'visual_url'],
+    ['status', 'status'], ['show_release_date', 'show_release_date'],
   ];
   fields.forEach(([from, to]) => { if (from in release) row[to] = release[from]; });
   if ('type' in release) row.release_type = release.type;
   if ('artwork_url' in release) row.cover_url = release.artwork_url;
   if ('contentType' in release) row.content_type = release.contentType;
   if ('visualType' in release) row.visual_type = release.visualType;
+  if ('status' in release && release.status) row.status = release.status;
   return row;
 }
 
@@ -143,7 +147,7 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
   const loadRemote = useCallback(async (authenticated = false): Promise<MutationResult> => {
     if (!isSupabaseConfigured) { setIsReady(true); return {}; }
     try {
-      const { data, error } = await supabase.from('albums').select('*, tracks(*), platform_links(*)').order('release_date', { ascending: false });
+      const { data, error } = await supabase.from('albums').select('*, tracks(*), platform_links(*)').order('release_date', { ascending: false, nullsFirst: false });
       if (error) { setIsReady(true); return { error: error.message }; }
       const normalized = await resolveAudioReferences((data ?? []).map(normalizeRelease));
       setReleases(normalized);

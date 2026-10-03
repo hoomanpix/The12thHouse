@@ -4,7 +4,13 @@ import { useCatalog } from '../features/catalog/CatalogProvider';
 import type { Release, ReleaseContentType, ReleaseType, VisualType } from '../types';
 
 function isUpcoming(release: Release) {
-  return !release.published && Boolean(release.release_date) && release.release_date > new Date().toISOString().slice(0, 10);
+  const releaseDate = release.release_date;
+  return release.status === 'upcoming' || (!release.published && typeof releaseDate === 'string' && releaseDate > new Date().toISOString().slice(0, 10));
+}
+
+function formatReleaseDate(release: Release) {
+  if (!release.release_date || release.show_release_date === false) return 'TBA';
+  return new Date(release.release_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
 export function ReleasesPage() {
@@ -104,8 +110,8 @@ export function ReleasesPage() {
                   <p className="eyebrow subtle release-type">{isUpcoming(release) ? 'Coming soon' : release.type}</p>
                   <h3>{release.title}</h3>
                 </div>
-                <time dateTime={release.release_date}>
-                  {new Date(release.release_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                <time dateTime={release.release_date ?? undefined}>
+                  {formatReleaseDate(release)}
                 </time>
               </div>
               {isUpcoming(release) && <p className="release-upcoming-note">Available on release day.</p>}

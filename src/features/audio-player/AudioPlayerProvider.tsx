@@ -38,6 +38,12 @@ const AudioPlayerContext = createContext<AudioPlayerContextValue | null>(null);
 export function AudioPlayerProvider({ children }: { children: React.ReactNode }) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [state, setState] = useState<PlayerState>(initialState);
+  const stateRef = useRef(state);
+  const playNextRef = useRef<() => void>(() => undefined);
+
+  useEffect(() => {
+    stateRef.current = state;
+  }, [state]);
 
   const ensureAudio = useCallback(() => {
     if (!audioRef.current) {
@@ -74,7 +80,7 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
           currentTime: 0,
           status: 'ready',
         }));
-        playNext();
+        playNextRef.current();
       });
 
       audio.addEventListener('error', () => {
@@ -91,7 +97,15 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
   }, [state.volume]);
 
   const setQueue = useCallback((queue: AudioQueueItem[]) => {
-    setState((current) => ({ ...current, queue, activeTrackId: queue[0]?.trackId ?? null }));
+    const playableQueue = queue.filter((item) => Boolean(item.audioUrl));
+    setState((current) => ({
+      ...current,
+      queue: playableQueue,
+      activeTrackId: playableQueue.some((item) => item.trackId === current.activeTrackId)
+        ? current.activeTrackId
+        : playableQueue[0]?.trackId ?? null,
+      error: null,
+    }));
   }, []);
 
   const clearQueue = useCallback(() => {
@@ -186,24 +200,30 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
   );
 
   const playNext = useCallback(() => {
-    if (state.queue.length === 0) return;
+    const current = stateRef.current;
+    if (current.queue.length === 0) return;
 
-    const currentIndex = state.queue.findIndex((item) => item.trackId === state.activeTrackId);
+    const currentIndex = current.queue.findIndex((item) => item.trackId === current.activeTrackId);
     const nextIndex = currentIndex >= 0 ? currentIndex + 1 : 0;
-    const nextTrack = state.queue[nextIndex] ?? state.queue[0];
+    const nextTrack = current.queue[nextIndex] ?? current.queue[0];
 
     if (nextTrack) playTrack(nextTrack);
-  }, [playTrack, state.activeTrackId, state.queue]);
+  }, [playTrack]);
 
   const playPrevious = useCallback(() => {
-    if (state.queue.length === 0) return;
+    const current = stateRef.current;
+    if (current.queue.length === 0) return;
 
-    const currentIndex = state.queue.findIndex((item) => item.trackId === state.activeTrackId);
-    const previousIndex = currentIndex > 0 ? currentIndex - 1 : state.queue.length - 1;
-    const previousTrack = state.queue[previousIndex];
+    const currentIndex = current.queue.findIndex((item) => item.trackId === current.activeTrackId);
+    const previousIndex = currentIndex > 0 ? currentIndex - 1 : current.queue.length - 1;
+    const previousTrack = current.queue[previousIndex];
 
     if (previousTrack) playTrack(previousTrack);
-  }, [playTrack, state.activeTrackId, state.queue]);
+  }, [playTrack]);
+
+  useEffect(() => {
+    playNextRef.current = playNext;
+  }, [playNext]);
 
   useEffect(() => {
     const audio = ensureAudio();
