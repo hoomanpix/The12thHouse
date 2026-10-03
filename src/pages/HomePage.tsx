@@ -30,6 +30,7 @@ export function HomePage() {
       trackId: track.id,
       title: track.title,
       audioUrl: track.audio_url,
+      playable: true,
       artworkUrl: release.artwork_url,
       releaseTitle: release.title,
       duration: track.duration,

@@ -72,6 +72,31 @@ CREATE POLICY "public can read published media"
     )
   );
 
+DROP POLICY IF EXISTS "artists upload media" ON storage.objects;
+CREATE POLICY "artists upload media"
+  ON storage.objects
+  FOR INSERT
+  TO public
+  WITH CHECK (
+    can_manage_the12thhouse()
+    AND bucket_id IN ('audio', 'covers', 'artist-assets')
+  );
+
+DROP POLICY IF EXISTS "artists update media" ON storage.objects;
+CREATE POLICY "artists update media"
+  ON storage.objects
+  FOR UPDATE
+  TO public
+  USING (can_manage_the12thhouse())
+  WITH CHECK (can_manage_the12thhouse());
+
+DROP POLICY IF EXISTS "artists delete media" ON storage.objects;
+CREATE POLICY "artists delete media"
+  ON storage.objects
+  FOR DELETE
+  TO public
+  USING (can_manage_the12thhouse());
+
 DROP FUNCTION IF EXISTS public.increment_track_play(uuid);
 CREATE OR REPLACE FUNCTION public.increment_track_play(p_track_id uuid)
 RETURNS void

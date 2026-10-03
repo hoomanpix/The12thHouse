@@ -18,6 +18,7 @@ export interface AudioQueueItem {
   trackId: string;
   title: string;
   audioUrl: string | null;
+  playable?: boolean;
   artworkUrl: string | null;
   releaseTitle: string;
   duration: number;

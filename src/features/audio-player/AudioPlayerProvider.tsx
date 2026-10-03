@@ -91,7 +91,8 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
   }, [state.volume]);
 
   const setQueue = useCallback((queue: AudioQueueItem[]) => {
-    setState((current) => ({ ...current, queue, activeTrackId: queue[0]?.trackId ?? null }));
+    const playableQueue = queue.filter((item) => item.playable !== false && Boolean(item.audioUrl));
+    setState((current) => ({ ...current, queue: playableQueue, activeTrackId: playableQueue[0]?.trackId ?? null }));
   }, []);
 
   const clearQueue = useCallback(() => {
@@ -104,6 +105,16 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
   const playTrack = useCallback(
     (item: AudioQueueItem) => {
       const audio = ensureAudio();
+
+      if (item.playable === false) {
+        setState((current) => ({
+          ...current,
+          status: 'error',
+          error: 'This track is not available for playback.',
+          activeTrackId: item.trackId,
+        }));
+        return;
+      }
 
       if (!item.audioUrl) {
         setState((current) => ({
