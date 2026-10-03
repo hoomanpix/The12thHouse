@@ -23,7 +23,10 @@ export interface Track {
   id: string;
   release_id: string;
   title: string;
+  slug?: string | null;
   duration: number;
+  description?: string | null;
+  cover_url?: string | null;
   audio_url: string | null;
   published?: boolean;
   play_count?: number;

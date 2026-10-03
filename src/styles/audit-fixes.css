@@ -1,0 +1,52 @@
+.detail-cover--interactive { position: relative; }
+.detail-cover__zoom {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  z-index: 2;
+  min-height: 34px;
+  padding: 0 11px;
+  border: 1px solid rgba(255, 255, 255, .72);
+  border-radius: 999px;
+  background: rgba(17, 17, 17, .72);
+  color: #fff;
+  font: inherit;
+  font-size: .68rem;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  cursor: zoom-in;
+}
+.artwork-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: grid;
+  place-items: center;
+  padding: clamp(18px, 5vw, 72px);
+  background: rgba(17, 17, 17, .88);
+}
+.artwork-lightbox img {
+  display: block;
+  width: min(100%, 1100px);
+  max-height: calc(100dvh - 120px);
+  object-fit: contain;
+  border-radius: var(--radius);
+  box-shadow: 0 28px 80px rgba(0, 0, 0, .35);
+}
+.artwork-lightbox__close {
+  position: absolute;
+  top: max(18px, env(safe-area-inset-top));
+  right: max(18px, env(safe-area-inset-right));
+  min-height: 38px;
+  padding: 0 13px;
+  border: 1px solid rgba(255, 255, 255, .55);
+  border-radius: 999px;
+  background: transparent;
+  color: #fff;
+  font: inherit;
+  cursor: pointer;
+}
+@media (max-width: 640px) {
+  .detail-cover__zoom { right: 8px; bottom: 8px; }
+  .artwork-lightbox { padding: 18px; }
+}

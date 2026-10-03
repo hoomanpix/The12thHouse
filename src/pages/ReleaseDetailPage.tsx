@@ -1,15 +1,25 @@
+import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useCatalog } from '../features/catalog/CatalogProvider';
 import { useAudioPlayer } from '../features/audio-player/AudioPlayerProvider';
 import { publicRoutes } from '../config/routes';
 import { formatReleaseDate, isUpcoming, shouldShowReleaseDate } from '../lib/releaseStatus';
+import { visualMediaKind, visualMediaMime } from '../lib/media';
 
 export function ReleaseDetailPage() {
   const { id } = useParams();
   const { releases } = useCatalog();
-  const release = releases.find((item) => item.slug === id) ?? releases[0];
+  const release = releases.find((item) => item.slug === id);
   const { setQueue, playTrack } = useAudioPlayer();
   const { recordPlay } = useCatalog();
+  const [isArtworkOpen, setIsArtworkOpen] = useState(false);
+  useEffect(() => {
+    if (!isArtworkOpen) return;
+    const handleKeyDown = (event: KeyboardEvent) => { if (event.key === 'Escape') setIsArtworkOpen(false); };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isArtworkOpen]);
+  if (!release) return <div className="page-section"><p className="release-empty">Release not found.</p></div>;
 
   const playableTracks = (release.tracks ?? []).filter((track) => track.published !== false && Boolean(track.audio_url));
   const queue = playableTracks.map((track) => ({
@@ -55,9 +65,18 @@ export function ReleaseDetailPage() {
   return (
     <div className="page-section release-detail">
       <div className="detail-header">
-        <div className="detail-cover">
+        <div className={`detail-cover ${release.artwork_url ? 'detail-cover--interactive' : ''}`}>
+          {release.artwork_url && <button type="button" className="detail-cover__zoom" onClick={() => setIsArtworkOpen(true)} aria-label={`Open ${release.title} artwork`}>
+            <span aria-hidden="true">View artwork</span>
+          </button>}
           {release.contentType === 'visual' && release.visual_url ? (
-            <video src={release.visual_url} poster={release.artwork_url ?? undefined} controls playsInline aria-label={release.title} />
+            visualMediaKind(release.visual_url) === 'image' ? (
+              <img src={release.visual_url} alt={release.title} />
+            ) : (
+              <video controls playsInline preload="metadata" poster={release.artwork_url ?? undefined} aria-label={release.title}>
+                <source src={release.visual_url} type={visualMediaMime(release.visual_url)} />
+              </video>
+            )
           ) : (
             <img src={release.artwork_url ?? ''} alt={release.title} />
           )}
@@ -132,6 +151,10 @@ export function ReleaseDetailPage() {
           })}
         </ol>
       </section>
+      {isArtworkOpen && release.artwork_url && <div className="artwork-lightbox" role="dialog" aria-modal="true" aria-label={`${release.title} artwork`} onClick={() => setIsArtworkOpen(false)}>
+        <button type="button" className="artwork-lightbox__close" onClick={() => setIsArtworkOpen(false)} aria-label="Close artwork">Close</button>
+        <img src={release.artwork_url} alt={release.title} onClick={(event) => event.stopPropagation()} />
+      </div>}
     </div>
   );
 }

@@ -1,6 +1,6 @@
 export const siteConfig = {
-  brand: 'A 071 Studio',
-  brandLines: ['A 071', 'Studio'],
+  brand: 'The12thHouse',
+  brandLines: ['THE12TH', 'HOUSE'],
   heroEyebrow: 'WELCOME TO',
   introName: 'The12thHouse',
   contactMembers: [
@@ -45,16 +45,6 @@ export const aboutMembers = [
       { label: 'X — placeholder', href: 'https://x.com/your-handle' },
       { label: 'Instagram — placeholder', href: 'https://instagram.com/your-handle' },
       { label: 'GitHub — placeholder', href: 'https://github.com/your-handle' },
-    ],
-  },
-  {
-    id: 'member-04',
-    number: '04',
-    role: 'DESIGNER / ANIMATOR',
-    name: 'Member 04 — Placeholder',
-    about: 'Editable placeholder biography for the fourth studio member. Replace this text with the designer / animator’s biography and practice.',
-    socials: [
-      { label: 'Instagram — placeholder', href: 'https://instagram.com/your-handle' },
     ],
   },
 ] as const;

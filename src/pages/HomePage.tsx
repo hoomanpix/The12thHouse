@@ -24,7 +24,7 @@ export function HomePage() {
   }
 
   const playRelease = (release: Release) => {
-    const queue = (release.tracks ?? []).map((track) => ({
+    const queue = (release.tracks ?? []).filter((track) => track.published !== false && Boolean(track.audio_url)).map((track) => ({
       id: `${release.id}-${track.id}`,
       releaseId: release.id,
       trackId: track.id,

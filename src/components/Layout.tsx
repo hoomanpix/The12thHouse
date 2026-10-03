@@ -6,7 +6,6 @@ import { siteConfig } from '../config/site';
 const navItems = [
   { label: 'Home', to: publicRoutes.home },
   { label: 'Releases', to: publicRoutes.releases },
-  { label: 'Contact', to: publicRoutes.contact },
   { label: 'About', to: publicRoutes.about },
 ];
 
@@ -16,8 +15,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <header className="topbar">
         <div className="brand-block">
           <NavLink to={publicRoutes.home} className="brand-link" aria-label={`${siteConfig.brand} home`}>
-            <span className="brand-line brand-line--top"><span className="brand-line__initial">A</span><span>071</span></span>
-            <span className="brand-line brand-line--bottom"><span className="brand-line__initial">S</span><span>TUDIO</span></span>
+            <span className="brand-line brand-line--top"><span className="brand-line__initial">T</span><span>HE12TH</span></span>
+            <span className="brand-line brand-line--bottom"><span className="brand-line__initial">H</span><span>OUSE</span></span>
           </NavLink>
         </div>
 

@@ -2,7 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import { mockArtist, mockReleases } from '../../data/mock';
 import { isSupabaseConfigured, supabase } from '../../lib/supabase';
 import type { Artist, PlatformLink, Release, Track } from '../../types';
-import { normalizeReleaseStatus } from '../../lib/releaseStatus';
+import { isUpcoming, normalizeReleaseStatus } from '../../lib/releaseStatus';
 
 type ReleaseInput = Omit<Release, 'id' | 'created_at' | 'updated_at'>;
 type MutationResult = { error?: string };
@@ -71,6 +71,8 @@ function normalizeRelease(row: any): Release {
       ...track,
       release_id: track.release_id ?? track.album_id,
       duration: track.duration ?? 0,
+      description: track.description ?? null,
+      cover_url: track.cover_url ?? null,
       order: track.track_order ?? track.order ?? 1,
     })).sort((a: Track, b: Track) => a.order - b.order),
     platform_links: (row.platform_links ?? []).map((link: any) => ({
@@ -97,6 +99,10 @@ function releaseRow(release: Partial<Release>) {
 function trackRow(releaseId: string, track: Partial<Track>) {
   const row: Record<string, unknown> = { album_id: releaseId };
   if ('title' in track) row.title = track.title;
+  if ('slug' in track) row.slug = track.slug;
+  if ('duration' in track) row.duration = track.duration;
+  if ('description' in track) row.description = track.description;
+  if ('cover_url' in track) row.cover_url = track.cover_url;
   if ('audio_url' in track) row.audio_url = track.audio_url;
   if ('published' in track) row.published = track.published;
   if ('play_count' in track) row.play_count = track.play_count;
@@ -258,7 +264,7 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
   const addTrack = useCallback(async (releaseId: string, track: Omit<Track, 'id' | 'release_id' | 'order'>) => {
     const id = makeId();
     const release = releases.find((item) => item.id === releaseId);
-    const order = (release?.tracks?.length ?? 0) + 1;
+    const order = Math.max(0, ...(release?.tracks ?? []).map((track) => track.order)) + 1;
     if (!isSupabaseConfigured) { setReleases((current) => current.map((item) => item.id === releaseId ? { ...item, tracks: [...(item.tracks ?? []), { ...track, id, release_id: releaseId, order }] } : item)); return { id }; }
     const { error } = await supabase.from('tracks').insert({ id, ...trackRow(releaseId, { ...track, order }) });
     if (error) return { error: error.message };
@@ -329,7 +335,7 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
     const path = `${releaseId}/${trackId}-${Date.now()}.${extension}`;
     const upload = await supabase.storage.from('audio').upload(path, file, { upsert: true, contentType: file.type || undefined });
     if (upload.error) return { error: upload.error.message };
-    const update = await supabase.from('tracks').update({ audio_url: path, published: true }).eq('id', trackId).eq('album_id', releaseId);
+    const update = await supabase.from('tracks').update({ audio_url: path }).eq('id', trackId).eq('album_id', releaseId);
     if (update.error) { await supabase.storage.from('audio').remove([path]); return { error: update.error.message }; }
     return loadRemote(Boolean(user));
   }, [loadRemote, user]);
@@ -393,7 +399,7 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
   }, []);
   const resetCatalog = useCallback(() => setReleases(fallbackReleases), []);
 
-  const value = useMemo(() => ({ artist, releases, upcomingReleases: releases.filter((release) => !release.published), homeCardIds, user, isRecoveringPassword, isReady, isRemote: isSupabaseConfigured, signIn, signUp, resetPassword, updatePassword, signOut, reloadCatalog, updateRelease, addRelease, removeRelease, updateHomeCard, addTrack, removeTrack, updateTrack, saveTrackOrder, saveArtwork, removeArtwork, saveTrackAudio, removeTrackAudio, saveVisualMedia, removeVisualMedia, addPlatformLink, updatePlatformLink, removePlatformLink, recordPlay, resetCatalog }), [artist, releases, homeCardIds, user, isRecoveringPassword, isReady, signIn, signUp, resetPassword, updatePassword, signOut, reloadCatalog, updateRelease, addRelease, removeRelease, updateHomeCard, addTrack, removeTrack, updateTrack, saveTrackOrder, saveArtwork, removeArtwork, saveTrackAudio, removeTrackAudio, saveVisualMedia, removeVisualMedia, addPlatformLink, updatePlatformLink, removePlatformLink, recordPlay, resetCatalog]);
+  const value = useMemo(() => ({ artist, releases, upcomingReleases: releases.filter(isUpcoming), homeCardIds, user, isRecoveringPassword, isReady, isRemote: isSupabaseConfigured, signIn, signUp, resetPassword, updatePassword, signOut, reloadCatalog, updateRelease, addRelease, removeRelease, updateHomeCard, addTrack, removeTrack, updateTrack, saveTrackOrder, saveArtwork, removeArtwork, saveTrackAudio, removeTrackAudio, saveVisualMedia, removeVisualMedia, addPlatformLink, updatePlatformLink, removePlatformLink, recordPlay, resetCatalog }), [artist, releases, homeCardIds, user, isRecoveringPassword, isReady, signIn, signUp, resetPassword, updatePassword, signOut, reloadCatalog, updateRelease, addRelease, removeRelease, updateHomeCard, addTrack, removeTrack, updateTrack, saveTrackOrder, saveArtwork, removeArtwork, saveTrackAudio, removeTrackAudio, saveVisualMedia, removeVisualMedia, addPlatformLink, updatePlatformLink, removePlatformLink, recordPlay, resetCatalog]);
   return <CatalogContext.Provider value={value}>{children}</CatalogContext.Provider>;
 }
 
