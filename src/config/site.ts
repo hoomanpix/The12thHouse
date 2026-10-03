@@ -1,6 +1,6 @@
 export const siteConfig = {
-  brand: 'The12thHouse',
-  brandLines: ['THE12TH', 'HOUSE'],
+  brand: 'A 071 Studio',
+  brandLines: ['A 071', 'Studio'],
   heroEyebrow: 'WELCOME TO',
   introName: 'The12thHouse',
   contactMembers: [

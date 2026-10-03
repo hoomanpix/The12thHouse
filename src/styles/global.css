@@ -1687,8 +1687,15 @@ input[type='range'] {
   display: block;
   width: 100%;
   aspect-ratio: 1 / 1.2;
-  object-fit: cover;
+  object-fit: contain;
   background: #000;
+}
+
+.media-playback-error {
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.45;
 }
 
 

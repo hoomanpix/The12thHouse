@@ -4,7 +4,7 @@ import { useCatalog } from '../features/catalog/CatalogProvider';
 import { useAudioPlayer } from '../features/audio-player/AudioPlayerProvider';
 import { publicRoutes } from '../config/routes';
 import { formatReleaseDate, isUpcoming, shouldShowReleaseDate } from '../lib/releaseStatus';
-import { visualMediaKind, visualMediaMime } from '../lib/media';
+import { visualMediaKind } from '../lib/media';
 
 export function ReleaseDetailPage() {
   const { id } = useParams();
@@ -13,6 +13,7 @@ export function ReleaseDetailPage() {
   const { setQueue, playTrack } = useAudioPlayer();
   const { recordPlay } = useCatalog();
   const [isArtworkOpen, setIsArtworkOpen] = useState(false);
+  const [mediaPlaybackError, setMediaPlaybackError] = useState(false);
   useEffect(() => {
     if (!isArtworkOpen) return;
     const handleKeyDown = (event: KeyboardEvent) => { if (event.key === 'Escape') setIsArtworkOpen(false); };
@@ -75,9 +76,21 @@ export function ReleaseDetailPage() {
             visualMediaKind(release.visual_url) === 'image' ? (
               <img src={release.visual_url} alt={release.title} />
             ) : (
-              <video controls playsInline preload="metadata" poster={release.artwork_url ?? undefined} aria-label={release.title}>
-                <source src={release.visual_url} type={visualMediaMime(release.visual_url)} />
-              </video>
+              <>
+                <video
+                  controls
+                  playsInline
+                  preload="metadata"
+                  poster={release.artwork_url ?? undefined}
+                  aria-label={release.title}
+                  src={release.visual_url}
+                  onLoadedData={() => setMediaPlaybackError(false)}
+                  onError={() => setMediaPlaybackError(true)}
+                />
+                {mediaPlaybackError && <p className="media-playback-error" role="alert">
+                  This original animation format could not be played by this browser. The original file is preserved; <a href={release.visual_url} target="_blank" rel="noreferrer">open the original file</a> in an app or browser with native codec support.
+                </p>}
+              </>
             )
           ) : (
             <img src={release.artwork_url ?? ''} alt={release.title} />
