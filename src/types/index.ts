@@ -25,6 +25,8 @@ export interface Track {
   title: string;
   duration: number;
   audio_url: string | null;
+  audio_reference?: string | null;
+  audio_error?: string | null;
   published?: boolean;
   play_count?: number;
   order: number;

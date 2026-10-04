@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { useCatalog } from '../features/catalog/CatalogProvider';
 import { publicRoutes } from '../config/routes';
 import { useAudioPlayer } from '../features/audio-player/AudioPlayerProvider';
+import { isPlayableTrack } from '../features/audio-player/queue';
 import { siteConfig } from '../config/site';
 import type { Release } from '../types';
 import { formatReleaseDate, isPublished, isUpcoming, shouldShowReleaseDate } from '../lib/releaseStatus';
@@ -24,7 +25,7 @@ export function HomePage() {
   }
 
   const playRelease = (release: Release) => {
-    const queue = (release.tracks ?? []).map((track) => ({
+    const queue = (release.tracks ?? []).filter(isPlayableTrack).map((track) => ({
       id: `${release.id}-${track.id}`,
       releaseId: release.id,
       trackId: track.id,
