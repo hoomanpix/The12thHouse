@@ -176,3 +176,31 @@ The original `.mov` remains the source. Browser support remains codec/container 
 4. The Supabase security advisor still reports pre-existing warnings for executable `SECURITY DEFINER` functions and disabled leaked-password protection; those were not changed because this repair must remain limited to the Admin/Public data-media path.
 
 This branch is ready for authenticated artist verification. It has not been merged into `main` and has not been deployed.
+
+## 12. Final follow-up verification — 2026-10-04
+
+### Additional source-level integrity fixes
+
+- `releaseRow()` now preserves `artist_id` when release mutations are sent to Supabase, preventing owner-field loss on update paths that include it.
+- Track audio upload now updates only `audio_url`; it no longer silently sets `published = true`. The artist's independent playable/unplayable choice is preserved.
+- Single and pending album-track creation initializes `published` consistently with whether an audio file was supplied.
+- Applying a lower album track count now deletes the confirmed trailing persisted tracks and normalizes the remaining order through the existing backend-backed removal flow. No schema or RLS change was made.
+
+### Browser preview evidence
+
+- Preview URL: `https://5180-isfr19aoz2bfqwt3frkw0-1ef2ae6c.us4.manus.computer/`
+- Public Home: **PASS** — rendered persisted Home cards, including an Upcoming card from Supabase.
+- Public Releases / Music: **PASS** — rendered persisted Published and Upcoming rows.
+- Public Releases / Visual: **PASS** — switched to the Visual tab and rendered persisted visual catalog entries and Supabase cover URLs.
+- Public release detail: **PASS** — rendered a persisted detail route with the existing artwork, metadata, tracklist, and player controls.
+- Admin route: **PASS** — unauthenticated users receive the restricted artist sign-in screen; the approved-email gate remains visible.
+- Browser console: **no console output/errors observed** during the route smoke test.
+
+### Final validation after the source fixes
+
+- `npm run build`: **PASS** — Vite production build completed successfully.
+- `npm run test`: **PASS** — 1 test file, 4 tests passed; existing React `act(...)` warnings remain.
+- `git diff --check`: **PASS**.
+- No production deployment, database migration, RLS change, or merge to `main` was performed.
+
+The live authenticated artist mutation matrix remains a required manual check because this sandbox does not have the artist's password. Mobile Safari remains unverified in this environment.

@@ -99,7 +99,7 @@ export function AdminPage() {
     if (newArtworkFile) { const saved = await saveArtwork(releaseId, newArtworkFile); if (saved.error) { flash('error', `Release saved, artwork failed: ${saved.error}`); return; } }
     if (!isMusic && visualType === 'animation' && newMediaFile) { const saved = await saveVisualMedia(releaseId, newMediaFile); if (saved.error) { flash('error', `Release saved, animation failed: ${saved.error}`); return; } }
     if (isMusic && type === 'single') {
-      const track = await addTrack(releaseId, { title: newTrackTitles[0] || newTitle.trim(), audio_url: null, duration: 0, published: false, play_count: 0 });
+      const track = await addTrack(releaseId, { title: newTrackTitles[0] || newTitle.trim(), audio_url: null, duration: 0, published: Boolean(newAudioFile), play_count: 0 });
       if (track.error || !track.id) { flash('error', `Release saved, track failed: ${track.error ?? 'No track ID returned.'}`); return; }
       if (newAudioFile) { const saved = await saveTrackAudio(releaseId, track.id, newAudioFile); if (saved.error) { flash('error', `Release saved, audio failed: ${saved.error}`); return; } }
     }
@@ -111,9 +111,31 @@ export function AdminPage() {
   const saveVisualFile = () => selectedRelease && visualFile ? runSave(() => saveVisualMedia(selectedRelease.id, visualFile), 'Visual media.') : flash('error', 'Save failed: choose a video first.');
   const confirmDelete = async () => { if (!deleteCandidate) return; const ok = await runSave(() => removeRelease(deleteCandidate), 'Content deleted.'); if (ok) { setDeleteCandidate(null); setSelectedReleaseId(''); setMode('list'); } };
   const saveTrack = async (track: Track) => { if (!selectedRelease) return; const draft = trackDrafts[track.id]; if (!draft?.title.trim()) { flash('error', 'Save failed: track title is required.'); return; } flash('saving', 'Saving track…'); const metadata = await updateTrack(selectedRelease.id, track.id, draft); if (metadata.error) { flash('error', `Save failed: ${metadata.error}`); return; } const file = audioFiles[track.id]; if (file) { const audio = await saveTrackAudio(selectedRelease.id, track.id, file); if (audio.error) { flash('error', `Track saved, audio failed: ${audio.error}`); return; } } flash('saved', 'Saved ✓ Track and audio.'); };
-  const applyTrackCount = () => { if (!selectedRelease || selectedRelease.type !== 'album') return; const desired = Math.max(1, Math.floor(albumTrackCountDraft)); const persistedCount = selectedRelease.tracks?.length ?? 0; if (desired < persistedCount) { const confirmed = window.confirm(`You are reducing this album from ${persistedCount} tracks to ${desired}. Existing tracks will not be deleted automatically. Do you want to continue?`); if (!confirmed) { setAlbumTrackCountDraft(persistedCount); return; } } const missing = Math.max(0, desired - persistedCount - pendingTracks.length); if (missing > 0) setPendingTracks((current) => [...current, ...Array.from({ length: missing }, (_, index) => ({ key: `pending-${Date.now()}-${index}`, order: persistedCount + current.length + index + 1, title: `Track ${String(persistedCount + current.length + index + 1).padStart(2, '0')}`, file: null }))]); flash('saved', desired < persistedCount ? `Saved ✓ Count set to ${desired}; existing tracks were preserved.` : `Saved ✓ ${desired} track editors ready.`); };
+  const applyTrackCount = async () => {
+    if (!selectedRelease || selectedRelease.type !== 'album') return;
+    const desired = Math.max(1, Math.floor(albumTrackCountDraft));
+    const persistedTracks = selectedRelease.tracks ?? [];
+    const persistedCount = persistedTracks.length;
+    if (desired < persistedCount) {
+      const confirmed = window.confirm(`You are reducing this album from ${persistedCount} tracks to ${desired}. The last ${persistedCount - desired} persisted tracks will be permanently deleted. Continue?`);
+      if (!confirmed) { setAlbumTrackCountDraft(persistedCount); return; }
+      flash('saving', 'Removing tracks…');
+      for (const track of persistedTracks.slice(desired).sort((a, b) => b.order - a.order)) {
+        const result = await removeTrack(selectedRelease.id, track.id);
+        if (result.error) { flash('error', `Save failed: ${result.error}`); return; }
+      }
+      setPendingTracks([]);
+      setAlbumTrackCountDraft(desired);
+      flash('saved', `Saved ✓ Album now has ${desired} tracks.`);
+      return;
+    }
+    const missing = Math.max(0, desired - persistedCount - pendingTracks.length);
+    if (missing > 0) setPendingTracks((current) => [...current, ...Array.from({ length: missing }, (_, index) => ({ key: `pending-${Date.now()}-${index}`, order: persistedCount + current.length + index + 1, title: `Track ${String(persistedCount + current.length + index + 1).padStart(2, '0')}`, file: null }))]);
+    setAlbumTrackCountDraft(desired);
+    flash('saved', `Saved ✓ ${desired} track editors ready.`);
+  };
   const addPendingTrack = () => { const persistedCount = selectedRelease?.tracks?.length ?? 0; setAlbumTrackCountDraft((count) => count + 1); setPendingTracks((current) => [...current, { key: `pending-${Date.now()}`, order: persistedCount + current.length + 1, title: `Track ${String(persistedCount + current.length + 1).padStart(2, '0')}`, file: null }]); };
-  const savePendingTrack = async (pending: PendingTrack) => { if (!selectedRelease || !pending.title.trim()) { flash('error', 'Save failed: track title is required.'); return; } flash('saving', 'Saving track…'); const created = await addTrack(selectedRelease.id, { title: pending.title.trim(), audio_url: null, duration: 0, published: false, play_count: 0 }); if (created.error || !created.id) { flash('error', `Save failed: ${created.error ?? 'No track ID returned.'}`); return; } if (pending.file) { const audio = await saveTrackAudio(selectedRelease.id, created.id, pending.file); if (audio.error) { flash('error', `Track saved, audio failed: ${audio.error}`); return; } } setPendingTracks((current) => current.filter((item) => item.key !== pending.key)); flash('saved', 'Saved ✓ Track and audio.'); };
+  const savePendingTrack = async (pending: PendingTrack) => { if (!selectedRelease || !pending.title.trim()) { flash('error', 'Save failed: track title is required.'); return; } flash('saving', 'Saving track…'); const created = await addTrack(selectedRelease.id, { title: pending.title.trim(), audio_url: null, duration: 0, published: Boolean(pending.file), play_count: 0 }); if (created.error || !created.id) { flash('error', `Save failed: ${created.error ?? 'No track ID returned.'}`); return; } if (pending.file) { const audio = await saveTrackAudio(selectedRelease.id, created.id, pending.file); if (audio.error) { flash('error', `Track saved, audio failed: ${audio.error}`); return; } } setPendingTracks((current) => current.filter((item) => item.key !== pending.key)); flash('saved', 'Saved ✓ Track and audio.'); };
   const deletePersistedTrack = async (track: Track) => { if (!selectedRelease) return; if (!window.confirm(`Delete Track ${track.title}? This will permanently remove the track.`)) return; const ok = await runSave(() => removeTrack(selectedRelease.id, track.id), 'Track deleted.'); if (ok) setTrackOrderDraft((current) => current.filter((id) => id !== track.id)); };
   const saveAudio = (track: Track) => selectedRelease && audioFiles[track.id] ? runSave(() => saveTrackAudio(selectedRelease.id, track.id, audioFiles[track.id] as File), 'Audio file.') : flash('error', 'Save failed: choose an audio file first.');
   const saveOrder = () => selectedRelease && runSave(() => saveTrackOrder(selectedRelease.id, trackOrderDraft), 'Track order.');

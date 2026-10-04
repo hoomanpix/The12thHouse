@@ -80,6 +80,7 @@ function normalizeRelease(row: any): Release {
 
 function releaseRow(release: Partial<Release>) {
   const row: Record<string, unknown> = {};
+  if ('artist_id' in release) row.artist_id = release.artist_id;
   const fields: Array<[keyof Release, string]> = [
     ['title', 'title'], ['slug', 'slug'], ['release_date', 'release_date'], ['description', 'description'],
     ['featured', 'featured'], ['published', 'published'], ['visual_url', 'visual_url'],
@@ -329,7 +330,8 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
     const path = `${releaseId}/${trackId}-${Date.now()}.${extension}`;
     const upload = await supabase.storage.from('audio').upload(path, file, { upsert: true, contentType: file.type || undefined });
     if (upload.error) return { error: upload.error.message };
-    const update = await supabase.from('tracks').update({ audio_url: path, published: true }).eq('id', trackId).eq('album_id', releaseId);
+    // Uploading a file must not silently change the artist's separate playable toggle.
+    const update = await supabase.from('tracks').update({ audio_url: path }).eq('id', trackId).eq('album_id', releaseId);
     if (update.error) { await supabase.storage.from('audio').remove([path]); return { error: update.error.message }; }
     return loadRemote(Boolean(user));
   }, [loadRemote, user]);
