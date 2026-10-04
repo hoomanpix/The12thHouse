@@ -10,6 +10,7 @@ import {
 import type { AudioQueueItem, PlayerState } from './types';
 import { isSupabaseConfigured, supabase } from '../../lib/supabase';
 import { eligibleAudioQueue, nextQueueItem, previousQueueItem } from './queue';
+import { applyMediaVolume, clampVolume, DEFAULT_VOLUME } from './volume';
 
 interface AudioPlayerContextValue {
   state: PlayerState;
@@ -27,7 +28,7 @@ const initialState: PlayerState = {
   isPlaying: false,
   currentTime: 0,
   duration: 0,
-  volume: 0.8,
+  volume: DEFAULT_VOLUME,
   queue: [],
   activeTrackId: null,
   status: 'idle',
@@ -44,6 +45,8 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
   const playTrackRef = useRef<(item: AudioQueueItem) => void>(() => undefined);
   const refreshAudioRef = useRef<() => Promise<void>>(async () => undefined);
   const refreshAttemptRef = useRef<string | null>(null);
+  const volumeRef = useRef(DEFAULT_VOLUME);
+  const mutedRef = useRef(false);
   const [state, setState] = useState<PlayerState>(initialState);
 
   useEffect(() => { stateRef.current = state; }, [state]);
@@ -52,7 +55,7 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
     if (!audioRef.current) {
       const audio = new Audio();
       audio.preload = 'metadata';
-      audio.volume = stateRef.current.volume;
+      applyMediaVolume(audio, volumeRef.current, mutedRef.current);
       const onTimeUpdate = () => setState((current) => ({ ...current, currentTime: audio.currentTime }));
       const onLoadStart = () => setState((current) => ({ ...current, status: 'loading', isReady: false, error: null }));
       const onLoadedMetadata = () => setState((current) => ({ ...current, duration: Number.isFinite(audio.duration) ? audio.duration : 0, status: 'ready', isReady: true, error: null }));
@@ -115,7 +118,13 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
       return;
     }
     if (refreshAttemptRef.current !== item.audioReference) refreshAttemptRef.current = null;
-    if (audio.src !== item.audioUrl) { audio.src = item.audioUrl; audio.load(); }
+    if (audio.src !== item.audioUrl) {
+      audio.src = item.audioUrl;
+      applyMediaVolume(audio, volumeRef.current, mutedRef.current);
+      audio.load();
+    } else {
+      applyMediaVolume(audio, volumeRef.current, mutedRef.current);
+    }
     setState((current) => ({ ...current, activeTrackId: item.trackId, status: 'loading', isReady: false, error: null, currentTime: 0 }));
     void audio.play().catch((error: unknown) => setState((current) => ({ ...current, status: 'error', error: error instanceof Error ? error.message : 'Playback was blocked. Please try again.', isPlaying: false })));
   }, [ensureAudio]);
@@ -157,8 +166,10 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
   }, [ensureAudio]);
 
   const setVolume = useCallback((value: number) => {
-    const nextVolume = Math.min(1, Math.max(0, value));
-    ensureAudio().volume = nextVolume;
+    const nextVolume = clampVolume(value);
+    volumeRef.current = nextVolume;
+    const audio = ensureAudio();
+    applyMediaVolume(audio, nextVolume, mutedRef.current);
     setState((current) => ({ ...current, volume: nextVolume }));
   }, [ensureAudio]);
 
@@ -176,7 +187,10 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
     if (previous) playTrackRef.current(previous);
   }, []);
 
-  useEffect(() => { if (audioRef.current) audioRef.current.volume = state.volume; }, [state.volume]);
+  useEffect(() => {
+    volumeRef.current = clampVolume(state.volume);
+    if (audioRef.current) applyMediaVolume(audioRef.current, volumeRef.current, mutedRef.current);
+  }, [state.volume]);
 
   const value = useMemo<AudioPlayerContextValue>(() => ({ state, playTrack, togglePlay, playNext, playPrevious, seek, setVolume, setQueue, clearQueue }), [clearQueue, playNext, playPrevious, playTrack, seek, setQueue, setVolume, state, togglePlay]);
   return <AudioPlayerContext.Provider value={value}>{children}</AudioPlayerContext.Provider>;
