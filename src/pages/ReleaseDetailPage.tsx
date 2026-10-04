@@ -26,7 +26,7 @@ export function ReleaseDetailPage() {
 
   const handlePlayTrack = (trackIndex: number) => {
     const nextTrack = (release.tracks ?? [])[trackIndex];
-    if (!nextTrack || nextTrack.published === false || !nextTrack.audio_url) {
+    if (!nextTrack || !isPlayableTrack(nextTrack)) {
       return;
     }
 
@@ -38,6 +38,7 @@ export function ReleaseDetailPage() {
         trackId: track.id,
         title: track.title,
         audioUrl: track.audio_url,
+        audioReference: track.audio_reference ?? null,
         artworkUrl: release.artwork_url,
         releaseTitle: release.title,
         duration: track.duration,
@@ -81,7 +82,7 @@ export function ReleaseDetailPage() {
                 if (!firstPlayable) return;
                 handlePlayTrack((release.tracks ?? []).findIndex((track) => track.id === firstPlayable.id));
               }}
-              disabled={(release.tracks ?? []).every((track) => track.published === false || !track.audio_url)}
+              disabled={(release.tracks ?? []).every((track) => !isPlayableTrack(track))}
             >
               Play album
             </button>

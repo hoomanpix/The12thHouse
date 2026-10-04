@@ -8,6 +8,7 @@ import {
   useState,
 } from 'react';
 import type { AudioQueueItem, PlayerState } from './types';
+import { isSupabaseConfigured, supabase } from '../../lib/supabase';
 import { eligibleAudioQueue, nextQueueItem, previousQueueItem } from './queue';
 
 interface AudioPlayerContextValue {
@@ -41,6 +42,8 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
   const cleanupAudioRef = useRef<(() => void) | null>(null);
   const stateRef = useRef<PlayerState>(initialState);
   const playTrackRef = useRef<(item: AudioQueueItem) => void>(() => undefined);
+  const refreshAudioRef = useRef<() => Promise<void>>(async () => undefined);
+  const refreshAttemptRef = useRef<string | null>(null);
   const [state, setState] = useState<PlayerState>(initialState);
 
   useEffect(() => { stateRef.current = state; }, [state]);
@@ -61,7 +64,7 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
         if (next) { playTrackRef.current(next); return; }
         setState((latest) => ({ ...latest, isPlaying: false, currentTime: 0, status: 'ready' }));
       };
-      const onError = () => setState((current) => ({ ...current, isPlaying: false, status: 'error', isReady: false, error: 'This track could not be loaded. The file may be missing or unsupported by this browser.' }));
+      const onError = () => { void refreshAudioRef.current(); };
       audio.addEventListener('timeupdate', onTimeUpdate);
       audio.addEventListener('loadstart', onLoadStart);
       audio.addEventListener('loadedmetadata', onLoadedMetadata);
@@ -111,11 +114,32 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
       setState((current) => ({ ...current, isPlaying: false, status: 'error', error: 'No audio file is available for this track yet.', activeTrackId: item.trackId }));
       return;
     }
+    if (refreshAttemptRef.current !== item.audioReference) refreshAttemptRef.current = null;
     if (audio.src !== item.audioUrl) { audio.src = item.audioUrl; audio.load(); }
     setState((current) => ({ ...current, activeTrackId: item.trackId, status: 'loading', isReady: false, error: null, currentTime: 0 }));
     void audio.play().catch((error: unknown) => setState((current) => ({ ...current, status: 'error', error: error instanceof Error ? error.message : 'Playback was blocked. Please try again.', isPlaying: false })));
   }, [ensureAudio]);
   playTrackRef.current = playTrack;
+
+  const refreshAudioUrl = useCallback(async () => {
+    const current = stateRef.current;
+    const active = current.queue.find((item) => item.trackId === current.activeTrackId);
+    const reference = active?.audioReference;
+    if (!isSupabaseConfigured || !active || !reference || refreshAttemptRef.current === reference) {
+      setState((latest) => ({ ...latest, isPlaying: false, status: 'error', isReady: false, error: active?.audioReference ? 'This audio file could not be decoded by this browser.' : 'The audio URL expired and no original Storage reference is available.' }));
+      return;
+    }
+    refreshAttemptRef.current = reference;
+    const { data, error } = await supabase.storage.from('audio').createSignedUrl(reference, 3600);
+    if (error || !data?.signedUrl) {
+      setState((latest) => ({ ...latest, isPlaying: false, status: 'error', isReady: false, error: error?.message ?? 'Unable to refresh the audio URL.' }));
+      return;
+    }
+    const refreshed = { ...active, audioUrl: data.signedUrl };
+    setState((latest) => ({ ...latest, queue: latest.queue.map((item) => item.trackId === refreshed.trackId ? refreshed : item), status: 'loading', error: null }));
+    playTrackRef.current(refreshed);
+  }, []);
+  refreshAudioRef.current = refreshAudioUrl;
 
   const togglePlay = useCallback(() => {
     const audio = ensureAudio();
