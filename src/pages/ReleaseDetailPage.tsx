@@ -1,6 +1,7 @@
 import { Link, useParams } from 'react-router-dom';
 import { useCatalog } from '../features/catalog/CatalogProvider';
 import { useAudioPlayer } from '../features/audio-player/AudioPlayerProvider';
+import { isPlayableTrack } from '../features/audio-player/queue';
 import { publicRoutes } from '../config/routes';
 import { formatReleaseDate, isUpcoming, shouldShowReleaseDate } from '../lib/releaseStatus';
 
@@ -11,7 +12,7 @@ export function ReleaseDetailPage() {
   const { setQueue, playTrack } = useAudioPlayer();
   const { recordPlay } = useCatalog();
 
-  const playableTracks = (release.tracks ?? []).filter((track) => track.published !== false && Boolean(track.audio_url));
+  const playableTracks = (release.tracks ?? []).filter(isPlayableTrack);
   const queue = playableTracks.map((track) => ({
     id: `${release.id}-${track.id}`,
     releaseId: release.id,
@@ -25,18 +26,19 @@ export function ReleaseDetailPage() {
 
   const handlePlayTrack = (trackIndex: number) => {
     const nextTrack = (release.tracks ?? [])[trackIndex];
-    if (!nextTrack || nextTrack.published === false || !nextTrack.audio_url) {
+    if (!nextTrack || !isPlayableTrack(nextTrack)) {
       return;
     }
 
     const filteredQueue = (release.tracks ?? [])
-      .filter((track) => track.published !== false && Boolean(track.audio_url))
+      .filter(isPlayableTrack)
       .map((track) => ({
         id: `${release.id}-${track.id}`,
         releaseId: release.id,
         trackId: track.id,
         title: track.title,
         audioUrl: track.audio_url,
+        audioReference: track.audio_reference ?? null,
         artworkUrl: release.artwork_url,
         releaseTitle: release.title,
         duration: track.duration,
@@ -76,11 +78,11 @@ export function ReleaseDetailPage() {
               type="button"
               className="button primary"
               onClick={() => {
-                const firstPlayable = (release.tracks ?? []).find((track) => track.published !== false && Boolean(track.audio_url));
+                const firstPlayable = (release.tracks ?? []).find((track) => isPlayableTrack(track));
                 if (!firstPlayable) return;
                 handlePlayTrack((release.tracks ?? []).findIndex((track) => track.id === firstPlayable.id));
               }}
-              disabled={(release.tracks ?? []).every((track) => track.published === false || !track.audio_url)}
+              disabled={(release.tracks ?? []).every((track) => !isPlayableTrack(track))}
             >
               Play album
             </button>
@@ -109,7 +111,7 @@ export function ReleaseDetailPage() {
 
         <ol className="tracklist">
           {(release.tracks ?? []).map((track, index) => {
-            const isPlayable = track.published !== false && Boolean(track.audio_url);
+            const isPlayable = isPlayableTrack(track);
 
             return (
               <li key={track.id} className={`track-row ${isPlayable ? '' : 'track-row--disabled'}`}>

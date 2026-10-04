@@ -136,8 +136,10 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
     const resolved = await Promise.all(items.map(async (release) => {
       const tracks = await Promise.all((release.tracks ?? []).map(async (track) => {
         if (!track.audio_url || track.audio_url.startsWith('http')) return track;
-        const { data } = await supabase.storage.from('audio').createSignedUrl(track.audio_url, 3600);
-        return { ...track, audio_url: data?.signedUrl ?? null };
+        const reference = track.audio_url;
+        const { data, error } = await supabase.storage.from('audio').createSignedUrl(reference, 3600);
+        if (error || !data?.signedUrl) return { ...track, audio_reference: reference, audio_error: error?.message ?? 'Unable to create a playback URL.' };
+        return { ...track, audio_reference: reference, audio_url: data.signedUrl, audio_error: null };
       }));
       return { ...release, tracks };
     }));
@@ -305,7 +307,7 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
     if (!isSupabaseConfigured) return { error: 'Supabase Storage is not configured.' };
     const extension = file.name.split('.').pop()?.toLowerCase().replace(/[^a-z0-9]/g, '') || 'bin';
     const path = `${releaseId}/${Date.now()}.${extension}`;
-    const upload = await supabase.storage.from('covers').upload(path, file, { upsert: true, contentType: file.type || undefined });
+    const upload = await supabase.storage.from('covers').upload(path, file, { upsert: false, contentType: file.type || undefined, cacheControl: '3600' });
     if (upload.error) return { error: upload.error.message };
     const { data } = supabase.storage.from('covers').getPublicUrl(path);
     const update = await supabase.from('albums').update({ cover_url: data.publicUrl }).eq('id', releaseId);
@@ -327,18 +329,18 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
     if (!isSupabaseConfigured) return { error: 'Supabase Storage is not configured.' };
     const extension = file.name.split('.').pop()?.toLowerCase().replace(/[^a-z0-9]/g, '') || 'audio';
     const path = `${releaseId}/${trackId}-${Date.now()}.${extension}`;
-    const upload = await supabase.storage.from('audio').upload(path, file, { upsert: true, contentType: file.type || undefined });
+    const upload = await supabase.storage.from('audio').upload(path, file, { upsert: false, contentType: file.type || undefined, cacheControl: '3600' });
     if (upload.error) return { error: upload.error.message };
-    const update = await supabase.from('tracks').update({ audio_url: path, published: true }).eq('id', trackId).eq('album_id', releaseId);
+    const update = await supabase.from('tracks').update({ audio_url: path }).eq('id', trackId).eq('album_id', releaseId);
     if (update.error) { await supabase.storage.from('audio').remove([path]); return { error: update.error.message }; }
     return loadRemote(Boolean(user));
   }, [loadRemote, user]);
 
   const removeTrackAudio = useCallback(async (releaseId: string, trackId: string) => {
     const track = releases.flatMap((release) => release.tracks ?? []).find((item) => item.id === trackId);
-    const update = await supabase.from('tracks').update({ audio_url: null, published: false }).eq('id', trackId).eq('album_id', releaseId);
+    const update = await supabase.from('tracks').update({ audio_url: null }).eq('id', trackId).eq('album_id', releaseId);
     if (update.error) return { error: update.error.message };
-    const path = storagePathFromReference(track?.audio_url, 'audio');
+    const path = storagePathFromReference(track?.audio_reference ?? track?.audio_url, 'audio');
     if (path) { const removed = await supabase.storage.from('audio').remove([path]); if (removed.error) return { error: removed.error.message }; }
     return loadRemote(Boolean(user));
   }, [loadRemote, releases, user]);
@@ -348,7 +350,7 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
     if (!isSupabaseConfigured) return { error: 'Supabase Storage is not configured.' };
     const extension = file.name.split('.').pop()?.toLowerCase().replace(/[^a-z0-9]/g, '') || 'bin';
     const path = `visuals/${releaseId}/${Date.now()}.${extension}`;
-    const upload = await supabase.storage.from('artist-assets').upload(path, file, { upsert: true, contentType: file.type || undefined });
+    const upload = await supabase.storage.from('artist-assets').upload(path, file, { upsert: false, contentType: file.type || undefined, cacheControl: '3600' });
     if (upload.error) return { error: upload.error.message };
     const { data } = supabase.storage.from('artist-assets').getPublicUrl(path);
     const update = await supabase.from('albums').update({ visual_url: data.publicUrl }).eq('id', releaseId);
