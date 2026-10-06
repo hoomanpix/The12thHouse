@@ -27,61 +27,17 @@ export function GlobalAudioPlayer() {
   }, [isExpanded]);
 
   return (
-    <div className={`global-player ${isExpanded ? 'is-expanded' : ''}`} aria-live="polite">
+    <div className={`global-player ${isExpanded ? 'is-expanded' : ''}`}>
       <div className="player-shell">
-        <div
-          className="player-strip"
-          aria-label={isExpanded ? 'Collapse audio player' : 'Expand audio player'}
-          onClick={() => setIsExpanded((current) => (current ? current : true))}
-          role="button"
-          tabIndex={0}
-          onKeyDown={(event) => {
-            if (event.key === 'Enter' || event.key === ' ') {
-              event.preventDefault();
-              setIsExpanded((current) => !current);
-            }
-          }}
-        >
-          <button
-            type="button"
-            className="player-button player-button--primary player-strip__cover-button"
-            onClick={(event) => {
-              event.stopPropagation();
-              togglePlay();
-            }}
-            aria-label={state.isPlaying ? 'Pause' : 'Play'}
-          >
-            {activeTrack?.artworkUrl ? (
-              <img className="player-strip__cover" src={activeTrack.artworkUrl} alt="" aria-hidden="true" />
-            ) : (
-              <span className="player-strip__cover player-strip__cover--empty" aria-hidden="true" />
-            )}
+        <div className="player-strip">
+          <button type="button" className="player-button player-button--primary player-strip__cover-button" onClick={togglePlay} aria-label={state.isPlaying ? 'Pause' : 'Play'}>
+            {activeTrack?.artworkUrl ? <img className="player-strip__cover" src={activeTrack.artworkUrl} alt="" aria-hidden="true" /> : <span className="player-strip__cover player-strip__cover--empty" aria-hidden="true" />}
           </button>
-
-          <div className="player-strip__meta">
-            <span className="player-strip__title">{trackTitle}</span>
-            <span className="player-strip__artist">{artistName}</span>
-          </div>
-
-          <div className="player-strip__progress" aria-hidden="true">
-            <span className="player-strip__progress-bar" style={{ width: `${Math.min(progress, 100)}%` }} />
-          </div>
-
-          <button
-            type="button"
-            className="player-button player-button--compact"
-            aria-label={isExpanded ? 'Collapse player' : 'Expand player'}
-            aria-expanded={isExpanded}
-            onClick={(event) => {
-              event.stopPropagation();
-              setIsExpanded((current) => !current);
-            }}
-          >
-            <PlayerIcon name={isExpanded ? 'minus' : 'plus'} />
-          </button>
+          <div className="player-strip__meta"><span className="player-strip__title">{trackTitle}</span><span className="player-strip__artist">{artistName}</span></div>
+          <div className="player-strip__progress" aria-hidden="true"><span className="player-strip__progress-bar" style={{ width: `${Math.min(progress, 100)}%` }} /></div>
+          <button type="button" className="player-button player-button--compact" aria-label={isExpanded ? 'Collapse player' : 'Expand player'} aria-expanded={isExpanded} onClick={() => setIsExpanded((current) => !current)}><PlayerIcon name={isExpanded ? 'minus' : 'plus'} /></button>
         </div>
-
-        <div className="player-detail" aria-hidden={!isExpanded}>
+        <>{isExpanded && <div className="player-detail">
           <div className="player-detail__topbar">
             <span className="eyebrow">Now playing</span>
           </div>
@@ -148,7 +104,9 @@ export function GlobalAudioPlayer() {
               </div>
             </div>
           </div>
-        </div>
+          {state.error && <p className="player-error" role="status">{state.error}</p>}
+        </div>}
+        </>
       </div>
     </div>
   );

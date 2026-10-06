@@ -18,6 +18,7 @@ export function AboutPage() {
 
       <section className="member-directory" aria-label="The12thHouse members">
         <div className="member-list">
+          {aboutMembers.length === 0 && <p className="release-empty">Member profiles will appear here when the studio publishes them.</p>}
           {aboutMembers.map((member: Member) => {
             const isActive = member.id === activeMemberId;
             return (

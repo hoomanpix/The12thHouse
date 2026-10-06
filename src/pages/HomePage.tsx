@@ -6,98 +6,53 @@ import { isPlayableTrack } from '../features/audio-player/queue';
 import { siteConfig } from '../config/site';
 import type { Release } from '../types';
 import { formatReleaseDate, isPublished, isUpcoming, shouldShowReleaseDate } from '../lib/releaseStatus';
+import { releaseTypeLabel } from '../lib/releaseSemantics';
 
 export function HomePage() {
   const { setQueue, playTrack } = useAudioPlayer();
-  const { artist: mockArtist, releases: mockReleases, homeCardIds, recordPlay } = useCatalog();
-  const visibleReleases = mockReleases.filter(isPublished);
-  const homeVisibleReleases = mockReleases.filter((release) => isPublished(release) || isUpcoming(release));
-  // A featured flag can intentionally exist on a draft while the artist is preparing it.
-  // Never let that unpublished flag blank the public Home: use the newest published release
-  // until a published Featured release is available.
-  const featuredRelease = visibleReleases.find((release) => release.featured) ?? visibleReleases[0];
-  const homeCards = homeCardIds
-    .map((id) => homeVisibleReleases.find((release) => release.id === id))
-    .filter((release): release is Release => Boolean(release));
-
-  if (!featuredRelease && homeCards.length === 0) {
-    return <div className="page-section"><p className="admin-empty">No releases are published yet.</p></div>;
-  }
-
+  const { artist, releases, homeCardIds, recordPlay, isReady, catalogError } = useCatalog();
+  if (!isReady) return <div className="page-section"><p className="release-empty" role="status">Loading catalog…</p></div>;
+  if (catalogError) return <div className="page-section"><p className="release-empty" role="alert">Catalog unavailable. Please try again later.</p></div>;
+  const visibleReleases = releases.filter(isPublished);
+  const homeVisibleReleases = releases.filter((release) => isPublished(release) || isUpcoming(release));
+  const featuredRelease = visibleReleases.find((release) => release.featured) ?? null;
+  const homeCards = homeCardIds.map((id) => homeVisibleReleases.find((release) => release.id === id)).filter((release): release is Release => Boolean(release));
   const playRelease = (release: Release) => {
-    const queue = (release.tracks ?? []).filter(isPlayableTrack).map((track) => ({
-      id: `${release.id}-${track.id}`,
-      releaseId: release.id,
-      trackId: track.id,
-      title: track.title,
-      audioUrl: track.audio_url,
-      audioReference: track.audio_reference ?? null,
-      artworkUrl: release.artwork_url,
-      releaseTitle: release.title,
-      duration: track.duration,
+    if (release.contentType !== 'music' || !isPublished(release)) return;
+    const queue = (release.tracks ?? []).filter((track) => isPlayableTrack(track, release)).map((track) => ({
+      id: `${release.id}-${track.id}`, releaseId: release.id, trackId: track.id, title: track.title, audioUrl: track.audio_url,
+      audioReference: track.audio_reference ?? null, artworkUrl: release.artwork_url, releaseTitle: release.title, duration: track.duration,
     }));
     setQueue(queue);
-    if (queue[0]) {
-      recordPlay(release.id, queue[0].trackId);
-      playTrack(queue[0]);
-    }
+    if (queue[0]) { recordPlay(release.id, queue[0].trackId); playTrack(queue[0]); }
   };
-
+  if (!featuredRelease && homeCards.length === 0) return <div className="page-section"><p className="release-empty">No public releases are available yet.</p></div>;
   return (
     <div className="page-section home-page">
       <section className="hero-block">
         <div className="hero-copy">
-          <p className="eyebrow">{siteConfig.heroEyebrow}</p>
-          <h1>{mockArtist.name}</h1>
-          <p className="lede">
-            Sculpted atmospheres, slow-burn rhythm, and intimate songs for the edge of the night.
-          </p>
+          <p className="eyebrow">{siteConfig.heroEyebrow}</p><h1>{artist.name}</h1>
+          <p className="lede">Sculpted atmospheres, slow-burn rhythm, and intimate songs for the edge of the night.</p>
           <div className="hero-actions">
-            {featuredRelease && <button type="button" className="button primary" onClick={() => playRelease(featuredRelease)}>
-              Play latest
-            </button>}
-            <Link to={publicRoutes.releases} className="button secondary">
-              Browse releases
-            </Link>
+            {featuredRelease?.contentType === 'music' && <button type="button" className="button primary" onClick={() => playRelease(featuredRelease)}>Play latest</button>}
+            {featuredRelease?.contentType === 'visual' && <Link to={`/releases/${featuredRelease.slug}`} className="button primary">View featured visual</Link>}
+            <Link to={publicRoutes.releases} className="button secondary">Browse releases</Link>
           </div>
         </div>
-
-        <div className="hero-visual">
-          {featuredRelease ? <img src={featuredRelease.artwork_url ?? ''} alt={featuredRelease.title} /> : <div className="hero-visual-placeholder" aria-label="Upcoming releases are being prepared" />}
-        </div>
+        <div className="hero-visual">{featuredRelease?.artwork_url ? <img src={featuredRelease.artwork_url} alt={featuredRelease.title} /> : <div className="hero-visual-placeholder" aria-label="No featured artwork selected" />}</div>
       </section>
-
       <section className="home-release-collection" aria-labelledby="home-releases-title">
-        <div className="section-heading">
-          <p className="eyebrow">Selected releases</p>
-          <h2 id="home-releases-title">A small collection of work.</h2>
-        </div>
+        <div className="section-heading"><p className="eyebrow">Selected releases</p><h2 id="home-releases-title">A small collection of work.</h2></div>
         <div className="home-release-grid">
-          {homeCards.map((release) => {
-            return (
-              <article key={release.id} className="feature-card home-feature-card">
-                <div className="feature-artwork">
-                  <Link to={`/releases/${release.slug}`} aria-label={`View ${release.title}`}>
-                    <img src={release.artwork_url ?? ''} alt={release.title} />
-                  </Link>
-                </div>
-                <div className="feature-copy">
-                  <p className="release-type">{isUpcoming(release) ? 'Coming soon' : release.type}</p>
-                  <h3>{release.title}</h3>
-                  <time className="release-date" dateTime={release.release_date ?? undefined}>
-                    {formatReleaseDate(shouldShowReleaseDate(release) ? release.release_date : null)}
-                  </time>
-                  <p>{release.description}</p>
-                  <div className="home-feature-actions">
-                    <Link to={`/releases/${release.slug}`} className="text-link">View release</Link>
-                    {isPublished(release) && <button type="button" className="text-link home-release-play" onClick={() => playRelease(release)}>
-                      Play selection
-                    </button>}
-                  </div>
-                </div>
-              </article>
-            );
-          })}
+          {homeCards.map((release) => <article key={release.id} className="feature-card home-feature-card">
+            <div className="feature-artwork"><Link to={`/releases/${release.slug}`} aria-label={`View ${release.title}`}>
+              {release.artwork_url ? <img src={release.artwork_url} alt={release.title} /> : <div className="home-feature-placeholder-artwork" aria-label={`${release.title} has no artwork yet`} />}
+            </Link></div>
+            <div className="feature-copy"><p className="release-type">{isUpcoming(release) ? 'Coming soon' : releaseTypeLabel(release)}</p><h3>{release.title}</h3>
+              <time className="release-date" dateTime={release.release_date ?? undefined}>{formatReleaseDate(shouldShowReleaseDate(release) ? release.release_date : null)}</time><p>{release.description}</p>
+              <div className="home-feature-actions"><Link to={`/releases/${release.slug}`} className="text-link">View release</Link>{release.contentType === 'music' && isPublished(release) && <button type="button" className="text-link home-release-play" onClick={() => playRelease(release)}>Play selection</button>}</div>
+            </div>
+          </article>)}
         </div>
       </section>
     </div>

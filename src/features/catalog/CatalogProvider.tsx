@@ -1,11 +1,12 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { mockArtist, mockReleases } from '../../data/mock';
+import { siteConfig } from '../../config/site';
 import { isSupabaseConfigured, supabase } from '../../lib/supabase';
 import type { Artist, PlatformLink, Release, Track } from '../../types';
-import { normalizeReleaseStatus } from '../../lib/releaseStatus';
+import { isPublished, normalizeReleaseStatus } from '../../lib/releaseStatus';
 
 type ReleaseInput = Omit<Release, 'id' | 'created_at' | 'updated_at'>;
-type MutationResult = { error?: string };
+type MutationResult = { error?: string; warning?: string };
 type CreateReleaseResult = MutationResult & { id?: string };
 
 interface CatalogContextValue {
@@ -15,6 +16,7 @@ interface CatalogContextValue {
   homeCardIds: string[];
   user: { id: string; email?: string } | null;
   isRecoveringPassword: boolean;
+  catalogError: string | null;
   isReady: boolean;
   isRemote: boolean;
   signIn: (email: string, password: string) => Promise<MutationResult>;
@@ -41,11 +43,13 @@ interface CatalogContextValue {
   updatePlatformLink: (releaseId: string, linkId: string, update: Partial<PlatformLink>) => Promise<MutationResult>;
   removePlatformLink: (releaseId: string, linkId: string) => Promise<MutationResult>;
   recordPlay: (releaseId: string, trackId: string) => void;
-  resetCatalog: () => void;
+  resetCatalog: () => Promise<MutationResult>;
 }
 
 const CatalogContext = createContext<CatalogContextValue | null>(null);
+const localMockMode = import.meta.env.DEV && import.meta.env.VITE_USE_MOCK_DATA === 'true';
 const fallbackReleases = mockReleases as Release[];
+const neutralArtist: Artist = { id: 'the12thhouse', name: siteConfig.introName, slug: 'the12thhouse', biography: '', image_url: null, location: null, email: null, website: null };
 const approvedAdminEmail = 'kamielkhajehpour@gmail.com';
 const makeId = () => typeof crypto !== 'undefined' && 'randomUUID' in crypto
   ? crypto.randomUUID()
@@ -83,7 +87,7 @@ function normalizeRelease(row: any): Release {
 function releaseRow(release: Partial<Release>) {
   const row: Record<string, unknown> = {};
   const fields: Array<[keyof Release, string]> = [
-    ['title', 'title'], ['slug', 'slug'], ['release_date', 'release_date'], ['description', 'description'],
+    ['artist_id', 'artist_id'], ['title', 'title'], ['slug', 'slug'], ['release_date', 'release_date'], ['description', 'description'],
     ['featured', 'featured'], ['published', 'published'], ['status', 'status'], ['show_release_date', 'show_release_date'], ['visual_url', 'visual_url'],
   ];
   fields.forEach(([from, to]) => { if (from in release) row[to] = release[from]; });
@@ -119,10 +123,20 @@ function storagePathFromReference(reference: string | null | undefined, bucket: 
   const index = reference.indexOf(marker);
   return index >= 0 ? reference.slice(index + marker.length).split('?')[0] : (reference.startsWith(`${bucket}/`) ? reference.slice(bucket.length + 1) : null);
 }
+async function cleanupStorageObject(bucket: string, reference: string | null | undefined) {
+  const path = storagePathFromReference(reference, bucket);
+  if (!path || !isSupabaseConfigured) return null;
+  const { error } = await supabase.storage.from(bucket).remove([path]);
+  return error ? `${bucket}/${path}` : null;
+}
+function cleanupWarning(paths: string[]) {
+  return paths.length > 0 ? `Saved, but old media cleanup needs attention (${paths.join(', ')}).` : undefined;
+}
 
 export function CatalogProvider({ children }: { children: React.ReactNode }) {
-  const [artist] = useState<Artist>(mockArtist as Artist);
-  const [releases, setReleases] = useState<Release[]>(fallbackReleases);
+  const [artist] = useState<Artist>(localMockMode ? mockArtist as Artist : neutralArtist);
+  const [releases, setReleases] = useState<Release[]>(localMockMode ? fallbackReleases : []);
+  const [catalogError, setCatalogError] = useState<string | null>(null);
   const [homeCardIds, setHomeCardIds] = useState<string[]>([]);
   const [user, setUser] = useState<{ id: string; email?: string } | null>(null);
   const [isRecoveringPassword, setIsRecoveringPassword] = useState(() => {
@@ -131,10 +145,11 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
   });
   const [isReady, setIsReady] = useState(!isSupabaseConfigured);
 
-  const resolveAudioReferences = useCallback(async (items: Release[]) => {
+  const resolveAudioReferences = useCallback(async (items: Release[], authenticated: boolean) => {
     if (!isSupabaseConfigured) return items;
     const resolved = await Promise.all(items.map(async (release) => {
       const tracks = await Promise.all((release.tracks ?? []).map(async (track) => {
+        if (!authenticated && (!isPublished(release) || track.published !== true)) return { ...track, audio_url: null, audio_reference: null, audio_error: null };
         if (!track.audio_url || track.audio_url.startsWith('http')) return track;
         const reference = track.audio_url;
         const { data, error } = await supabase.storage.from('audio').createSignedUrl(reference, 3600);
@@ -149,14 +164,17 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
   const loadRemote = useCallback(async (authenticated = false): Promise<MutationResult> => {
     if (!isSupabaseConfigured) { setIsReady(true); return {}; }
     try {
-      const { data, error } = await supabase.from('albums').select('*, tracks(*), platform_links(*)').order('release_date', { ascending: false, nullsFirst: false });
-      if (error) { setIsReady(true); return { error: error.message }; }
-      const normalized = await resolveAudioReferences((data ?? []).map(normalizeRelease));
+      let albumsQuery = supabase.from('albums').select('*, tracks(*), platform_links(*)').order('release_date', { ascending: false, nullsFirst: false });
+      if (!authenticated) albumsQuery = albumsQuery.in('status', ['published', 'upcoming']);
+      const { data, error } = await albumsQuery;
+      if (error) { setReleases([]); setHomeCardIds([]); setCatalogError(error.message); setIsReady(true); return { error: error.message }; }
+      const normalized = await resolveAudioReferences((data ?? []).map(normalizeRelease), authenticated);
       setReleases(normalized);
+      setCatalogError(null);
       const cards = await supabase.from('home_cards').select('slot, album_id').order('slot');
-      if (cards.error) { setIsReady(true); return { error: cards.error.message }; }
+      if (cards.error) { setReleases([]); setHomeCardIds([]); setCatalogError(cards.error.message); setIsReady(true); return { error: cards.error.message }; }
       const slots = Array.from({ length: 3 }, () => '');
-      (cards.data ?? []).forEach((card) => { if (card.slot >= 0 && card.slot < slots.length) slots[card.slot] = card.album_id ?? ''; });
+      (cards.data ?? []).forEach((card) => { if (card.slot >= 0 && card.slot < slots.length && normalized.some((release) => release.id === card.album_id)) slots[card.slot] = card.album_id ?? ''; });
       setHomeCardIds(slots);
       if (authenticated) {
         const current = await supabase.auth.getUser();
@@ -166,8 +184,9 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
       setIsReady(true);
       return {};
     } catch (error) {
-      setIsReady(true);
-      return { error: errorMessage(error) };
+      const message = errorMessage(error);
+      setReleases([]); setHomeCardIds([]); setCatalogError(message); setIsReady(true);
+      return { error: message };
     }
   }, [resolveAudioReferences]);
 
@@ -238,7 +257,13 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
   }, [loadRemote, user]);
 
   const removeRelease = useCallback(async (releaseId: string) => {
-    if (!isSupabaseConfigured) { setReleases((current) => current.filter((release) => release.id !== releaseId)); return {}; }
+    const release = releases.find((item) => item.id === releaseId);
+    const media = [
+      { bucket: 'covers', reference: release?.artwork_url },
+      { bucket: 'artist-assets', reference: release?.visual_url },
+      ...((release?.tracks ?? []).map((track) => ({ bucket: 'audio', reference: track.audio_reference ?? track.audio_url }))),
+    ];
+    if (!isSupabaseConfigured) { setReleases((current) => current.filter((item) => item.id !== releaseId)); return {}; }
     const home = await supabase.from('home_cards').delete().eq('album_id', releaseId);
     if (home.error) return { error: home.error.message };
     const tracks = await supabase.from('tracks').delete().eq('album_id', releaseId);
@@ -247,8 +272,11 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
     if (links.error) return { error: links.error.message };
     const { error } = await supabase.from('albums').delete().eq('id', releaseId);
     if (error) return { error: error.message };
-    return loadRemote(Boolean(user));
-  }, [loadRemote, user]);
+    const cleanupFailures: string[] = [];
+    for (const item of media) { const failed = await cleanupStorageObject(item.bucket, item.reference); if (failed) cleanupFailures.push(failed); }
+    const reloaded = await loadRemote(Boolean(user));
+    return reloaded.error ? reloaded : { warning: cleanupWarning(cleanupFailures) };
+  }, [loadRemote, releases, user]);
 
   const updateHomeCard = useCallback(async (slot: number, releaseId: string) => {
     if (!isSupabaseConfigured) { setHomeCardIds((current) => { const next = [...current]; next[slot] = releaseId; return next; }); return {}; }
@@ -273,18 +301,15 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
     const existing = releases.flatMap((release) => release.tracks ?? []).find((track) => track.id === trackId);
     const { error } = await supabase.from('tracks').delete().eq('id', trackId).eq('album_id', releaseId);
     if (error) return { error: error.message };
-    const audioPath = storagePathFromReference(existing?.audio_url, 'audio');
-    if (audioPath) {
-      const removed = await supabase.storage.from('audio').remove([audioPath]);
-      if (removed.error) return { error: removed.error.message };
-    }
+    const cleanupFailure = await cleanupStorageObject('audio', existing?.audio_reference ?? existing?.audio_url);
     const remaining = await supabase.from('tracks').select('id').eq('album_id', releaseId).order('track_order');
     if (remaining.error) return { error: remaining.error.message };
     for (const [index, track] of (remaining.data ?? []).entries()) {
       const normalized = await supabase.from('tracks').update({ track_order: index + 1 }).eq('id', track.id).eq('album_id', releaseId);
       if (normalized.error) return { error: normalized.error.message };
     }
-    return loadRemote(Boolean(user));
+    const reloaded = await loadRemote(Boolean(user));
+    return reloaded.error ? reloaded : { warning: cleanupWarning(cleanupFailure ? [cleanupFailure] : []) };
   }, [loadRemote, releases, user]);
 
   const updateTrack = useCallback(async (releaseId: string, trackId: string, update: Partial<Track>) => {
@@ -297,6 +322,10 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
   const saveTrackOrder = useCallback(async (releaseId: string, trackIds: string[]) => {
     if (!isSupabaseConfigured) return {};
     for (const [index, trackId] of trackIds.entries()) {
+      const { error } = await supabase.from('tracks').update({ track_order: -(index + 1) }).eq('id', trackId).eq('album_id', releaseId);
+      if (error) return { error: error.message };
+    }
+    for (const [index, trackId] of trackIds.entries()) {
       const { error } = await supabase.from('tracks').update({ track_order: index + 1 }).eq('id', trackId).eq('album_id', releaseId);
       if (error) return { error: error.message };
     }
@@ -305,6 +334,7 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
 
   const saveArtwork = useCallback(async (releaseId: string, file: File) => {
     if (!isSupabaseConfigured) return { error: 'Supabase Storage is not configured.' };
+    const release = releases.find((item) => item.id === releaseId);
     const extension = file.name.split('.').pop()?.toLowerCase().replace(/[^a-z0-9]/g, '') || 'bin';
     const path = `${releaseId}/${Date.now()}.${extension}`;
     const upload = await supabase.storage.from('covers').upload(path, file, { upsert: false, contentType: file.type || undefined, cacheControl: '3600' });
@@ -312,17 +342,19 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
     const { data } = supabase.storage.from('covers').getPublicUrl(path);
     const update = await supabase.from('albums').update({ cover_url: data.publicUrl }).eq('id', releaseId);
     if (update.error) { await supabase.storage.from('covers').remove([path]); return { error: update.error.message }; }
-    return loadRemote(Boolean(user));
-  }, [loadRemote, user]);
+    const cleanupFailure = await cleanupStorageObject('covers', release?.artwork_url);
+    const reloaded = await loadRemote(Boolean(user));
+    return reloaded.error ? reloaded : { warning: cleanupWarning(cleanupFailure ? [cleanupFailure] : []) };
+  }, [loadRemote, releases, user]);
 
   const removeArtwork = useCallback(async (releaseId: string) => {
     const release = releases.find((item) => item.id === releaseId);
     if (!isSupabaseConfigured) return { error: 'Supabase Storage is not configured.' };
     const update = await supabase.from('albums').update({ cover_url: null }).eq('id', releaseId);
     if (update.error) return { error: update.error.message };
-    const path = storagePathFromReference(release?.artwork_url, 'covers');
-    if (path) { const removed = await supabase.storage.from('covers').remove([path]); if (removed.error) return { error: removed.error.message }; }
-    return loadRemote(Boolean(user));
+    const cleanupFailure = await cleanupStorageObject('covers', release?.artwork_url);
+    const reloaded = await loadRemote(Boolean(user));
+    return reloaded.error ? reloaded : { warning: cleanupWarning(cleanupFailure ? [cleanupFailure] : []) };
   }, [loadRemote, releases, user]);
 
   const saveTrackAudio = useCallback(async (releaseId: string, trackId: string, file: File) => {
@@ -333,16 +365,19 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
     if (upload.error) return { error: upload.error.message };
     const update = await supabase.from('tracks').update({ audio_url: path }).eq('id', trackId).eq('album_id', releaseId);
     if (update.error) { await supabase.storage.from('audio').remove([path]); return { error: update.error.message }; }
-    return loadRemote(Boolean(user));
+    const oldTrack = releases.flatMap((release) => release.tracks ?? []).find((track) => track.id === trackId);
+    const cleanupFailure = await cleanupStorageObject('audio', oldTrack?.audio_reference ?? oldTrack?.audio_url);
+    const reloaded = await loadRemote(Boolean(user));
+    return reloaded.error ? reloaded : { warning: cleanupWarning(cleanupFailure ? [cleanupFailure] : []) };
   }, [loadRemote, user]);
 
   const removeTrackAudio = useCallback(async (releaseId: string, trackId: string) => {
     const track = releases.flatMap((release) => release.tracks ?? []).find((item) => item.id === trackId);
     const update = await supabase.from('tracks').update({ audio_url: null }).eq('id', trackId).eq('album_id', releaseId);
     if (update.error) return { error: update.error.message };
-    const path = storagePathFromReference(track?.audio_reference ?? track?.audio_url, 'audio');
-    if (path) { const removed = await supabase.storage.from('audio').remove([path]); if (removed.error) return { error: removed.error.message }; }
-    return loadRemote(Boolean(user));
+    const cleanupFailure = await cleanupStorageObject('audio', track?.audio_reference ?? track?.audio_url);
+    const reloaded = await loadRemote(Boolean(user));
+    return reloaded.error ? reloaded : { warning: cleanupWarning(cleanupFailure ? [cleanupFailure] : []) };
   }, [loadRemote, releases, user]);
 
 
@@ -355,16 +390,18 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
     const { data } = supabase.storage.from('artist-assets').getPublicUrl(path);
     const update = await supabase.from('albums').update({ visual_url: data.publicUrl }).eq('id', releaseId);
     if (update.error) { await supabase.storage.from('artist-assets').remove([path]); return { error: update.error.message }; }
-    return loadRemote(Boolean(user));
+    const cleanupFailure = await cleanupStorageObject('artist-assets', releases.find((item) => item.id === releaseId)?.visual_url);
+    const reloaded = await loadRemote(Boolean(user));
+    return reloaded.error ? reloaded : { warning: cleanupWarning(cleanupFailure ? [cleanupFailure] : []) };
   }, [loadRemote, user]);
 
   const removeVisualMedia = useCallback(async (releaseId: string) => {
     const release = releases.find((item) => item.id === releaseId);
     const update = await supabase.from('albums').update({ visual_url: null }).eq('id', releaseId);
     if (update.error) return { error: update.error.message };
-    const path = storagePathFromReference(release?.visual_url, 'artist-assets');
-    if (path) { const removed = await supabase.storage.from('artist-assets').remove([path]); if (removed.error) return { error: removed.error.message }; }
-    return loadRemote(Boolean(user));
+    const cleanupFailure = await cleanupStorageObject('artist-assets', release?.visual_url);
+    const reloaded = await loadRemote(Boolean(user));
+    return reloaded.error ? reloaded : { warning: cleanupWarning(cleanupFailure ? [cleanupFailure] : []) };
   }, [loadRemote, releases, user]);
 
   const addPlatformLink = useCallback(async (releaseId: string, link: Omit<PlatformLink, 'id' | 'order'>) => {
@@ -393,9 +430,9 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
     if (isSupabaseConfigured) void supabase.rpc('increment_track_play', { p_track_id: trackId });
     else setReleases((current) => current.map((release) => release.id === releaseId ? { ...release, tracks: (release.tracks ?? []).map((track) => track.id === trackId ? { ...track, play_count: (track.play_count ?? 0) + 1 } : track) } : release));
   }, []);
-  const resetCatalog = useCallback(() => setReleases(fallbackReleases), []);
+  const resetCatalog = useCallback(() => localMockMode ? (setReleases(fallbackReleases), Promise.resolve({})) : loadRemote(Boolean(user)), [loadRemote, user]);
 
-  const value = useMemo(() => ({ artist, releases, upcomingReleases: releases.filter((release) => !release.published), homeCardIds, user, isRecoveringPassword, isReady, isRemote: isSupabaseConfigured, signIn, signUp, resetPassword, updatePassword, signOut, reloadCatalog, updateRelease, addRelease, removeRelease, updateHomeCard, addTrack, removeTrack, updateTrack, saveTrackOrder, saveArtwork, removeArtwork, saveTrackAudio, removeTrackAudio, saveVisualMedia, removeVisualMedia, addPlatformLink, updatePlatformLink, removePlatformLink, recordPlay, resetCatalog }), [artist, releases, homeCardIds, user, isRecoveringPassword, isReady, signIn, signUp, resetPassword, updatePassword, signOut, reloadCatalog, updateRelease, addRelease, removeRelease, updateHomeCard, addTrack, removeTrack, updateTrack, saveTrackOrder, saveArtwork, removeArtwork, saveTrackAudio, removeTrackAudio, saveVisualMedia, removeVisualMedia, addPlatformLink, updatePlatformLink, removePlatformLink, recordPlay, resetCatalog]);
+  const value = useMemo(() => ({ artist, releases, upcomingReleases: releases.filter((release) => !release.published), homeCardIds, user, isRecoveringPassword, catalogError, isReady, isRemote: isSupabaseConfigured, signIn, signUp, resetPassword, updatePassword, signOut, reloadCatalog, updateRelease, addRelease, removeRelease, updateHomeCard, addTrack, removeTrack, updateTrack, saveTrackOrder, saveArtwork, removeArtwork, saveTrackAudio, removeTrackAudio, saveVisualMedia, removeVisualMedia, addPlatformLink, updatePlatformLink, removePlatformLink, recordPlay, resetCatalog }), [artist, releases, homeCardIds, user, isRecoveringPassword, catalogError, isReady, signIn, signUp, resetPassword, updatePassword, signOut, reloadCatalog, updateRelease, addRelease, removeRelease, updateHomeCard, addTrack, removeTrack, updateTrack, saveTrackOrder, saveArtwork, removeArtwork, saveTrackAudio, removeTrackAudio, saveVisualMedia, removeVisualMedia, addPlatformLink, updatePlatformLink, removePlatformLink, recordPlay, resetCatalog]);
   return <CatalogContext.Provider value={value}>{children}</CatalogContext.Provider>;
 }
 

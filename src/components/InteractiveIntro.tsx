@@ -10,7 +10,7 @@ export function InteractiveIntro({ artistName, onComplete }: InteractiveIntroPro
   const [isDismissed, setIsDismissed] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
   const [revealedCharacters, setRevealedCharacters] = useState<IntroCharacter[]>([]);
-  const displayName = useMemo(() => artistName.trim().split(/\s+/).map((word) => `${word.charAt(0).toUpperCase()}${word.slice(1).toLowerCase()}`).join(' '), [artistName]);
+  const displayName = useMemo(() => artistName.trim(), [artistName]);
   const characters = useMemo(() => displayName.split(''), [displayName]);
   const pointerRef = useRef<{ x: number; y: number } | null>(null);
   const pathDistanceRef = useRef(0);
@@ -29,7 +29,7 @@ export function InteractiveIntro({ artistName, onComplete }: InteractiveIntroPro
     if (dismissedRef.current) return;
     dismissedRef.current = true;
     setIsDismissed(true);
-    transitionTimerRef.current = window.setTimeout(() => onComplete?.(), COMPLETION_PAUSE_DURATION);
+    onComplete?.();
   }, [onComplete]);
 
   useEffect(() => () => {
@@ -121,6 +121,7 @@ export function InteractiveIntro({ artistName, onComplete }: InteractiveIntroPro
   }, [characters, completeIntro, getPlacementDistance, isComplete, isDismissed]);
 
   return <div className={['intro-screen', isDismissed ? 'intro-screen--hidden' : ''].filter(Boolean).join(' ')} role="dialog" aria-modal="true" aria-label={`${displayName} intro`} aria-hidden={isDismissed}>
+    <button type="button" className="intro-skip" onClick={triggerComplete}>Skip intro</button>
     <div className="intro-assembly" aria-hidden="true">{revealedCharacters.map((character) => { const characterStyle: CSSProperties = { left: `${character.x}px`, top: `${character.y}px`, transform: `translate(-50%, -50%) rotate(${character.angle}rad)` }; return <span key={`${character.id}-${character.char}`} className={['intro-character', character.char === ' ' ? 'intro-character--space' : ''].filter(Boolean).join(' ')} style={characterStyle}>{character.char}</span>; })}</div>
   </div>;
 }

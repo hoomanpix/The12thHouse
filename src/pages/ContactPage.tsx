@@ -11,6 +11,7 @@ export function ContactPage() {
 
       <section className="contact-directory" aria-label="The12thHouse contact members">
         <div className="contact-list">
+          {siteConfig.contactMembers.length === 0 && <p className="release-empty">Contact details will appear here when the studio publishes them.</p>}
           {siteConfig.contactMembers.map((member) => (
             <article className="contact-member" key={member.id}>
               <h2>{member.name}</h2>
