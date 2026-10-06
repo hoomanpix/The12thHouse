@@ -87,7 +87,7 @@ function normalizeRelease(row: any): Release {
 function releaseRow(release: Partial<Release>) {
   const row: Record<string, unknown> = {};
   const fields: Array<[keyof Release, string]> = [
-    ['artist_id', 'artist_id'], ['title', 'title'], ['slug', 'slug'], ['release_date', 'release_date'], ['description', 'description'],
+    ['title', 'title'], ['slug', 'slug'], ['release_date', 'release_date'], ['description', 'description'],
     ['featured', 'featured'], ['published', 'published'], ['status', 'status'], ['show_release_date', 'show_release_date'], ['visual_url', 'visual_url'],
   ];
   fields.forEach(([from, to]) => { if (from in release) row[to] = release[from]; });
