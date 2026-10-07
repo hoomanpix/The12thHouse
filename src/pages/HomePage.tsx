@@ -10,26 +10,27 @@ import { releaseTypeLabel } from '../lib/releaseSemantics';
 
 export function HomePage() {
   const { setQueue, playTrack } = useAudioPlayer();
-  const { artist, releases, homeCardIds, recordPlay, isReady, catalogError } = useCatalog();
+  const { artist, releases, homeCardIds, homeHeroId, recordPlay, isReady, catalogError } = useCatalog();
   if (!isReady) return <div className="page-section"><p className="release-empty" role="status">Loading catalog…</p></div>;
   if (catalogError) return <div className="page-section"><p className="release-empty" role="alert">Catalog unavailable. Please try again later.</p></div>;
   const visibleReleases = releases.filter(isPublished);
   const homeVisibleReleases = releases.filter((release) => isPublished(release) || isUpcoming(release));
   const featuredRelease = visibleReleases.find((release) => release.featured) ?? null;
+  const heroRelease = visibleReleases.find((release) => release.id === homeHeroId && Boolean(release.artwork_url)) ?? null;
   const homeCards = homeCardIds.map((id) => homeVisibleReleases.find((release) => release.id === id)).filter((release): release is Release => Boolean(release));
   const playRelease = (release: Release) => {
     if (release.contentType !== 'music' || !isPublished(release)) return;
     const queue = (release.tracks ?? []).filter((track) => isPlayableTrack(track, release)).map((track) => ({
       id: `${release.id}-${track.id}`, releaseId: release.id, trackId: track.id, title: track.title, audioUrl: track.audio_url,
-      audioReference: track.audio_reference ?? null, artworkUrl: release.artwork_url, releaseTitle: release.title, duration: track.duration,
+      audioReference: track.audio_reference ?? null, artworkUrl: release.artwork_url, releaseTitle: release.title,
     }));
     setQueue(queue);
     if (queue[0]) { recordPlay(release.id, queue[0].trackId); playTrack(queue[0]); }
   };
-  if (!featuredRelease && homeCards.length === 0) return <div className="page-section"><p className="release-empty">No public releases are available yet.</p></div>;
+  if (!featuredRelease && !heroRelease && homeCards.length === 0) return <div className="page-section"><p className="release-empty">No public releases are available yet.</p></div>;
   return (
     <div className="page-section home-page">
-      <section className="hero-block">
+      <section className={`hero-block${heroRelease ? ' hero-block--has-image' : ''}`}>
         <div className="hero-copy">
           <p className="eyebrow">{siteConfig.heroEyebrow}</p><h1>{artist.name}</h1>
           <p className="lede">Sculpted atmospheres, slow-burn rhythm, and intimate songs for the edge of the night.</p>
@@ -39,7 +40,7 @@ export function HomePage() {
             <Link to={publicRoutes.releases} className="button secondary">Browse releases</Link>
           </div>
         </div>
-        <div className="hero-visual">{featuredRelease?.artwork_url ? <img src={featuredRelease.artwork_url} alt={featuredRelease.title} /> : <div className="hero-visual-placeholder" aria-label="No featured artwork selected" />}</div>
+        <div className="hero-visual">{heroRelease?.artwork_url ? <img src={heroRelease.artwork_url} alt={heroRelease.title} /> : <div className="hero-visual-placeholder" aria-label="No Hero image selected" />}</div>
       </section>
       <section className="home-release-collection" aria-labelledby="home-releases-title">
         <div className="section-heading"><p className="eyebrow">Selected releases</p><h2 id="home-releases-title">A small collection of work.</h2></div>

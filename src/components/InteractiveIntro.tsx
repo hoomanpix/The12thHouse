@@ -5,6 +5,8 @@ type IntroCharacter = { id: number; char: string; x: number; y: number; angle: n
 const BASE_PLACEMENT_DISTANCE = 42;
 const CHARACTER_CLEARANCE = 6;
 const COMPLETION_PAUSE_DURATION = 2500;
+const NO_MOTION_FALLBACK_DURATION = 8000;
+const REDUCED_MOTION_FALLBACK_DURATION = 160;
 
 export function InteractiveIntro({ artistName, onComplete }: InteractiveIntroProps) {
   const [isDismissed, setIsDismissed] = useState(false);
@@ -18,7 +20,10 @@ export function InteractiveIntro({ artistName, onComplete }: InteractiveIntroPro
   const dismissedRef = useRef(false);
   const completionStartedRef = useRef(false);
   const prefersReducedMotionRef = useRef(false);
-  const transitionTimerRef = useRef<number | null>(null);
+  const onCompleteRef = useRef(onComplete);
+  const safetyTimerRef = useRef<number | null>(null);
+
+  useEffect(() => { onCompleteRef.current = onComplete; }, [onComplete]);
 
   const getPlacementDistance = useCallback(() => {
     const viewportFontSize = Math.min(42, Math.max(26, window.innerWidth * 0.02));
@@ -29,12 +34,23 @@ export function InteractiveIntro({ artistName, onComplete }: InteractiveIntroPro
     if (dismissedRef.current) return;
     dismissedRef.current = true;
     setIsDismissed(true);
-    onComplete?.();
-  }, [onComplete]);
-
-  useEffect(() => () => {
-    if (transitionTimerRef.current !== null) window.clearTimeout(transitionTimerRef.current);
+    onCompleteRef.current?.();
   }, []);
+
+  const resetSafetyTimer = useCallback((duration = NO_MOTION_FALLBACK_DURATION) => {
+    if (safetyTimerRef.current !== null) window.clearTimeout(safetyTimerRef.current);
+    safetyTimerRef.current = window.setTimeout(triggerComplete, duration);
+  }, [triggerComplete]);
+
+  useEffect(() => {
+    prefersReducedMotionRef.current = typeof window !== 'undefined' && typeof window.matchMedia === 'function'
+      ? window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      : false;
+    resetSafetyTimer(prefersReducedMotionRef.current ? REDUCED_MOTION_FALLBACK_DURATION : NO_MOTION_FALLBACK_DURATION);
+    return () => {
+      if (safetyTimerRef.current !== null) window.clearTimeout(safetyTimerRef.current);
+    };
+  }, [resetSafetyTimer]);
 
   const completeIntro = useCallback(() => {
     if (completionStartedRef.current || dismissedRef.current) return;
@@ -43,15 +59,9 @@ export function InteractiveIntro({ artistName, onComplete }: InteractiveIntroPro
   }, []);
 
   useEffect(() => {
-    prefersReducedMotionRef.current = typeof window !== 'undefined' && typeof window.matchMedia === 'function'
-      ? window.matchMedia('(prefers-reduced-motion: reduce)').matches
-      : false;
-  }, []);
-
-  useEffect(() => {
     if (!isComplete || isDismissed) return undefined;
     if (prefersReducedMotionRef.current) {
-      const timer = window.setTimeout(triggerComplete, 160);
+      const timer = window.setTimeout(triggerComplete, REDUCED_MOTION_FALLBACK_DURATION);
       return () => window.clearTimeout(timer);
     }
     const completionTimer = window.setTimeout(triggerComplete, COMPLETION_PAUSE_DURATION);
@@ -63,6 +73,7 @@ export function InteractiveIntro({ artistName, onComplete }: InteractiveIntroPro
 
     const handleMotion = (clientX: number, clientY: number, deltaX: number, deltaY: number) => {
       if (dismissedRef.current || revealedCountRef.current >= characters.length) return;
+      resetSafetyTimer();
       const previous = pointerRef.current;
       if (!previous) {
         pointerRef.current = { x: clientX, y: clientY };
@@ -87,13 +98,7 @@ export function InteractiveIntro({ artistName, onComplete }: InteractiveIntroPro
         const ratio = Math.min(1, consumed / segmentDistance);
         const x = previous.x + segmentX * ratio;
         const y = previous.y + segmentY * ratio;
-        newCharacters.push({
-          id: revealedCountRef.current,
-          char: characters[revealedCountRef.current],
-          x,
-          y,
-          angle,
-        });
+        newCharacters.push({ id: revealedCountRef.current, char: characters[revealedCountRef.current], x, y, angle });
         revealedCountRef.current += 1;
         pathDistanceRef.current = 0;
       }
@@ -118,10 +123,9 @@ export function InteractiveIntro({ artistName, onComplete }: InteractiveIntroPro
       window.removeEventListener('mousemove', handleMouseMoveFallback);
       window.removeEventListener('touchmove', handleTouchMove);
     };
-  }, [characters, completeIntro, getPlacementDistance, isComplete, isDismissed]);
+  }, [characters, completeIntro, getPlacementDistance, isComplete, isDismissed, resetSafetyTimer]);
 
   return <div className={['intro-screen', isDismissed ? 'intro-screen--hidden' : ''].filter(Boolean).join(' ')} role="dialog" aria-modal="true" aria-label={`${displayName} intro`} aria-hidden={isDismissed}>
-    <button type="button" className="intro-skip" onClick={triggerComplete}>Skip intro</button>
     <div className="intro-assembly" aria-hidden="true">{revealedCharacters.map((character) => { const characterStyle: CSSProperties = { left: `${character.x}px`, top: `${character.y}px`, transform: `translate(-50%, -50%) rotate(${character.angle}rad)` }; return <span key={`${character.id}-${character.char}`} className={['intro-character', character.char === ' ' ? 'intro-character--space' : ''].filter(Boolean).join(' ')} style={characterStyle}>{character.char}</span>; })}</div>
   </div>;
 }

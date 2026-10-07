@@ -13,11 +13,21 @@ export function isPublicRelease(release: Pick<Release, 'status' | 'published' | 
   return status === 'PUBLISHED' || status === 'UPCOMING';
 }
 
+export function isPlayableAudioUrl(value: string | null | undefined): value is string {
+  if (!value?.trim()) return false;
+  try {
+    const protocol = new URL(value).protocol;
+    return protocol === 'http:' || protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
 export function isPlayableReleaseTrack(
   release: Pick<Release, 'status' | 'published' | 'release_date'>,
   track: Pick<Track, 'published' | 'audio_url'>,
 ) {
-  return isPublished(release as Release) && track.published === true && Boolean(track.audio_url);
+  return isPublished(release as Release) && track.published === true && isPlayableAudioUrl(track.audio_url);
 }
 
 export function publicReleaseStatus(release: Pick<Release, 'status' | 'published' | 'release_date'>): ReleaseStatus {

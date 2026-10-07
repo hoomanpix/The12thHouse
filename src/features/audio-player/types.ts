@@ -5,6 +5,9 @@ export interface PlayerState {
   currentTime: number;
   duration: number;
   volume: number;
+  isMuted: boolean;
+  volumeSupported: boolean;
+  volumeSupportKnown: boolean;
   queue: AudioQueueItem[];
   activeTrackId: string | null;
   status: PlayerStatus;
@@ -21,5 +24,4 @@ export interface AudioQueueItem {
   audioReference?: string | null;
   artworkUrl: string | null;
   releaseTitle: string;
-  duration: number;
 }
