@@ -91,13 +91,15 @@
   display: none;
 }
 
-.player-strip__cover-button {
-  padding: 0;
+.player-strip__cover-frame {
+  display: block;
+  flex: 0 0 34px;
+  width: 34px;
+  height: 34px;
   overflow: hidden;
   border-radius: 6px;
   background: var(--panel-alt);
-  border-color: var(--line);
-  color: var(--ink);
+  border: 1px solid var(--line);
 }
 
 .player-strip__cover {
@@ -201,10 +203,10 @@
     color: var(--ink);
   }
 
-  .player-strip__cover-button {
+  .player-strip__cover-frame {
+    flex-basis: 30px;
     width: 30px;
     height: 30px;
-    min-width: 30px;
     padding: 0;
     border: 0;
     border-radius: 6px;
@@ -398,7 +400,7 @@
   display: none;
 }
 
-/* Desktop Home: the hero artwork is replaced by the shared release-card collection. */
+/* Keep the text-only desktop layout unless an explicit Home Hero image is selected. */
 @media (min-width: 901px) {
   .home-page .hero-block {
     grid-template-columns: minmax(0, 1fr);
@@ -406,6 +408,15 @@
 
   .home-page .hero-visual {
     display: none;
+  }
+
+  .home-page .hero-block--has-image {
+    grid-template-columns: minmax(0, 1fr) minmax(280px, 420px);
+    gap: clamp(24px, 4vw, 48px);
+  }
+
+  .home-page .hero-block--has-image .hero-visual {
+    display: block;
   }
 
   .home-release-collection {
@@ -755,6 +766,4 @@
 .cover-lightbox__close { background: #fff; color: #111; }
 .visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 
-.intro-skip { position: absolute; right: 24px; bottom: 24px; z-index: 2; border: 1px solid currentColor; border-radius: 999px; padding: 10px 14px; background: transparent; color: inherit; font: inherit; cursor: pointer; }
-.intro-skip:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
 .player-error { margin: 0; padding: 0 18px 14px; color: #a33b2f; font-size: 0.82rem; }

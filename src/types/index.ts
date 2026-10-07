@@ -23,7 +23,7 @@ export interface Track {
   id: string;
   release_id: string;
   title: string;
-  duration: number;
+  duration?: number;
   audio_url: string | null;
   audio_reference?: string | null;
   audio_error?: string | null;
@@ -38,7 +38,7 @@ export interface Release {
   artist_id: string;
   title: string;
   slug: string;
-  type: ReleaseType;
+  type?: ReleaseType;
   contentType: ReleaseContentType;
   visualType?: VisualType;
   release_date: string | null;
@@ -77,5 +77,5 @@ export interface AudioQueueItem {
   audioUrl: string | null;
   artworkUrl: string | null;
   releaseTitle: string;
-  duration: number;
+  duration?: number;
 }

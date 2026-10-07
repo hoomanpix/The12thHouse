@@ -3,7 +3,8 @@ import { mockArtist, mockReleases } from '../../data/mock';
 import { siteConfig } from '../../config/site';
 import { isSupabaseConfigured, supabase } from '../../lib/supabase';
 import type { Artist, PlatformLink, Release, Track } from '../../types';
-import { isPublished, normalizeReleaseStatus } from '../../lib/releaseStatus';
+import { isPublished } from '../../lib/releaseStatus';
+import { normalizeRelease } from './normalizeRelease';
 
 type ReleaseInput = Omit<Release, 'id' | 'created_at' | 'updated_at'>;
 type MutationResult = { error?: string; warning?: string };
@@ -14,6 +15,8 @@ interface CatalogContextValue {
   releases: Release[];
   upcomingReleases: Release[];
   homeCardIds: string[];
+  homeHeroId: string | null;
+  homeHeroError: string | null;
   user: { id: string; email?: string } | null;
   isRecoveringPassword: boolean;
   catalogError: string | null;
@@ -29,6 +32,7 @@ interface CatalogContextValue {
   addRelease: (release: ReleaseInput) => Promise<CreateReleaseResult>;
   removeRelease: (releaseId: string) => Promise<MutationResult>;
   updateHomeCard: (slot: number, releaseId: string) => Promise<MutationResult>;
+  updateHomeHero: (releaseId: string) => Promise<MutationResult>;
   addTrack: (releaseId: string, track: Omit<Track, 'id' | 'release_id' | 'order'>) => Promise<MutationResult & { id?: string }>;
   removeTrack: (releaseId: string, trackId: string) => Promise<MutationResult>;
   updateTrack: (releaseId: string, trackId: string, update: Partial<Track>) => Promise<MutationResult>;
@@ -59,31 +63,6 @@ function errorMessage(error: unknown) {
   return error instanceof Error ? error.message : String(error ?? 'Unknown backend error');
 }
 
-function normalizeRelease(row: any): Release {
-  return {
-    ...row,
-    artist_id: row.artist_id ?? row.created_by ?? 'artist-1',
-    type: row.release_type ?? row.type ?? 'album',
-    contentType: row.content_type ?? row.contentType ?? 'music',
-    visualType: row.visual_type ?? row.visualType,
-    artwork_url: row.artwork_url ?? row.cover_url ?? null,
-    visual_url: row.visual_url ?? null,
-    release_date: row.release_date ?? null,
-    status: normalizeReleaseStatus(row.status, Boolean(row.published), row.release_date ?? null),
-    show_release_date: row.show_release_date !== false,
-    tracks: (row.tracks ?? []).map((track: any) => ({
-      ...track,
-      release_id: track.release_id ?? track.album_id,
-      duration: track.duration ?? 0,
-      order: track.track_order ?? track.order ?? 1,
-    })).sort((a: Track, b: Track) => a.order - b.order),
-    platform_links: (row.platform_links ?? []).map((link: any) => ({
-      ...link,
-      order: link.link_order ?? link.order ?? 1,
-    })).sort((a: PlatformLink, b: PlatformLink) => a.order - b.order),
-  };
-}
-
 function releaseRow(release: Partial<Release>) {
   const row: Record<string, unknown> = {};
   const fields: Array<[keyof Release, string]> = [
@@ -91,10 +70,10 @@ function releaseRow(release: Partial<Release>) {
     ['featured', 'featured'], ['published', 'published'], ['status', 'status'], ['show_release_date', 'show_release_date'], ['visual_url', 'visual_url'],
   ];
   fields.forEach(([from, to]) => { if (from in release) row[to] = release[from]; });
-  if ('type' in release) row.release_type = release.type;
+  if ('type' in release && release.type && release.contentType !== 'visual') row.release_type = release.type;
   if ('artwork_url' in release) row.cover_url = release.artwork_url;
   if ('contentType' in release) row.content_type = release.contentType;
-  if ('visualType' in release) row.visual_type = release.visualType;
+  if ('visualType' in release && release.visualType) row.visual_type = release.visualType;
   return row;
 }
 
@@ -138,6 +117,8 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
   const [releases, setReleases] = useState<Release[]>(localMockMode ? fallbackReleases : []);
   const [catalogError, setCatalogError] = useState<string | null>(null);
   const [homeCardIds, setHomeCardIds] = useState<string[]>([]);
+  const [homeHeroId, setHomeHeroId] = useState<string | null>(null);
+  const [homeHeroError, setHomeHeroError] = useState<string | null>(null);
   const [user, setUser] = useState<{ id: string; email?: string } | null>(null);
   const [isRecoveringPassword, setIsRecoveringPassword] = useState(() => {
     const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
@@ -167,15 +148,21 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
       let albumsQuery = supabase.from('albums').select('*, tracks(*), platform_links(*)').order('release_date', { ascending: false, nullsFirst: false });
       if (!authenticated) albumsQuery = albumsQuery.in('status', ['published', 'upcoming']);
       const { data, error } = await albumsQuery;
-      if (error) { setReleases([]); setHomeCardIds([]); setCatalogError(error.message); setIsReady(true); return { error: error.message }; }
+      if (error) { setReleases([]); setHomeCardIds([]); setHomeHeroId(null); setHomeHeroError(null); setCatalogError(error.message); setIsReady(true); return { error: error.message }; }
       const normalized = await resolveAudioReferences((data ?? []).map(normalizeRelease), authenticated);
       setReleases(normalized);
       setCatalogError(null);
-      const cards = await supabase.from('home_cards').select('slot, album_id').order('slot');
-      if (cards.error) { setReleases([]); setHomeCardIds([]); setCatalogError(cards.error.message); setIsReady(true); return { error: cards.error.message }; }
+      const [cards, hero] = await Promise.all([
+        supabase.from('home_cards').select('slot, album_id').order('slot'),
+        supabase.from('home_hero').select('release_id').eq('id', 1).maybeSingle(),
+      ]);
+      if (cards.error) { setReleases([]); setHomeCardIds([]); setHomeHeroId(null); setHomeHeroError(null); setCatalogError(cards.error.message); setIsReady(true); return { error: cards.error.message }; }
       const slots = Array.from({ length: 3 }, () => '');
       (cards.data ?? []).forEach((card) => { if (card.slot >= 0 && card.slot < slots.length && normalized.some((release) => release.id === card.album_id)) slots[card.slot] = card.album_id ?? ''; });
       setHomeCardIds(slots);
+      const heroId = hero.data?.release_id ?? null;
+      setHomeHeroError(hero.error?.message ?? null);
+      setHomeHeroId(!hero.error && heroId && normalized.some((release) => release.id === heroId && isPublished(release) && Boolean(release.artwork_url)) ? heroId : null);
       if (authenticated) {
         const current = await supabase.auth.getUser();
         if (current.error) { setIsReady(true); return { error: current.error.message }; }
@@ -185,7 +172,7 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
       return {};
     } catch (error) {
       const message = errorMessage(error);
-      setReleases([]); setHomeCardIds([]); setCatalogError(message); setIsReady(true);
+      setReleases([]); setHomeCardIds([]); setHomeHeroId(null); setHomeHeroError(null); setCatalogError(message); setIsReady(true);
       return { error: message };
     }
   }, [resolveAudioReferences]);
@@ -248,6 +235,9 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
   }, [loadRemote, user]);
 
   const addRelease = useCallback(async (release: ReleaseInput): Promise<CreateReleaseResult> => {
+    if (release.contentType === 'visual' && (release.type || (release.tracks?.length ?? 0) > 0 || (release.platform_links?.length ?? 0) > 0)) {
+      return { error: 'Visual releases cannot contain music type, track, or platform-link data.' };
+    }
     const id = makeId();
     if (!isSupabaseConfigured) { setReleases((current) => [...current, { ...release, id } as Release]); return { id }; }
     const { error } = await supabase.from('albums').insert({ id, ...releaseRow(release) });
@@ -285,9 +275,21 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
     return loadRemote(Boolean(user));
   }, [loadRemote, user]);
 
+  const updateHomeHero = useCallback(async (releaseId: string) => {
+    if (releaseId && !releases.some((release) => release.id === releaseId && isPublished(release) && Boolean(release.artwork_url))) {
+      return { error: 'Choose an existing published release with artwork.' };
+    }
+    if (!isSupabaseConfigured) { setHomeHeroError(null); setHomeHeroId(releaseId || null); return {}; }
+    const { error } = await supabase.from('home_hero').upsert({ id: 1, release_id: releaseId || null }, { onConflict: 'id' });
+    if (error) { setHomeHeroError(error.message); return { error: error.message }; }
+    setHomeHeroError(null);
+    return loadRemote(Boolean(user));
+  }, [loadRemote, releases, user]);
+
   const addTrack = useCallback(async (releaseId: string, track: Omit<Track, 'id' | 'release_id' | 'order'>) => {
-    const id = makeId();
     const release = releases.find((item) => item.id === releaseId);
+    if (!release || release.contentType !== 'music') return { error: 'Tracks can only be added to music releases.' };
+    const id = makeId();
     const order = (release?.tracks?.length ?? 0) + 1;
     if (!isSupabaseConfigured) { setReleases((current) => current.map((item) => item.id === releaseId ? { ...item, tracks: [...(item.tracks ?? []), { ...track, id, release_id: releaseId, order }] } : item)); return { id }; }
     const { error } = await supabase.from('tracks').insert({ id, ...trackRow(releaseId, { ...track, order }) });
@@ -297,6 +299,7 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
   }, [loadRemote, releases, user]);
 
   const removeTrack = useCallback(async (releaseId: string, trackId: string) => {
+    if (releases.find((release) => release.id === releaseId)?.contentType !== 'music') return { error: 'Tracks can only be removed from music releases.' };
     if (!isSupabaseConfigured) { setReleases((current) => current.map((release) => release.id === releaseId ? { ...release, tracks: (release.tracks ?? []).filter((track) => track.id !== trackId) } : release)); return {}; }
     const existing = releases.flatMap((release) => release.tracks ?? []).find((track) => track.id === trackId);
     const { error } = await supabase.from('tracks').delete().eq('id', trackId).eq('album_id', releaseId);
@@ -313,13 +316,15 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
   }, [loadRemote, releases, user]);
 
   const updateTrack = useCallback(async (releaseId: string, trackId: string, update: Partial<Track>) => {
+    if (releases.find((release) => release.id === releaseId)?.contentType !== 'music') return { error: 'Tracks can only be updated on music releases.' };
     if (!isSupabaseConfigured) { setReleases((current) => current.map((release) => release.id === releaseId ? { ...release, tracks: (release.tracks ?? []).map((track) => track.id === trackId ? { ...track, ...update } : track) } : release)); return {}; }
     const { error } = await supabase.from('tracks').update(trackRow(releaseId, update)).eq('id', trackId).eq('album_id', releaseId);
     if (error) return { error: error.message };
     return loadRemote(Boolean(user));
-  }, [loadRemote, user]);
+  }, [loadRemote, releases, user]);
 
   const saveTrackOrder = useCallback(async (releaseId: string, trackIds: string[]) => {
+    if (releases.find((release) => release.id === releaseId)?.contentType !== 'music') return { error: 'Track order only applies to music releases.' };
     if (!isSupabaseConfigured) return {};
     for (const [index, trackId] of trackIds.entries()) {
       const { error } = await supabase.from('tracks').update({ track_order: -(index + 1) }).eq('id', trackId).eq('album_id', releaseId);
@@ -330,7 +335,7 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
       if (error) return { error: error.message };
     }
     return loadRemote(Boolean(user));
-  }, [loadRemote, user]);
+  }, [loadRemote, releases, user]);
 
   const saveArtwork = useCallback(async (releaseId: string, file: File) => {
     if (!isSupabaseConfigured) return { error: 'Supabase Storage is not configured.' };
@@ -358,6 +363,7 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
   }, [loadRemote, releases, user]);
 
   const saveTrackAudio = useCallback(async (releaseId: string, trackId: string, file: File) => {
+    if (releases.find((release) => release.id === releaseId)?.contentType !== 'music') return { error: 'Audio files can only be saved for music releases.' };
     if (!isSupabaseConfigured) return { error: 'Supabase Storage is not configured.' };
     const extension = file.name.split('.').pop()?.toLowerCase().replace(/[^a-z0-9]/g, '') || 'audio';
     const path = `${releaseId}/${trackId}-${Date.now()}.${extension}`;
@@ -369,9 +375,10 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
     const cleanupFailure = await cleanupStorageObject('audio', oldTrack?.audio_reference ?? oldTrack?.audio_url);
     const reloaded = await loadRemote(Boolean(user));
     return reloaded.error ? reloaded : { warning: cleanupWarning(cleanupFailure ? [cleanupFailure] : []) };
-  }, [loadRemote, user]);
+  }, [loadRemote, releases, user]);
 
   const removeTrackAudio = useCallback(async (releaseId: string, trackId: string) => {
+    if (releases.find((release) => release.id === releaseId)?.contentType !== 'music') return { error: 'Audio files can only be removed from music releases.' };
     const track = releases.flatMap((release) => release.tracks ?? []).find((item) => item.id === trackId);
     const update = await supabase.from('tracks').update({ audio_url: null }).eq('id', trackId).eq('album_id', releaseId);
     if (update.error) return { error: update.error.message };
@@ -382,6 +389,8 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
 
 
   const saveVisualMedia = useCallback(async (releaseId: string, file: File) => {
+    const release = releases.find((item) => item.id === releaseId);
+    if (release?.contentType !== 'visual' || release.visualType !== 'animation') return { error: 'Animation media can only be saved for Visual Animation releases.' };
     if (!isSupabaseConfigured) return { error: 'Supabase Storage is not configured.' };
     const extension = file.name.split('.').pop()?.toLowerCase().replace(/[^a-z0-9]/g, '') || 'bin';
     const path = `visuals/${releaseId}/${Date.now()}.${extension}`;
@@ -393,10 +402,11 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
     const cleanupFailure = await cleanupStorageObject('artist-assets', releases.find((item) => item.id === releaseId)?.visual_url);
     const reloaded = await loadRemote(Boolean(user));
     return reloaded.error ? reloaded : { warning: cleanupWarning(cleanupFailure ? [cleanupFailure] : []) };
-  }, [loadRemote, user]);
+  }, [loadRemote, releases, user]);
 
   const removeVisualMedia = useCallback(async (releaseId: string) => {
     const release = releases.find((item) => item.id === releaseId);
+    if (release?.contentType !== 'visual' || release.visualType !== 'animation') return { error: 'Animation media can only be removed from Visual Animation releases.' };
     const update = await supabase.from('albums').update({ visual_url: null }).eq('id', releaseId);
     if (update.error) return { error: update.error.message };
     const cleanupFailure = await cleanupStorageObject('artist-assets', release?.visual_url);
@@ -405,8 +415,9 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
   }, [loadRemote, releases, user]);
 
   const addPlatformLink = useCallback(async (releaseId: string, link: Omit<PlatformLink, 'id' | 'order'>) => {
-    const id = makeId();
     const release = releases.find((item) => item.id === releaseId);
+    if (!release || release.contentType !== 'music') return { error: 'Platform links are only available for music releases.' };
+    const id = makeId();
     const order = (release?.platform_links?.length ?? 0) + 1;
     const { error } = await supabase.from('platform_links').insert({ id, ...linkRow(releaseId, { ...link, order }) });
     if (error) return { error: error.message };
@@ -415,24 +426,27 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
   }, [loadRemote, releases, user]);
 
   const updatePlatformLink = useCallback(async (releaseId: string, linkId: string, update: Partial<PlatformLink>) => {
+    if (releases.find((release) => release.id === releaseId)?.contentType !== 'music') return { error: 'Platform links are only available for music releases.' };
     const { error } = await supabase.from('platform_links').update(linkRow(releaseId, update)).eq('id', linkId).eq('album_id', releaseId);
     if (error) return { error: error.message };
     return loadRemote(Boolean(user));
-  }, [loadRemote, user]);
+  }, [loadRemote, releases, user]);
 
   const removePlatformLink = useCallback(async (releaseId: string, linkId: string) => {
+    if (releases.find((release) => release.id === releaseId)?.contentType !== 'music') return { error: 'Platform links are only available for music releases.' };
     const { error } = await supabase.from('platform_links').delete().eq('id', linkId).eq('album_id', releaseId);
     if (error) return { error: error.message };
     return loadRemote(Boolean(user));
-  }, [loadRemote, user]);
+  }, [loadRemote, releases, user]);
 
   const recordPlay = useCallback((releaseId: string, trackId: string) => {
+    if (releases.find((release) => release.id === releaseId)?.contentType !== 'music') return;
     if (isSupabaseConfigured) void supabase.rpc('increment_track_play', { p_track_id: trackId });
     else setReleases((current) => current.map((release) => release.id === releaseId ? { ...release, tracks: (release.tracks ?? []).map((track) => track.id === trackId ? { ...track, play_count: (track.play_count ?? 0) + 1 } : track) } : release));
-  }, []);
+  }, [releases]);
   const resetCatalog = useCallback(() => localMockMode ? (setReleases(fallbackReleases), Promise.resolve({})) : loadRemote(Boolean(user)), [loadRemote, user]);
 
-  const value = useMemo(() => ({ artist, releases, upcomingReleases: releases.filter((release) => !release.published), homeCardIds, user, isRecoveringPassword, catalogError, isReady, isRemote: isSupabaseConfigured, signIn, signUp, resetPassword, updatePassword, signOut, reloadCatalog, updateRelease, addRelease, removeRelease, updateHomeCard, addTrack, removeTrack, updateTrack, saveTrackOrder, saveArtwork, removeArtwork, saveTrackAudio, removeTrackAudio, saveVisualMedia, removeVisualMedia, addPlatformLink, updatePlatformLink, removePlatformLink, recordPlay, resetCatalog }), [artist, releases, homeCardIds, user, isRecoveringPassword, catalogError, isReady, signIn, signUp, resetPassword, updatePassword, signOut, reloadCatalog, updateRelease, addRelease, removeRelease, updateHomeCard, addTrack, removeTrack, updateTrack, saveTrackOrder, saveArtwork, removeArtwork, saveTrackAudio, removeTrackAudio, saveVisualMedia, removeVisualMedia, addPlatformLink, updatePlatformLink, removePlatformLink, recordPlay, resetCatalog]);
+  const value = useMemo(() => ({ artist, releases, upcomingReleases: releases.filter((release) => !release.published), homeCardIds, homeHeroId, homeHeroError, user, isRecoveringPassword, catalogError, isReady, isRemote: isSupabaseConfigured, signIn, signUp, resetPassword, updatePassword, signOut, reloadCatalog, updateRelease, addRelease, removeRelease, updateHomeCard, updateHomeHero, addTrack, removeTrack, updateTrack, saveTrackOrder, saveArtwork, removeArtwork, saveTrackAudio, removeTrackAudio, saveVisualMedia, removeVisualMedia, addPlatformLink, updatePlatformLink, removePlatformLink, recordPlay, resetCatalog }), [artist, releases, homeCardIds, homeHeroId, homeHeroError, user, isRecoveringPassword, catalogError, isReady, signIn, signUp, resetPassword, updatePassword, signOut, reloadCatalog, updateRelease, addRelease, removeRelease, updateHomeCard, updateHomeHero, addTrack, removeTrack, updateTrack, saveTrackOrder, saveArtwork, removeArtwork, saveTrackAudio, removeTrackAudio, saveVisualMedia, removeVisualMedia, addPlatformLink, updatePlatformLink, removePlatformLink, recordPlay, resetCatalog]);
   return <CatalogContext.Provider value={value}>{children}</CatalogContext.Provider>;
 }
 

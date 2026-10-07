@@ -154,13 +154,18 @@
   }
 
   .release-card .release-cover {
+    height: auto;
+    aspect-ratio: auto;
     border-radius: 14px;
     box-shadow: 0 12px 24px var(--shadow);
   }
 
   .release-card .release-cover img {
-    aspect-ratio: 1 / 1;
-    object-fit: cover;
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: auto;
+    object-fit: initial;
   }
 
   .release-card-meta {

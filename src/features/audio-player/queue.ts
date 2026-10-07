@@ -1,16 +1,16 @@
 import type { AudioQueueItem } from './types';
 import type { Release, Track } from '../../types';
-import { isPlayableReleaseTrack } from '../../lib/releaseSemantics';
+import { isPlayableAudioUrl, isPlayableReleaseTrack } from '../../lib/releaseSemantics';
 
 export function isPlayableTrack(
   track: Pick<Track, 'published' | 'audio_url'>,
   release?: Pick<Release, 'status' | 'published' | 'release_date'>,
 ) {
-  return release ? isPlayableReleaseTrack(release, track) : track.published === true && Boolean(track.audio_url);
+  return release ? isPlayableReleaseTrack(release, track) : track.published === true && isPlayableAudioUrl(track.audio_url);
 }
 
 export function eligibleAudioQueue(items: AudioQueueItem[]) {
-  return items.filter((item) => Boolean(item.audioUrl));
+  return items.filter((item) => isPlayableAudioUrl(item.audioUrl));
 }
 
 export function nextQueueItem(queue: AudioQueueItem[], activeTrackId: string | null) {
