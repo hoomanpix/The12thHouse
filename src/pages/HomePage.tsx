@@ -33,7 +33,7 @@ export function HomePage() {
       <section className={`hero-block${heroRelease ? ' hero-block--has-image' : ''}`}>
         <div className="hero-copy">
           <p className="eyebrow">{siteConfig.heroEyebrow}</p><h1>{artist.name}</h1>
-          <p className="lede">Sculpted atmospheres, slow-burn rhythm, and intimate songs for the edge of the night.</p>
+          <p className="lede">Start Digging into House Productions ,here you can listen to songs ,watch the visuals and ,analyze the works for further tasks.</p>
           <div className="hero-actions">
             {featuredRelease?.contentType === 'music' && <button type="button" className="button primary" onClick={() => playRelease(featuredRelease)}>Play latest</button>}
             {featuredRelease?.contentType === 'visual' && <Link to={`/releases/${featuredRelease.slug}`} className="button primary">View featured visual</Link>}
