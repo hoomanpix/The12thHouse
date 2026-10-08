@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { VisualVideoPreview } from '../components/VisualVideoPreview';
 import { useCatalog } from '../features/catalog/CatalogProvider';
 import type { ReleaseContentType, ReleaseType, VisualType } from '../types';
 import { formatReleaseDate, isPublished, isUpcoming, shouldShowReleaseDate } from '../lib/releaseStatus';
@@ -21,6 +22,17 @@ export function ReleasesPage() {
     <div className="section-heading split releases-heading"><div className="releases-heading__copy"><div className="releases-heading__topline"><h1 className="eyebrow">Releases</h1><div className="release-categories" role="tablist" aria-label="Release categories">{categoryTabs.map((tab) => <button key={tab.value} type="button" role="tab" aria-selected={category === tab.value} className={category === tab.value ? 'release-category is-active' : 'release-category'} onClick={() => setCategory(tab.value)}>{tab.label}</button>)}</div></div></div>
       <div className="release-filter-groups" aria-label={`${category} release filters`}><div className="filter-group"><div className="filter-bar">{(category === 'music' ? ['all', 'single', 'album'] : ['all', 'cover', 'animation']).map((option) => <button key={option} type="button" className={(category === 'music' ? musicFilter : visualFilter) === option ? 'filter-pill active' : 'filter-pill'} onClick={() => category === 'music' ? setMusicFilter(option as 'all' | ReleaseType) : setVisualFilter(option as 'all' | VisualType)} aria-pressed={(category === 'music' ? musicFilter : visualFilter) === option}>{option === 'all' ? 'All' : option === 'cover' ? 'Art Work' : option}</button>)}</div></div></div>
     </div>
-    {filteredReleases.length > 0 ? <div className="release-grid">{filteredReleases.map((release) => <article key={release.id} className="release-card"><Link to={`/releases/${release.slug}`} className={release.artwork_url ? 'release-cover' : 'release-cover release-cover--placeholder'} aria-label={`View ${release.title}`}>{release.artwork_url ? <img src={release.artwork_url} alt={release.title} /> : <><span>{release.contentType}</span><strong>{release.title}</strong></>}</Link><div className="release-card-meta"><div><p className="eyebrow subtle release-type">{isUpcoming(release) ? 'Coming soon' : releaseTypeLabel(release)}</p><h3>{release.title}</h3></div><time dateTime={release.release_date ?? undefined}>{formatReleaseDate(shouldShowReleaseDate(release) ? release.release_date : null)}</time></div>{isUpcoming(release) && <p className="release-upcoming-note">Available on release day.</p>}</article>)}</div> : <p className="release-empty" role="status">{category === 'visual' ? 'No visual projects yet.' : 'No releases match this filter.'}</p>}
+    {filteredReleases.length > 0 ? <div className="release-grid">{filteredReleases.map((release) => {
+      const visualUrl = release.contentType === 'visual' ? release.visual_url : null;
+      const hasVideoPreview = Boolean(visualUrl);
+      const coverClassName = hasVideoPreview ? 'release-cover release-cover--video' : release.artwork_url ? 'release-cover' : 'release-cover release-cover--placeholder';
+      return <article key={release.id} className={hasVideoPreview ? 'release-card release-card--video' : 'release-card'}>
+        <Link to={`/releases/${release.slug}`} className={coverClassName} aria-label={`View ${release.title}`}>
+          {visualUrl ? <VisualVideoPreview src={visualUrl} poster={release.artwork_url ?? undefined} /> : release.artwork_url ? <img src={release.artwork_url} alt={release.title} /> : <><span>{release.contentType}</span><strong>{release.title}</strong></>}
+        </Link>
+        <div className="release-card-meta"><div><p className="eyebrow subtle release-type">{isUpcoming(release) ? 'Coming soon' : releaseTypeLabel(release)}</p><h3>{release.title}</h3></div><time dateTime={release.release_date ?? undefined}>{formatReleaseDate(shouldShowReleaseDate(release) ? release.release_date : null)}</time></div>
+        {isUpcoming(release) && <p className="release-upcoming-note">Available on release day.</p>}
+      </article>;
+    })}</div> : <p className="release-empty" role="status">{category === 'visual' ? 'No visual projects yet.' : 'No releases match this filter.'}</p>}
   </div>;
 }
