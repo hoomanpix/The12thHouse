@@ -36,7 +36,7 @@ export async function loadPlatformLinkClickStats(): Promise<{
   if (!isSupabaseConfigured || usesLocalMockData) {
     return { data: [], error: usesLocalMockData
       ? 'Analytics are disabled while local mock data is active.'
-      : 'Connect Supabase and apply the preview analytics migration to load platform click statistics.' };
+      : 'Connect Supabase and apply the analytics migration to load platform click statistics.' };
   }
 
   try {
@@ -63,7 +63,7 @@ export async function loadQualifiedTrackViews(): Promise<{
   if (!isSupabaseConfigured || usesLocalMockData) {
     return { data: [], error: usesLocalMockData
       ? 'Analytics are disabled while local mock data is active.'
-      : 'Connect Supabase and apply the preview analytics migration to load qualified track views.' };
+      : 'Connect Supabase and apply the analytics migration to load qualified track views.' };
   }
 
   try {

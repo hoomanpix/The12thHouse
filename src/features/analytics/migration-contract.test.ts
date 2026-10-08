@@ -22,4 +22,9 @@ describe('analytics migration security contract', () => {
     expect(migration).toContain('with (security_invoker = true)');
     expect(migration.toLowerCase()).not.toContain('security definer');
   });
+
+  it('aggregates only music tracks and music platform links', () => {
+    expect(migration).toMatch(/create or replace view public\.admin_track_view_stats[\s\S]*?join public\.albums a on a\.id = t\.album_id and a\.content_type = 'music'[\s\S]*?group by t\.id;/);
+    expect(migration).toMatch(/create or replace view public\.admin_platform_link_click_stats[\s\S]*?where a\.content_type = 'music'[\s\S]*?group by pl\.id,/);
+  });
 });

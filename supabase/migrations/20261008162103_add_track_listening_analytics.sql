@@ -87,6 +87,7 @@ as
     t.id as track_id,
     count(e.session_id)::bigint as qualified_view_count
   from public.tracks t
+  join public.albums a on a.id = t.album_id and a.content_type = 'music'
   left join public.track_view_events e on e.track_id = t.id
   group by t.id;
 
@@ -106,6 +107,7 @@ as
   from public.platform_links pl
   join public.albums a on a.id = pl.album_id
   left join public.platform_link_click_events e on e.platform_link_id = pl.id
+  where a.content_type = 'music'
   group by pl.id, pl.album_id, pl.platform, pl.label, a.title;
 
 revoke all on public.admin_platform_link_click_stats from public, anon;

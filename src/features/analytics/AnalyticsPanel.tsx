@@ -27,7 +27,7 @@ export function AnalyticsPanel({ releases, isRemote }: { releases: Release[]; is
     let active = true;
     if (!isRemote) {
       setClickStats([]);
-      setError('Connect Supabase and apply the preview analytics migration to load platform click statistics.');
+      setError('Connect Supabase and apply the analytics migration to load platform click statistics.');
       return () => { active = false; };
     }
 
