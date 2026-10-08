@@ -88,10 +88,12 @@ export function HomePage() {
                   </time>
                   <p>{release.description}</p>
                   <div className="home-feature-actions">
-                    <Link to={`/releases/${release.slug}`} className="text-link">View release</Link>
                     {isPublished(release) && <button type="button" className="text-link home-release-play" onClick={() => playRelease(release)}>
-                      Play selection
+                      Play Now
                     </button>}
+                    <Link to={`/releases/${release.slug}`} className="text-link">
+                      {release.type === 'album' ? 'View the Tracks' : 'View the Track'}
+                    </Link>
                   </div>
                 </div>
               </article>
