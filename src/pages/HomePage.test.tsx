@@ -49,6 +49,20 @@ describe('HomePage Hero selection', () => {
     expect(container.textContent).toContain('Play latest');
   });
 
+  it('links beneath the Hero artwork to the latest published release', () => {
+    const latestRelease = { ...featuredMusic, id: 'latest-release', title: 'Latest', slug: 'latest-release', release_date: '2025-04-04', featured: false };
+    const olderRelease = { ...selectedHero, release_date: '2025-03-04' };
+    const upcomingRelease = { ...selectedHero, id: 'upcoming-release', title: 'Upcoming', slug: 'upcoming-release', release_date: '2030-01-01', status: 'upcoming', published: false };
+    mocks.catalog = { ...mocks.catalog, releases: [upcomingRelease, olderRelease, latestRelease, featuredMusic] };
+    act(() => root.render(<MemoryRouter><HomePage /></MemoryRouter>));
+    const group = container.querySelector('.hero-visual-group');
+    const link = group?.querySelector('.home-latest-release-link');
+    expect(link?.querySelector('.home-latest-release-link__text')?.textContent).toBe('Listen to the Latest Release');
+    expect(link?.querySelector('.home-latest-release-link__arrow')?.getAttribute('aria-hidden')).toBe('true');
+    expect(link?.getAttribute('href')).toBe('/releases/latest-release');
+    expect(group?.lastElementChild).toBe(link);
+  });
+
   it('does not silently fall back to Featured artwork when no Hero is configured', () => {
     mocks.catalog = { ...mocks.catalog, homeHeroId: null };
     act(() => root.render(<MemoryRouter><HomePage /></MemoryRouter>));

@@ -14,6 +14,10 @@ export function HomePage() {
   if (!isReady) return <div className="page-section"><p className="release-empty" role="status">Loading catalog…</p></div>;
   if (catalogError) return <div className="page-section"><p className="release-empty" role="alert">Catalog unavailable. Please try again later.</p></div>;
   const visibleReleases = releases.filter(isPublished);
+  const latestRelease = visibleReleases.reduce<Release | null>((latest, release) => {
+    if (!latest) return release;
+    return (release.release_date ?? '') > (latest.release_date ?? '') ? release : latest;
+  }, null);
   const homeVisibleReleases = releases.filter((release) => isPublished(release) || isUpcoming(release));
   const featuredRelease = visibleReleases.find((release) => release.featured) ?? null;
   const heroRelease = visibleReleases.find((release) => release.id === homeHeroId && Boolean(release.artwork_url)) ?? null;
@@ -40,7 +44,15 @@ export function HomePage() {
             <Link to={publicRoutes.releases} className="button secondary">Browse releases</Link>
           </div>
         </div>
-        <div className="hero-visual">{heroRelease?.artwork_url ? <img src={heroRelease.artwork_url} alt={heroRelease.title} /> : <div className="hero-visual-placeholder" aria-label="No Hero image selected" />}</div>
+        <div className="hero-visual-group">
+          <div className="hero-visual">{heroRelease?.artwork_url ? <img src={heroRelease.artwork_url} alt={heroRelease.title} /> : <div className="hero-visual-placeholder" aria-label="No Hero image selected" />}</div>
+          {latestRelease && (
+            <Link to={`/releases/${latestRelease.slug}`} className="home-latest-release-link">
+              <span className="home-latest-release-link__text">Listen to the Latest Release</span>
+              <span className="home-latest-release-link__arrow" aria-hidden="true">→</span>
+            </Link>
+          )}
+        </div>
       </section>
       <section className="home-release-collection" aria-labelledby="home-releases-title">
         <div className="section-heading"><p className="eyebrow">Selected releases</p><h2 id="home-releases-title">A small collection of work.</h2></div>
