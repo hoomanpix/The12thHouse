@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { GlobalAudioPlayer } from '../../components/GlobalAudioPlayer';
 import { AudioPlayerProvider, useAudioPlayer } from './AudioPlayerProvider';
 import type { AudioQueueItem } from './types';
+import { DEFAULT_VOLUME } from './volume';
 
 const backend = vi.hoisted(() => ({ createSignedUrl: vi.fn() }));
 vi.mock('../../lib/supabase', () => ({
@@ -13,10 +14,14 @@ vi.mock('../../lib/supabase', () => ({
 
 class FakeAudio extends EventTarget {
   static instances: FakeAudio[] = [];
+  static nativeVolumeWorks = true;
   src = '';
+  crossOrigin: string | null = null;
   currentTime = 0;
   duration = 180;
-  volume = 1;
+  private storedVolume = 1;
+  get volume() { return FakeAudio.nativeVolumeWorks ? this.storedVolume : 1; }
+  set volume(value: number) { if (FakeAudio.nativeVolumeWorks) this.storedVolume = value; }
   muted = false;
   error: MediaError | null = null;
   preload = '';
@@ -28,6 +33,52 @@ class FakeAudio extends EventTarget {
   play() { this.playCalls += 1; this.paused = false; this.dispatchEvent(new Event('play')); return Promise.resolve(); }
   pause() { const wasPlaying = !this.paused; this.paused = true; if (wasPlaying) this.dispatchEvent(new Event('pause')); }
   removeAttribute(name: string) { if (name === 'src') this.src = ''; }
+}
+
+class FakeAudioNode {
+  connect = vi.fn();
+  disconnect = vi.fn();
+}
+
+class FakeAudioParam {
+  value = 1;
+  cancelScheduledValues = vi.fn();
+  setTargetAtTime = vi.fn((value: number) => { this.value = value; });
+}
+
+class FakeGainNode extends FakeAudioNode {
+  gain = new FakeAudioParam();
+}
+
+class FakeAudioContext {
+  static instances: FakeAudioContext[] = [];
+  static failMediaElementSource = false;
+  static rejectResume = false;
+  state: AudioContextState = 'suspended';
+  destination = new FakeAudioNode();
+  sourceNodes: FakeAudioNode[] = [];
+  gainNodes: FakeGainNode[] = [];
+  resumeCalls = 0;
+
+  constructor() { FakeAudioContext.instances.push(this); }
+  createMediaElementSource(_audio: HTMLMediaElement) {
+    if (FakeAudioContext.failMediaElementSource) throw new Error('Web Audio media source is unavailable.');
+    const source = new FakeAudioNode();
+    this.sourceNodes.push(source);
+    return source;
+  }
+  createGain() {
+    const gain = new FakeGainNode();
+    this.gainNodes.push(gain);
+    return gain;
+  }
+  resume() {
+    this.resumeCalls += 1;
+    if (FakeAudioContext.rejectResume) return Promise.reject(new Error('AudioContext resume blocked.'));
+    this.state = 'running';
+    return Promise.resolve();
+  }
+  close() { this.state = 'closed'; return Promise.resolve(); }
 }
 
 const queue: AudioQueueItem[] = [
@@ -46,6 +97,10 @@ describe('AudioPlayerProvider interactions', () => {
   beforeEach(() => {
     vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
     FakeAudio.instances = [];
+    FakeAudio.nativeVolumeWorks = true;
+    FakeAudioContext.instances = [];
+    FakeAudioContext.failMediaElementSource = false;
+    FakeAudioContext.rejectResume = false;
     player = null;
     backend.createSignedUrl.mockReset().mockResolvedValue({ data: { signedUrl: 'https://cdn.example/refreshed.mp3' }, error: null });
     vi.stubGlobal('Audio', FakeAudio);
@@ -56,8 +111,193 @@ describe('AudioPlayerProvider interactions', () => {
 
   afterEach(() => {
     act(() => root.unmount());
+    expect(FakeAudioContext.instances.every((context) => context.state === 'closed')).toBe(true);
     container.remove();
     vi.unstubAllGlobals();
+  });
+
+  it('keeps the volume slider operational through a Web Audio gain node when native volume is unavailable', async () => {
+    FakeAudio.nativeVolumeWorks = false;
+    vi.stubGlobal('AudioContext', FakeAudioContext);
+    render(true);
+    const thirdTrack = { ...queue[0], id: 'three', trackId: 'three', title: 'Three', audioUrl: 'https://cdn.example/three.mp3' };
+    await act(async () => { player!.setQueue([...queue, thirdTrack]); player!.playTrack(queue[0]); await Promise.resolve(); });
+
+    const context = FakeAudioContext.instances[0];
+    expect(context).toBeTruthy();
+    expect(context.state).toBe('running');
+    expect(context.resumeCalls).toBeGreaterThan(0);
+    expect(context.sourceNodes).toHaveLength(1);
+    expect(context.gainNodes).toHaveLength(1);
+    expect(context.gainNodes[0].gain.value).toBe(DEFAULT_VOLUME);
+    expect(FakeAudio.instances[0].crossOrigin).toBe('anonymous');
+
+    act(() => (container.querySelector('[aria-label="Expand player"]') as HTMLButtonElement).click());
+    const slider = container.querySelector('#volume-control') as HTMLInputElement;
+    expect(slider.min).toBe('0');
+    expect(slider.max).toBe('1');
+    expect(slider.disabled).toBe(false);
+    const nativeValueSetter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set;
+    nativeValueSetter?.call(slider, '0.42');
+    act(() => {
+      slider.dispatchEvent(new Event('input', { bubbles: true }));
+      slider.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+    expect(player!.state.volume).toBe(0.42);
+    expect(context.gainNodes[0].gain.value).toBe(0.42);
+    expect(player!.state.isPlaying).toBe(true);
+
+    act(() => (container.querySelector('[aria-label="Mute audio"]') as HTMLButtonElement).click());
+    expect(context.gainNodes[0].gain.value).toBe(0);
+    expect(player!.state.volume).toBe(0.42);
+    act(() => (container.querySelector('[aria-label="Unmute audio"]') as HTMLButtonElement).click());
+    expect(context.gainNodes[0].gain.value).toBe(0.42);
+
+    act(() => (container.querySelector('[aria-label="Collapse player"]') as HTMLButtonElement).click());
+    act(() => player!.setVolume(0.35));
+    expect(player!.state.isPlaying).toBe(true);
+    expect(context.gainNodes[0].gain.value).toBe(0.35);
+    act(() => (container.querySelector('[aria-label="Expand player"]') as HTMLButtonElement).click());
+
+    await act(async () => { player!.playNext(); await Promise.resolve(); });
+    expect(player!.state.activeTrackId).toBe('two');
+    expect(player!.state.isPlaying).toBe(true);
+    expect(player!.state.volume).toBe(0.35);
+    expect(FakeAudioContext.instances).toHaveLength(1);
+    expect(context.sourceNodes).toHaveLength(2);
+    expect(context.gainNodes[1].gain.value).toBe(0.35);
+    expect(context.sourceNodes[0].disconnect).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      FakeAudio.instances[1].dispatchEvent(new Event('ended'));
+      await Promise.resolve();
+    });
+    expect(player!.state.activeTrackId).toBe('three');
+    expect(player!.state.isPlaying).toBe(true);
+    expect(context.sourceNodes).toHaveLength(3);
+    expect(context.gainNodes[2].gain.value).toBe(0.35);
+    expect(context.sourceNodes[1].disconnect).toHaveBeenCalledTimes(1);
+
+    act(() => player!.toggleMute());
+    expect(player!.state.isMuted).toBe(true);
+    expect(context.gainNodes[2].gain.value).toBe(0);
+    await act(async () => { player!.playPrevious(); await Promise.resolve(); });
+    expect(player!.state.activeTrackId).toBe('two');
+    expect(player!.state.isPlaying).toBe(true);
+    expect(player!.state.isMuted).toBe(true);
+    expect(player!.state.volume).toBe(0.35);
+    expect(context.gainNodes[3].gain.value).toBe(0);
+
+    act(() => player!.toggleMute());
+    expect(context.gainNodes[3].gain.value).toBe(0.35);
+    act(() => player!.togglePlay());
+    expect(player!.state.isPlaying).toBe(false);
+    act(() => player!.setVolume(0.65));
+    expect(player!.state.isPlaying).toBe(false);
+    expect(player!.state.volume).toBe(0.65);
+    expect(context.gainNodes[3].gain.value).toBe(0.65);
+    act(() => player!.togglePlay());
+    expect(player!.state.isPlaying).toBe(true);
+    expect(context.gainNodes[3].gain.value).toBe(0.65);
+
+    await act(async () => { player!.playPrevious(); await Promise.resolve(); });
+    expect(player!.state.activeTrackId).toBe('one');
+    expect(player!.state.isPlaying).toBe(true);
+    expect(player!.state.volume).toBe(0.65);
+    expect(context.gainNodes[4].gain.value).toBe(0.65);
+    expect(context.sourceNodes[3].disconnect).toHaveBeenCalledTimes(1);
+  });
+
+  it('preserves native audio loading mode if Web Audio graph creation fails', async () => {
+    FakeAudioContext.failMediaElementSource = true;
+    vi.stubGlobal('AudioContext', FakeAudioContext);
+    render();
+    await act(async () => { player!.setQueue(queue); player!.playTrack(queue[0]); await Promise.resolve(); });
+
+    expect(FakeAudio.instances[0].crossOrigin).toBeNull();
+    expect(player!.state.volumeSupported).toBe(true);
+    expect(player!.state.isPlaying).toBe(true);
+  });
+
+  it('pauses playback and reports an error if the Web Audio context cannot resume', async () => {
+    FakeAudio.nativeVolumeWorks = false;
+    FakeAudioContext.rejectResume = true;
+    vi.stubGlobal('AudioContext', FakeAudioContext);
+    render();
+    await act(async () => {
+      player!.setQueue(queue);
+      player!.playTrack(queue[0]);
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(FakeAudioContext.instances[0].state).toBe('suspended');
+    expect(FakeAudio.instances[0].paused).toBe(true);
+    expect(player!.state.isPlaying).toBe(false);
+    expect(player!.state.status).toBe('error');
+    expect(player!.state.error).toContain('Audio output is suspended');
+  });
+
+  it('propagates real media duration and elapsed time to the expanded player', async () => {
+    render(true);
+    await act(async () => { player!.setQueue(queue); player!.playTrack(queue[0]); await Promise.resolve(); });
+    const audio = FakeAudio.instances[0];
+    audio.duration = 233.496;
+    act(() => audio.dispatchEvent(new Event('loadedmetadata')));
+    expect(Number.isFinite(player!.state.duration)).toBe(true);
+    expect(player!.state.duration).toBe(233.496);
+
+    audio.currentTime = 17;
+    act(() => audio.dispatchEvent(new Event('timeupdate')));
+    expect(player!.state.currentTime).toBe(17);
+
+    await act(async () => { player!.playNext(); await Promise.resolve(); });
+    expect(player!.state.activeTrackId).toBe('two');
+    expect(player!.state.duration).toBe(0);
+    const nextAudio = FakeAudio.instances[1];
+    nextAudio.duration = 128.25;
+    act(() => nextAudio.dispatchEvent(new Event('loadedmetadata')));
+    expect(player!.state.duration).toBe(128.25);
+    nextAudio.currentTime = 32;
+    act(() => nextAudio.dispatchEvent(new Event('timeupdate')));
+    expect(player!.state.currentTime).toBe(32);
+
+    act(() => (container.querySelector('[aria-label="Expand player"]') as HTMLButtonElement).click());
+    const times = [...container.querySelectorAll('.player-progress-block > span')].map((node) => node.textContent);
+    expect(times).toEqual(['0:32', '2:08']);
+    const progress = container.querySelector('.player-strip__progress-bar') as HTMLElement;
+    expect(parseFloat(progress.style.width)).toBeCloseTo((32 / 128.25) * 100, 3);
+  });
+
+  it('rebuilds the Web Audio graph and retains selected gain after signed URL refresh', async () => {
+    FakeAudio.nativeVolumeWorks = false;
+    vi.stubGlobal('AudioContext', FakeAudioContext);
+    render();
+    const item = { ...queue[0], audioReference: 'release/track-one.mp3' };
+    await act(async () => { player!.setQueue([item]); player!.playTrack(item); await Promise.resolve(); });
+    act(() => player!.setVolume(0.37));
+
+    const expiredAudio = FakeAudio.instances[0];
+    expiredAudio.error = { code: 4, message: 'Expired media URL.' } as MediaError;
+    await act(async () => {
+      expiredAudio.dispatchEvent(new Event('error'));
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    const context = FakeAudioContext.instances[0];
+    expect(backend.createSignedUrl).toHaveBeenCalledTimes(1);
+    expect(FakeAudio.instances).toHaveLength(2);
+    expect(FakeAudio.instances[1].src).toBe('https://cdn.example/refreshed.mp3');
+    expect(player!.state.isPlaying).toBe(true);
+    expect(player!.state.volume).toBe(0.37);
+    expect(context.sourceNodes).toHaveLength(2);
+    expect(context.sourceNodes[0].disconnect).toHaveBeenCalledTimes(1);
+    expect(context.gainNodes[1].gain.value).toBe(0.37);
+    const refreshedAudio = FakeAudio.instances[1];
+    refreshedAudio.duration = 209.4;
+    act(() => refreshedAudio.dispatchEvent(new Event('loadedmetadata')));
+    expect(player!.state.duration).toBe(209.4);
   });
 
   it('keeps playback active when navigating to the next track while already playing', async () => {
@@ -107,7 +347,8 @@ describe('AudioPlayerProvider interactions', () => {
     expect(player!.state.volumeSupported).toBe(false);
     act(() => (container.querySelector('[aria-label="Expand player"]') as HTMLButtonElement).click());
     expect((container.querySelector('#volume-control') as HTMLInputElement).disabled).toBe(true);
-    expect(container.textContent).toContain('This browser does not expose per-player volume control.');
+    expect(container.textContent).toContain('Per-player volume adjustment is unavailable in this browser; device volume is controlled by the operating system.');
+    expect(container.textContent).toContain('Mute here only mutes audio.');
   });
 
   it('keeps minimized artwork display-only and exposes explicit player controls', async () => {

@@ -15,7 +15,6 @@ export function GlobalAudioPlayer() {
   const progress = hasDuration ? Math.min(100, Math.max(0, (state.currentTime / state.duration) * 100)) : 0;
   const trackTitle = activeTrack?.title ?? 'No track selected';
   const artistName = activeTrack?.releaseTitle ?? 'The12thHouse';
-  const remainingTime = Math.max(state.duration - state.currentTime, 0);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -49,7 +48,7 @@ export function GlobalAudioPlayer() {
               <div className="player-progress-block">
                 <span>{formatMediaDuration(state.currentTime) ?? '0:00'}</span>
                 <input aria-label="Seek audio" type="range" min={0} max={100} value={progress} disabled={!hasDuration} onChange={(event) => seek(Number(event.target.value))} />
-                <span>{hasDuration ? `-${formatMediaDuration(remainingTime) ?? '0:00'}` : '—:—'}</span>
+                <span>{hasDuration ? formatMediaDuration(state.duration) ?? '—:—' : '—:—'}</span>
               </div>
               <div className="player-detail__controls">
                 <button type="button" className="player-button player-button--wide" onClick={playPrevious} aria-label="Previous track" title="Previous track"><span className="player-emoji" aria-hidden="true">⏮️</span><PlayerIcon name="previous" /></button>
@@ -62,7 +61,7 @@ export function GlobalAudioPlayer() {
                   <input id="volume-control" aria-label="Web player volume" type="range" min={0} max={1} step={0.01} value={state.volume} disabled={state.volumeSupportKnown && !state.volumeSupported} onChange={(event) => setVolume(Number(event.target.value))} />
                   <button type="button" className="player-volume__mute" aria-label={state.isMuted ? 'Unmute audio' : 'Mute audio'} aria-pressed={state.isMuted} onClick={toggleMute}>{state.isMuted ? 'Unmute' : 'Mute'}</button>
                 </div>
-                {state.volumeSupportKnown && !state.volumeSupported && <p className="player-volume__note" role="status">This browser does not expose per-player volume control. Use your device’s volume buttons; mute remains available here.</p>}
+                {state.volumeSupportKnown && !state.volumeSupported && <p className="player-volume__note" role="status">Per-player volume adjustment is unavailable in this browser; device volume is controlled by the operating system. Mute here only mutes audio.</p>}
               </div>
             </div>
           </div>

@@ -53,8 +53,9 @@ export function ReleaseDetailPage() {
           if (!cancelled) startNextProbes();
         };
         const onMetadata = () => {
-          if (!cancelled && Number.isFinite(audio.duration) && audio.duration >= 0) {
-            setTrackDurations((current) => ({ ...current, [track.id]: audio.duration }));
+          const duration = audio.duration;
+          if (!cancelled && Number.isFinite(duration) && duration > 0) {
+            setTrackDurations((current) => ({ ...current, [track.id]: duration }));
           }
           finish();
         };

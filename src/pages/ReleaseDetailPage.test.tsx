@@ -61,8 +61,12 @@ describe('ReleaseDetailPage media metadata', () => {
     expect(container.querySelector('.track-row')?.textContent).not.toContain('0:00');
     expect(probes).toHaveLength(1);
 
-    Object.defineProperty(probes[0], 'duration', { configurable: true, value: 123.8 });
+    Object.defineProperty(probes[0], 'duration', {
+      configurable: true,
+      get: () => probes[0].hasAttribute('src') ? 123.8 : Number.NaN,
+    });
     act(() => probes[0].dispatchEvent(new Event('loadedmetadata')));
+    expect(Number.isNaN(probes[0].duration)).toBe(true);
     expect(container.querySelector('.track-row')?.textContent).toContain('2:03');
   });
 

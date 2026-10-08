@@ -31,3 +31,52 @@ export function applyMediaVolume(
   media.muted = muted;
   return clampVolume(media.volume);
 }
+
+type AudioContextConstructor = new () => AudioContext;
+type WindowWithWebkitAudioContext = Window & { webkitAudioContext?: AudioContextConstructor };
+
+export type AudioVolumeGraph = {
+  audio: HTMLAudioElement;
+  context: AudioContext;
+  source: MediaElementAudioSourceNode;
+  gain: GainNode;
+};
+
+export function getAudioContextConstructor(): AudioContextConstructor | null {
+  if (typeof window === 'undefined') return null;
+  return window.AudioContext ?? (window as WindowWithWebkitAudioContext).webkitAudioContext ?? null;
+}
+
+export function createAudioVolumeGraph(audio: HTMLAudioElement, context: AudioContext): AudioVolumeGraph | null {
+  let source: MediaElementAudioSourceNode | null = null;
+  let gain: GainNode | null = null;
+  try {
+    source = context.createMediaElementSource(audio);
+    gain = context.createGain();
+    source.connect(gain);
+    gain.connect(context.destination);
+    return { audio, context, source, gain };
+  } catch {
+    try { source?.disconnect(); } catch { /* Release a partially-created graph. */ }
+    try { gain?.disconnect(); } catch { /* Release a partially-created graph. */ }
+    return null;
+  }
+}
+
+export function applyGainVolume(graph: AudioVolumeGraph, volume: number, muted: boolean) {
+  const nextVolume = muted ? 0 : clampVolume(volume);
+  const parameter = graph.gain.gain;
+  const now = graph.context.currentTime;
+  try {
+    parameter.cancelScheduledValues(now);
+    parameter.setTargetAtTime(nextVolume, now, 0.015);
+  } catch {
+    parameter.value = nextVolume;
+  }
+  return nextVolume;
+}
+
+export function disconnectAudioVolumeGraph(graph: AudioVolumeGraph) {
+  try { graph.source.disconnect(); } catch { /* The source may already be disconnected. */ }
+  try { graph.gain.disconnect(); } catch { /* The gain may already be disconnected. */ }
+}
