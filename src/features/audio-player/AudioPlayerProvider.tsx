@@ -10,7 +10,17 @@ import {
 import type { AudioQueueItem, PlayerState } from './types';
 import { isSupabaseConfigured, supabase } from '../../lib/supabase';
 import { eligibleAudioQueue, nextQueueItem, previousQueueItem } from './queue';
-import { applyMediaVolume, clampVolume, DEFAULT_VOLUME, supportsMediaElementVolume } from './volume';
+import {
+  applyGainVolume,
+  applyMediaVolume,
+  clampVolume,
+  createAudioVolumeGraph,
+  DEFAULT_VOLUME,
+  disconnectAudioVolumeGraph,
+  getAudioContextConstructor,
+  supportsMediaElementVolume,
+  type AudioVolumeGraph,
+} from './volume';
 
 interface AudioPlayerContextValue {
   state: PlayerState;
@@ -69,6 +79,8 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
   const volumeRef = useRef(DEFAULT_VOLUME);
   const mutedRef = useRef(false);
   const volumeSupportedRef = useRef(false);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const audioVolumeGraphRef = useRef<AudioVolumeGraph | null>(null);
   const [state, setState] = useState<PlayerState>(initialState);
 
   const commit = useCallback((update: (current: PlayerState) => PlayerState) => {
@@ -78,12 +90,11 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
   }, []);
 
   useEffect(() => {
-    const supported = supportsMediaElementVolume(document.createElement('audio'));
+    const supported = getAudioContextConstructor() !== null
+      || supportsMediaElementVolume(document.createElement('audio'));
     volumeSupportedRef.current = supported;
-    if (!supported) volumeRef.current = 1;
     commit((current) => ({
       ...current,
-      volume: supported ? current.volume : 1,
       volumeSupported: supported,
       volumeSupportKnown: true,
     }));
@@ -93,24 +104,54 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
     if (!audioRef.current) {
       const audio = new Audio();
       audio.preload = 'metadata';
-      const detectedSupport = supportsMediaElementVolume(audio);
-      const appliedVolume = applyMediaVolume(audio, volumeRef.current, mutedRef.current, detectedSupport);
-      const supported = detectedSupport && Math.abs(appliedVolume - volumeRef.current) < 0.001;
+      let volumeGraph: AudioVolumeGraph | null = null;
+      const AudioContextConstructor = getAudioContextConstructor();
+      if (AudioContextConstructor) {
+        try {
+          const context = audioContextRef.current ?? new AudioContextConstructor();
+          audioContextRef.current = context;
+          volumeGraph = createAudioVolumeGraph(audio, context);
+          if (volumeGraph) audio.crossOrigin = 'anonymous';
+        } catch { /* Fall back to native volume if Web Audio setup is unavailable. */ }
+      }
+      let supported = false;
+      if (volumeGraph) {
+        audioVolumeGraphRef.current = volumeGraph;
+        audio.muted = mutedRef.current;
+        applyGainVolume(volumeGraph, volumeRef.current, mutedRef.current);
+        supported = true;
+      } else {
+        const detectedSupport = supportsMediaElementVolume(audio);
+        const appliedVolume = applyMediaVolume(audio, volumeRef.current, mutedRef.current, detectedSupport);
+        supported = detectedSupport && Math.abs(appliedVolume - volumeRef.current) < 0.001;
+        if (supported) volumeRef.current = appliedVolume;
+      }
       volumeSupportedRef.current = supported;
-      if (!supported) volumeRef.current = appliedVolume;
       audioRef.current = audio;
       commit((current) => ({
         ...current,
-        volume: supported ? current.volume : appliedVolume,
+        volume: volumeRef.current,
         volumeSupported: supported,
         volumeSupportKnown: true,
       }));
 
-      const onTimeUpdate = () => commit((current) => ({ ...current, currentTime: audio.currentTime }));
+      const onTimeUpdate = () => {
+        const duration = audio.duration;
+        commit((current) => ({
+          ...current,
+          currentTime: audio.currentTime,
+          ...(Number.isFinite(duration) && duration > 0 ? { duration } : {}),
+        }));
+      };
       const onLoadStart = () => commit((current) => ({ ...current, status: 'loading', isReady: false, error: null }));
       const onLoadedMetadata = () => {
         const duration = Number.isFinite(audio.duration) && audio.duration >= 0 ? audio.duration : 0;
         commit((current) => ({ ...current, duration, status: 'ready', isReady: true, error: null }));
+      };
+      const onDurationChange = () => {
+        const duration = audio.duration;
+        if (!Number.isFinite(duration) || duration <= 0) return;
+        commit((current) => ({ ...current, duration }));
       };
       const onPlay = () => {
         if (!playbackIntentRef.current) {
@@ -145,6 +186,7 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
       audio.addEventListener('timeupdate', onTimeUpdate);
       audio.addEventListener('loadstart', onLoadStart);
       audio.addEventListener('loadedmetadata', onLoadedMetadata);
+      audio.addEventListener('durationchange', onDurationChange);
       audio.addEventListener('play', onPlay);
       audio.addEventListener('pause', onPause);
       audio.addEventListener('ended', onEnded);
@@ -153,6 +195,7 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
         audio.removeEventListener('timeupdate', onTimeUpdate);
         audio.removeEventListener('loadstart', onLoadStart);
         audio.removeEventListener('loadedmetadata', onLoadedMetadata);
+        audio.removeEventListener('durationchange', onDurationChange);
         audio.removeEventListener('play', onPlay);
         audio.removeEventListener('pause', onPause);
         audio.removeEventListener('ended', onEnded);
@@ -168,6 +211,13 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
     activeSourceRef.current = null;
     cleanupAudioRef.current?.();
     audioRef.current?.pause();
+    if (audioVolumeGraphRef.current) {
+      disconnectAudioVolumeGraph(audioVolumeGraphRef.current);
+      audioVolumeGraphRef.current = null;
+    }
+    const context = audioContextRef.current;
+    audioContextRef.current = null;
+    if (context && context.state !== 'closed') void context.close().catch(() => undefined);
   }, []);
 
   const setQueue = useCallback((items: AudioQueueItem[]) => {
@@ -269,6 +319,10 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
     if (sourceChanged && (previousSource !== null || audio.src || audio.currentSrc)) {
       cleanupAudioRef.current?.();
       cleanupAudioRef.current = null;
+      if (audioVolumeGraphRef.current?.audio === audio) {
+        disconnectAudioVolumeGraph(audioVolumeGraphRef.current);
+        audioVolumeGraphRef.current = null;
+      }
       audio.pause();
       audio.removeAttribute('src');
       audio.load();
@@ -294,6 +348,16 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
     }
 
     if (autoplay) {
+      const context = audioContextRef.current;
+      if (context && context.state !== 'running') {
+        void context.resume().catch(() => {
+          if (requestId !== playbackRequestRef.current || !playbackIntentRef.current) return;
+          playbackIntentRef.current = false;
+          pendingAutoplayRef.current = false;
+          audio.pause();
+          commit((current) => ({ ...current, status: 'error', error: 'Audio output is suspended by the browser. Tap Play to resume.' }));
+        });
+      }
       void audio.play().catch((error: unknown) => {
         if (requestId !== playbackRequestRef.current || !playbackIntentRef.current) return;
         playbackIntentRef.current = false;
@@ -437,17 +501,27 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
     const nextVolume = clampVolume(value);
     const audio = ensureAudio();
     if (!volumeSupportedRef.current) return;
+    const graph = audioVolumeGraphRef.current;
+    if (graph?.audio === audio) {
+      const appliedVolume = applyGainVolume(graph, nextVolume, mutedRef.current);
+      volumeRef.current = appliedVolume;
+      volumeSupportedRef.current = true;
+      commit((current) => ({ ...current, volume: appliedVolume, volumeSupported: true, volumeSupportKnown: true }));
+      return;
+    }
     const appliedVolume = applyMediaVolume(audio, nextVolume, mutedRef.current, true);
     const supported = Math.abs(appliedVolume - nextVolume) < 0.001;
     volumeSupportedRef.current = supported;
-    volumeRef.current = appliedVolume;
-    commit((current) => ({ ...current, volume: appliedVolume, volumeSupported: supported, volumeSupportKnown: true }));
+    if (supported) volumeRef.current = appliedVolume;
+    commit((current) => ({ ...current, volume: volumeRef.current, volumeSupported: supported, volumeSupportKnown: true }));
   }, [commit, ensureAudio]);
 
   const toggleMute = useCallback(() => {
     const audio = ensureAudio();
     mutedRef.current = !mutedRef.current;
     audio.muted = mutedRef.current;
+    const graph = audioVolumeGraphRef.current;
+    if (graph?.audio === audio) applyGainVolume(graph, volumeRef.current, mutedRef.current);
     commit((current) => ({ ...current, isMuted: mutedRef.current }));
   }, [commit, ensureAudio]);
 

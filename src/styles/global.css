@@ -883,7 +883,7 @@ h3 {
   display: grid;
   gap: 6px;
   width: 100%;
-  max-width: 420px;
+  max-width: 520px;
 }
 
 .player-volume label {
@@ -895,34 +895,13 @@ h3 {
 
 .player-volume__controls {
   display: grid;
-  grid-template-columns: auto minmax(72px, 1fr) auto;
+  grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
-  gap: 10px;
+  gap: 12px;
 }
 
 .player-volume__controls label {
   margin: 0;
-}
-
-.player-volume__mute {
-  min-height: 34px;
-  padding: 0 11px;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  background: transparent;
-  color: var(--ink);
-  font: inherit;
-  font-size: 0.74rem;
-  cursor: pointer;
-}
-
-.player-volume__mute:hover {
-  border-color: var(--ink);
-}
-
-.player-volume__mute:focus-visible {
-  outline: 2px solid var(--ink);
-  outline-offset: 3px;
 }
 
 .player-volume input:disabled {
