@@ -57,8 +57,8 @@ export function GlobalAudioPlayer() {
               </div>
               <div className="player-volume">
                 <div className="player-volume__controls">
-                  <label htmlFor="volume-control">Web player volume</label>
-                  <input id="volume-control" aria-label="Web player volume" type="range" min={0} max={1} step={0.01} value={state.volume} disabled={state.volumeSupportKnown && !state.volumeSupported} onChange={(event) => setVolume(Number(event.target.value))} />
+                  <label htmlFor="volume-control">Volume</label>
+                  <input id="volume-control" aria-label="Volume" type="range" min={0} max={1} step={0.01} value={state.volume} disabled={state.volumeSupportKnown && !state.volumeSupported} onChange={(event) => setVolume(Number(event.target.value))} />
                 </div>
                 {state.volumeSupportKnown && !state.volumeSupported && <p className="player-volume__note" role="status">Per-player volume adjustment is unavailable in this browser. Use your device’s volume controls.</p>}
               </div>

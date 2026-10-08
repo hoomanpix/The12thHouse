@@ -508,7 +508,8 @@ describe('AudioPlayerProvider interactions', () => {
     });
     expect(player!.state.volume).toBe(0.42);
     expect(FakeAudio.instances[0].volume).toBe(0.42);
-    expect(volume.getAttribute('aria-label')).toBe('Web player volume');
+    expect(volume.getAttribute('aria-label')).toBe('Volume');
+    expect(container.querySelector('label[for="volume-control"]')?.textContent).toBe('Volume');
   });
 
   it('continues playback when Previous changes the selected track', async () => {
