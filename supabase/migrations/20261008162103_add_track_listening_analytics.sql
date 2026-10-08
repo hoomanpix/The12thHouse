@@ -1,5 +1,5 @@
--- Analytics tables for the preview-only 30-second listening and platform-click feature.
--- Do not apply this migration to the live project until the preview is approved.
+-- 30-second listening and platform-click analytics for The12thHouse.
+-- Historical play starts are not backfilled as qualified listening views.
 
 create table public.track_view_events (
   track_id uuid not null references public.tracks(id) on delete cascade,
