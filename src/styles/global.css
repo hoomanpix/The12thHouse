@@ -948,7 +948,7 @@ h3 {
   display: grid;
   gap: 6px;
   width: 100%;
-  max-width: 520px;
+  max-width: 560px;
 }
 
 .player-volume label {

@@ -29,6 +29,14 @@ describe('ReleasesPage header', () => {
     act(() => root.render(<MemoryRouter><ReleasesPage /></MemoryRouter>));
     expect(container.querySelector('h1')?.textContent).toBe('Releases');
     expect(container.textContent).not.toContain('Selected work');
+    const categoryTabs = container.querySelectorAll<HTMLButtonElement>('[role="tab"]');
+    act(() => categoryTabs[1].click());
+    expect(Array.from(container.querySelectorAll('.filter-pill')).map((button) => button.textContent)).toEqual(['All', 'Art Work', 'animation']);
+    const artworkFilter = Array.from(container.querySelectorAll<HTMLButtonElement>('.filter-pill')).find((button) => button.textContent === 'Art Work');
+    expect(artworkFilter?.getAttribute('aria-pressed')).toBe('false');
+    act(() => artworkFilter?.click());
+    expect(artworkFilter?.getAttribute('aria-pressed')).toBe('true');
+    act(() => categoryTabs[0].click());
     expect(Array.from(container.querySelectorAll('.filter-pill')).map((button) => button.textContent)).toEqual(['All', 'single', 'album']);
   });
 });
