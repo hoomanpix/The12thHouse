@@ -93,6 +93,8 @@ describe('AudioPlayerProvider interactions', () => {
   let container: HTMLDivElement;
   let root: ReturnType<typeof createRoot>;
   const render = (includePlayer = false) => act(() => root.render(<AudioPlayerProvider><CapturePlayer />{includePlayer && <GlobalAudioPlayer />}</AudioPlayerProvider>));
+  const hasMuteButton = () => [...container.querySelectorAll('button')].some((button) =>
+    /\b(?:un)?mute\b/i.test(`${button.getAttribute('aria-label') ?? ''} ${button.textContent ?? ''}`));
 
   beforeEach(() => {
     vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
@@ -147,10 +149,10 @@ describe('AudioPlayerProvider interactions', () => {
     expect(context.gainNodes[0].gain.value).toBe(0.42);
     expect(player!.state.isPlaying).toBe(true);
 
-    act(() => (container.querySelector('[aria-label="Mute audio"]') as HTMLButtonElement).click());
+    act(() => player!.toggleMute());
     expect(context.gainNodes[0].gain.value).toBe(0);
     expect(player!.state.volume).toBe(0.42);
-    act(() => (container.querySelector('[aria-label="Unmute audio"]') as HTMLButtonElement).click());
+    act(() => player!.toggleMute());
     expect(context.gainNodes[0].gain.value).toBe(0.42);
 
     act(() => (container.querySelector('[aria-label="Collapse player"]') as HTMLButtonElement).click());
@@ -300,6 +302,71 @@ describe('AudioPlayerProvider interactions', () => {
     expect(player!.state.duration).toBe(209.4);
   });
 
+  it('updates the player total when finite duration arrives after loadedmetadata', async () => {
+    render(true);
+    await act(async () => { player!.setQueue(queue); player!.playTrack(queue[0]); await Promise.resolve(); });
+    const audio = FakeAudio.instances[0];
+    audio.duration = Number.NaN;
+    act(() => audio.dispatchEvent(new Event('loadedmetadata')));
+    expect(player!.state.duration).toBe(0);
+
+    audio.duration = 233.496;
+    act(() => audio.dispatchEvent(new Event('durationchange')));
+    expect(player!.state.duration).toBe(233.496);
+    act(() => (container.querySelector('[aria-label="Expand player"]') as HTMLButtonElement).click());
+    expect([...container.querySelectorAll('.player-progress-block > span')].map((node) => node.textContent)).toEqual(['0:00', '3:53']);
+  });
+
+  it('preserves paused status when finite duration changes', async () => {
+    render();
+    await act(async () => { player!.setQueue(queue); player!.playTrack(queue[0]); await Promise.resolve(); });
+    const audio = FakeAudio.instances[0];
+    act(() => audio.dispatchEvent(new Event('loadedmetadata')));
+    act(() => player!.togglePlay());
+    expect(player!.state.status).toBe('paused');
+
+    audio.duration = 233.496;
+    act(() => audio.dispatchEvent(new Event('durationchange')));
+    expect(player!.state.duration).toBe(233.496);
+    expect(player!.state.status).toBe('paused');
+  });
+
+  it('updates duration on timeupdate when it becomes finite without durationchange', async () => {
+    render(true);
+    await act(async () => { player!.setQueue(queue); player!.playTrack(queue[0]); await Promise.resolve(); });
+    const audio = FakeAudio.instances[0];
+    audio.duration = Number.NaN;
+    act(() => audio.dispatchEvent(new Event('loadedmetadata')));
+    expect(player!.state.duration).toBe(0);
+
+    audio.duration = 233.496;
+    audio.currentTime = 17;
+    act(() => audio.dispatchEvent(new Event('timeupdate')));
+    expect(player!.state.duration).toBe(233.496);
+    expect(player!.state.currentTime).toBe(17);
+    act(() => (container.querySelector('[aria-label="Expand player"]') as HTMLButtonElement).click());
+    expect([...container.querySelectorAll('.player-progress-block > span')].map((node) => node.textContent)).toEqual(['0:17', '3:53']);
+  });
+
+  it('preserves an audio error when duration changes after a failed signed URL refresh', async () => {
+    backend.createSignedUrl.mockResolvedValueOnce({ data: null, error: { message: 'Temporary refresh failure.' } });
+    render();
+    const item = { ...queue[0], audioReference: 'release/track-one.mp3' };
+    await act(async () => { player!.setQueue([item]); player!.playTrack(item); await Promise.resolve(); });
+    const audio = FakeAudio.instances[0];
+    audio.error = { code: 4, message: 'Expired media URL.' } as MediaError;
+    await act(async () => { audio.dispatchEvent(new Event('error')); await Promise.resolve(); await Promise.resolve(); });
+    expect(player!.state.status).toBe('error');
+    expect(player!.state.error).toBe('Temporary refresh failure.');
+
+    audio.duration = 233.496;
+    act(() => audio.dispatchEvent(new Event('durationchange')));
+    expect(player!.state.duration).toBe(233.496);
+    expect(player!.state.status).toBe('error');
+    expect(player!.state.error).toBe('Temporary refresh failure.');
+    expect(player!.state.isReady).toBe(false);
+  });
+
   it('keeps playback active when navigating to the next track while already playing', async () => {
     render();
     await act(async () => { player!.setQueue(queue); player!.playTrack(queue[0]); await Promise.resolve(); });
@@ -347,8 +414,8 @@ describe('AudioPlayerProvider interactions', () => {
     expect(player!.state.volumeSupported).toBe(false);
     act(() => (container.querySelector('[aria-label="Expand player"]') as HTMLButtonElement).click());
     expect((container.querySelector('#volume-control') as HTMLInputElement).disabled).toBe(true);
-    expect(container.textContent).toContain('Per-player volume adjustment is unavailable in this browser; device volume is controlled by the operating system.');
-    expect(container.textContent).toContain('Mute here only mutes audio.');
+    expect(container.textContent).toContain('Per-player volume adjustment is unavailable in this browser. Use your device’s volume controls.');
+    expect(hasMuteButton()).toBe(false);
   });
 
   it('keeps minimized artwork display-only and exposes explicit player controls', async () => {
@@ -366,11 +433,15 @@ describe('AudioPlayerProvider interactions', () => {
     expect(FakeAudio.instances[0].playCalls).toBe(playCalls);
   });
 
-  it('connects the expanded web-volume slider and explicit mute button to the audio element', () => {
+  it('keeps an accessible working volume slider without a mute button', () => {
     render(true);
     act(() => (container.querySelector('[aria-label="Expand player"]') as HTMLButtonElement).click());
     const volume = container.querySelector('#volume-control') as HTMLInputElement;
     expect(volume).toBeTruthy();
+    expect(volume.min).toBe('0');
+    expect(volume.max).toBe('1');
+    expect(volume.disabled).toBe(false);
+    expect(hasMuteButton()).toBe(false);
     const nativeValueSetter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set;
     nativeValueSetter?.call(volume, '0.42');
     act(() => {
@@ -379,12 +450,7 @@ describe('AudioPlayerProvider interactions', () => {
     });
     expect(player!.state.volume).toBe(0.42);
     expect(FakeAudio.instances[0].volume).toBe(0.42);
-
-    const mute = container.querySelector('[aria-label="Mute audio"]') as HTMLButtonElement;
-    act(() => mute.click());
-    expect(player!.state.isMuted).toBe(true);
-    expect(FakeAudio.instances[0].muted).toBe(true);
-    expect(mute.getAttribute('aria-pressed')).toBe('true');
+    expect(volume.getAttribute('aria-label')).toBe('Web player volume');
   });
 
   it('continues playback when Previous changes the selected track', async () => {

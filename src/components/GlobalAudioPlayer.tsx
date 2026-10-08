@@ -3,7 +3,7 @@ import { useAudioPlayer } from '../features/audio-player/AudioPlayerProvider';
 import { formatMediaDuration } from '../features/audio-player/duration';
 
 export function GlobalAudioPlayer() {
-  const { state, togglePlay, playPrevious, playNext, seek, setVolume, toggleMute } = useAudioPlayer();
+  const { state, togglePlay, playPrevious, playNext, seek, setVolume } = useAudioPlayer();
   const [isExpanded, setIsExpanded] = useState(false);
 
   const activeTrack = useMemo(
@@ -59,9 +59,8 @@ export function GlobalAudioPlayer() {
                 <div className="player-volume__controls">
                   <label htmlFor="volume-control">Web player volume</label>
                   <input id="volume-control" aria-label="Web player volume" type="range" min={0} max={1} step={0.01} value={state.volume} disabled={state.volumeSupportKnown && !state.volumeSupported} onChange={(event) => setVolume(Number(event.target.value))} />
-                  <button type="button" className="player-volume__mute" aria-label={state.isMuted ? 'Unmute audio' : 'Mute audio'} aria-pressed={state.isMuted} onClick={toggleMute}>{state.isMuted ? 'Unmute' : 'Mute'}</button>
                 </div>
-                {state.volumeSupportKnown && !state.volumeSupported && <p className="player-volume__note" role="status">Per-player volume adjustment is unavailable in this browser; device volume is controlled by the operating system. Mute here only mutes audio.</p>}
+                {state.volumeSupportKnown && !state.volumeSupported && <p className="player-volume__note" role="status">Per-player volume adjustment is unavailable in this browser. Use your device’s volume controls.</p>}
               </div>
             </div>
           </div>

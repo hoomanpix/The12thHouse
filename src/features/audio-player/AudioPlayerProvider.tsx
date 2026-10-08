@@ -135,11 +135,23 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
         volumeSupportKnown: true,
       }));
 
-      const onTimeUpdate = () => commit((current) => ({ ...current, currentTime: audio.currentTime }));
+      const onTimeUpdate = () => {
+        const duration = audio.duration;
+        commit((current) => ({
+          ...current,
+          currentTime: audio.currentTime,
+          ...(Number.isFinite(duration) && duration > 0 ? { duration } : {}),
+        }));
+      };
       const onLoadStart = () => commit((current) => ({ ...current, status: 'loading', isReady: false, error: null }));
       const onLoadedMetadata = () => {
         const duration = Number.isFinite(audio.duration) && audio.duration >= 0 ? audio.duration : 0;
         commit((current) => ({ ...current, duration, status: 'ready', isReady: true, error: null }));
+      };
+      const onDurationChange = () => {
+        const duration = audio.duration;
+        if (!Number.isFinite(duration) || duration <= 0) return;
+        commit((current) => ({ ...current, duration }));
       };
       const onPlay = () => {
         if (!playbackIntentRef.current) {
@@ -174,6 +186,7 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
       audio.addEventListener('timeupdate', onTimeUpdate);
       audio.addEventListener('loadstart', onLoadStart);
       audio.addEventListener('loadedmetadata', onLoadedMetadata);
+      audio.addEventListener('durationchange', onDurationChange);
       audio.addEventListener('play', onPlay);
       audio.addEventListener('pause', onPause);
       audio.addEventListener('ended', onEnded);
@@ -182,6 +195,7 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
         audio.removeEventListener('timeupdate', onTimeUpdate);
         audio.removeEventListener('loadstart', onLoadStart);
         audio.removeEventListener('loadedmetadata', onLoadedMetadata);
+        audio.removeEventListener('durationchange', onDurationChange);
         audio.removeEventListener('play', onPlay);
         audio.removeEventListener('pause', onPause);
         audio.removeEventListener('ended', onEnded);
