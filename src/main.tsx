@@ -6,6 +6,7 @@ import './styles/global.css';
 import './styles/mobile-redesign.css';
 import './styles/a071-update.css';
 import './styles/analytics.css';
+import './styles/visual-video.css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

@@ -1,0 +1,65 @@
+/* Visual release cards follow the source video ratio instead of an artwork crop. */
+.release-card--video {
+  align-self: start;
+}
+
+.release-card--video .release-cover--video {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: auto;
+  align-self: start;
+  background: #000;
+}
+
+.release-video-preview {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-width: 100%;
+  aspect-ratio: auto;
+  object-fit: contain;
+  object-position: center;
+  background: #000;
+}
+
+/* Give the detail player room for both landscape videos and portrait reels. */
+.detail-header--video {
+  grid-template-columns: minmax(0, min(720px, 55%)) minmax(0, 1fr);
+  align-items: start;
+}
+
+.detail-cover--video {
+  display: flex;
+  width: fit-content;
+  max-width: 100%;
+  max-height: min(72vh, 760px);
+  height: auto;
+  aspect-ratio: auto;
+  align-self: start;
+  justify-self: center;
+  background: #000;
+}
+
+.detail-cover--video .detail-media {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: min(72vh, 760px);
+  aspect-ratio: auto;
+  object-fit: contain;
+  object-position: center;
+  background: #000;
+}
+
+@media (max-width: 900px) {
+  .detail-header--video {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .detail-cover--video {
+    width: min(100%, 720px);
+    max-width: 100%;
+  }
+}

@@ -19,6 +19,7 @@ export function ReleaseDetailPage() {
   const [isCoverOpen, setIsCoverOpen] = useState(false);
   const [trackDurations, setTrackDurations] = useState<Record<string, number>>({});
   const release = releases.find((item) => item.slug === id);
+  const prefersReducedMotion = typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true;
   useEffect(() => {
     if (!isCoverOpen) return undefined;
     const close = (event: KeyboardEvent) => { if (event.key === 'Escape') setIsCoverOpen(false); };
@@ -101,9 +102,9 @@ export function ReleaseDetailPage() {
     setQueue(filteredQueue); playTrack(activeTrack);
   };
   return <div className="page-section release-detail">
-    <div className="detail-header">
-      <div className="detail-cover">
-        {release.contentType === 'visual' && release.visual_url ? <video className="detail-media" src={release.visual_url} poster={release.artwork_url ?? undefined} controls playsInline aria-label={`${release.title} animation`} /> : release.artwork_url ? <button type="button" className="detail-cover-button" onClick={() => setIsCoverOpen(true)} aria-label={`View ${release.title} artwork full size`}><img src={release.artwork_url} alt={release.title} /></button> : <div className="release-cover--placeholder" aria-label={`${release.title} has no artwork yet`}><span>{release.contentType}</span><strong>{release.title}</strong></div>}
+    <div className={release.contentType === 'visual' && release.visual_url ? 'detail-header detail-header--video' : 'detail-header'}>
+      <div className={release.contentType === 'visual' && release.visual_url ? 'detail-cover detail-cover--video' : 'detail-cover'}>
+        {release.contentType === 'visual' && release.visual_url ? <video className="detail-media" src={release.visual_url} poster={release.artwork_url ?? undefined} autoPlay={!prefersReducedMotion} muted preload="metadata" controls playsInline aria-label={`${release.title} video`} /> : release.artwork_url ? <button type="button" className="detail-cover-button" onClick={() => setIsCoverOpen(true)} aria-label={`View ${release.title} artwork full size`}><img src={release.artwork_url} alt={release.title} /></button> : <div className="release-cover--placeholder" aria-label={`${release.title} has no artwork yet`}><span>{release.contentType}</span><strong>{release.title}</strong></div>}
       </div>
       <div className="detail-copy"><p className="eyebrow">{releaseTypeLabel(release)}</p><h1>{release.title}</h1><p className="detail-date">{isUpcoming(release) ? `Coming soon · ${formatReleaseDate(shouldShowReleaseDate(release) ? release.release_date : null)}` : formatReleaseDate(shouldShowReleaseDate(release) ? release.release_date : null)}</p><p>{release.description}</p>
         <div className="detail-actions">{isMusic && <button type="button" className="button primary" onClick={() => { const firstPlayable = playableTracks[0]; if (firstPlayable) handlePlayTrack((release.tracks ?? []).findIndex((track) => track.id === firstPlayable.id)); }} disabled={playableTracks.length === 0}>Play {release.type === 'album' ? 'album' : 'single'}</button>}<Link to={publicRoutes.releases} className="button secondary">Back to releases</Link></div>

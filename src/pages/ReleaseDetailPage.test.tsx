@@ -3,6 +3,7 @@ import { createRoot, type Root } from 'react-dom/client';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ReleaseDetailPage } from './ReleaseDetailPage';
+import type { Release } from '../types';
 
 const mocks = vi.hoisted(() => ({ catalog: {} as Record<string, unknown>, setQueue: vi.fn(), playTrack: vi.fn() }));
 vi.mock('../features/catalog/CatalogProvider', () => ({ useCatalog: () => mocks.catalog }));
@@ -50,7 +51,7 @@ describe('ReleaseDetailPage media metadata', () => {
     vi.useRealTimers();
   });
 
-  function render(release: typeof musicRelease | typeof visualRelease) {
+  function render(release: Release) {
     mocks.catalog = { releases: [release], isReady: true, catalogError: null };
     act(() => root.render(<MemoryRouter initialEntries={[`/releases/${release.slug}`]}><Routes><Route path="/releases/:id" element={<ReleaseDetailPage />} /></Routes></MemoryRouter>));
   }
@@ -74,6 +75,29 @@ describe('ReleaseDetailPage media metadata', () => {
     render(visualRelease);
     expect(container.querySelector('.tracklist-block')).toBeNull();
     expect(probes).toHaveLength(0);
+  });
+
+  it('starts the original visual video muted with native controls and the video layout', () => {
+    render({ ...visualRelease, visual_url: 'https://cdn.example/portrait-reel.mp4' });
+    const video = container.querySelector('video.detail-media') as HTMLVideoElement;
+    expect(video).toBeTruthy();
+    expect(video.getAttribute('src')).toBe('https://cdn.example/portrait-reel.mp4');
+    expect(video.autoplay).toBe(true);
+    expect(video.muted).toBe(true);
+    expect(video.controls).toBe(true);
+    expect(video.playsInline).toBe(true);
+    expect(container.querySelector('.detail-header--video')).toBeTruthy();
+    expect(container.querySelector('.detail-cover--video')).toBeTruthy();
+  });
+
+  it('keeps native controls but does not autoplay when reduced motion is preferred', () => {
+    vi.stubGlobal('matchMedia', vi.fn().mockReturnValue({ matches: true }));
+    render({ ...visualRelease, visual_url: 'https://cdn.example/portrait-reel.mp4' });
+    const video = container.querySelector('video.detail-media') as HTMLVideoElement;
+    expect(video.autoplay).toBe(false);
+    expect(video.muted).toBe(true);
+    expect(video.controls).toBe(true);
+    expect(video.playsInline).toBe(true);
   });
 
   it('does not probe or show a playable duration for an unpublished track', () => {
