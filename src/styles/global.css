@@ -329,6 +329,11 @@ h3 {
   background: linear-gradient(135deg, var(--panel-alt), var(--line));
 }
 
+.hero-visual-group {
+  display: grid;
+  gap: 4px;
+}
+
 .feature-card,
 .admin-panel {
   display: grid;
@@ -416,6 +421,66 @@ h3 {
   color: var(--ink);
   border-bottom: 1px solid var(--line);
   padding-bottom: 2px;
+}
+
+.home-latest-release-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: fit-content;
+  min-height: 36px;
+  padding: 0 0 2px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  white-space: nowrap;
+  font-size: 0.78rem;
+  letter-spacing: 0.02em;
+  color: var(--muted);
+  margin-inline-start: calc(100% - min(100%, 320px) + 8px);
+  transition: color 0.2s ease;
+}
+
+.home-latest-release-link__arrow {
+  display: inline-block;
+  color: var(--muted);
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.home-latest-release-link:hover,
+.home-latest-release-link:focus-visible {
+  color: var(--ink);
+}
+
+.home-latest-release-link:hover .home-latest-release-link__arrow,
+.home-latest-release-link:focus-visible .home-latest-release-link__arrow {
+  color: var(--ink);
+  transform: translateX(3px);
+}
+
+.home-latest-release-link:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+}
+
+@media (max-width: 640px) {
+  .home-latest-release-link {
+    margin-inline-start: calc(50% - min(44%, 160px) + 8px);
+    min-height: 34px;
+    font-size: 0.76rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-latest-release-link,
+  .home-latest-release-link__arrow {
+    transition: none;
+  }
+
+  .home-latest-release-link:hover .home-latest-release-link__arrow,
+  .home-latest-release-link:focus-visible .home-latest-release-link__arrow {
+    transform: none;
+  }
 }
 
 .tracklist {
