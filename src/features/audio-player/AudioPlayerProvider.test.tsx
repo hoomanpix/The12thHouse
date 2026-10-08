@@ -6,10 +6,10 @@ import { AudioPlayerProvider, useAudioPlayer } from './AudioPlayerProvider';
 import type { AudioQueueItem } from './types';
 import { DEFAULT_VOLUME } from './volume';
 
-const backend = vi.hoisted(() => ({ createSignedUrl: vi.fn() }));
+const backend = vi.hoisted(() => ({ createSignedUrl: vi.fn(), from: vi.fn(), insertTrackView: vi.fn() }));
 vi.mock('../../lib/supabase', () => ({
   isSupabaseConfigured: true,
-  supabase: { storage: { from: () => ({ createSignedUrl: backend.createSignedUrl }) } },
+  supabase: { from: backend.from, storage: { from: () => ({ createSignedUrl: backend.createSignedUrl }) } },
 }));
 
 class FakeAudio extends EventTarget {
@@ -105,6 +105,8 @@ describe('AudioPlayerProvider interactions', () => {
     FakeAudioContext.rejectResume = false;
     player = null;
     backend.createSignedUrl.mockReset().mockResolvedValue({ data: { signedUrl: 'https://cdn.example/refreshed.mp3' }, error: null });
+    backend.from.mockReset().mockReturnValue({ insert: backend.insertTrackView });
+    backend.insertTrackView.mockReset().mockResolvedValue({ error: null });
     vi.stubGlobal('Audio', FakeAudio);
     container = document.createElement('div');
     document.body.appendChild(container);
@@ -116,6 +118,26 @@ describe('AudioPlayerProvider interactions', () => {
     expect(FakeAudioContext.instances.every((context) => context.state === 'closed')).toBe(true);
     container.remove();
     vi.unstubAllGlobals();
+  });
+
+  it('records one qualified track view at 30 seconds, not at selection or a shorter listen', async () => {
+    render();
+    await act(async () => { player!.setQueue(queue); player!.playTrack(queue[0]); await Promise.resolve(); });
+    const audio = FakeAudio.instances[0];
+
+    audio.currentTime = 29;
+    act(() => audio.dispatchEvent(new Event('timeupdate')));
+    expect(backend.insertTrackView).not.toHaveBeenCalled();
+
+    audio.currentTime = 30;
+    await act(async () => { audio.dispatchEvent(new Event('timeupdate')); await Promise.resolve(); });
+    expect(backend.from).toHaveBeenCalledWith('track_view_events');
+    expect(backend.insertTrackView).toHaveBeenCalledTimes(1);
+    expect(backend.insertTrackView).toHaveBeenCalledWith(expect.objectContaining({ track_id: 'one', session_id: expect.any(String) }));
+
+    audio.currentTime = 45;
+    act(() => audio.dispatchEvent(new Event('timeupdate')));
+    expect(backend.insertTrackView).toHaveBeenCalledTimes(1);
   });
 
   it('keeps the volume slider operational through a Web Audio gain node when native volume is unavailable', async () => {

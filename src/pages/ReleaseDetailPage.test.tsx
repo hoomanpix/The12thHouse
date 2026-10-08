@@ -51,7 +51,7 @@ describe('ReleaseDetailPage media metadata', () => {
   });
 
   function render(release: typeof musicRelease | typeof visualRelease) {
-    mocks.catalog = { releases: [release], recordPlay: vi.fn(), isReady: true, catalogError: null };
+    mocks.catalog = { releases: [release], isReady: true, catalogError: null };
     act(() => root.render(<MemoryRouter initialEntries={[`/releases/${release.slug}`]}><Routes><Route path="/releases/:id" element={<ReleaseDetailPage />} /></Routes></MemoryRouter>));
   }
 

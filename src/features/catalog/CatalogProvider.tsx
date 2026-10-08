@@ -46,7 +46,6 @@ interface CatalogContextValue {
   addPlatformLink: (releaseId: string, link: Omit<PlatformLink, 'id' | 'order'>) => Promise<MutationResult & { id?: string }>;
   updatePlatformLink: (releaseId: string, linkId: string, update: Partial<PlatformLink>) => Promise<MutationResult>;
   removePlatformLink: (releaseId: string, linkId: string) => Promise<MutationResult>;
-  recordPlay: (releaseId: string, trackId: string) => void;
   resetCatalog: () => Promise<MutationResult>;
 }
 
@@ -439,14 +438,9 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
     return loadRemote(Boolean(user));
   }, [loadRemote, releases, user]);
 
-  const recordPlay = useCallback((releaseId: string, trackId: string) => {
-    if (releases.find((release) => release.id === releaseId)?.contentType !== 'music') return;
-    if (isSupabaseConfigured) void supabase.rpc('increment_track_play', { p_track_id: trackId });
-    else setReleases((current) => current.map((release) => release.id === releaseId ? { ...release, tracks: (release.tracks ?? []).map((track) => track.id === trackId ? { ...track, play_count: (track.play_count ?? 0) + 1 } : track) } : release));
-  }, [releases]);
   const resetCatalog = useCallback(() => localMockMode ? (setReleases(fallbackReleases), Promise.resolve({})) : loadRemote(Boolean(user)), [loadRemote, user]);
 
-  const value = useMemo(() => ({ artist, releases, upcomingReleases: releases.filter((release) => !release.published), homeCardIds, homeHeroId, homeHeroError, user, isRecoveringPassword, catalogError, isReady, isRemote: isSupabaseConfigured, signIn, signUp, resetPassword, updatePassword, signOut, reloadCatalog, updateRelease, addRelease, removeRelease, updateHomeCard, updateHomeHero, addTrack, removeTrack, updateTrack, saveTrackOrder, saveArtwork, removeArtwork, saveTrackAudio, removeTrackAudio, saveVisualMedia, removeVisualMedia, addPlatformLink, updatePlatformLink, removePlatformLink, recordPlay, resetCatalog }), [artist, releases, homeCardIds, homeHeroId, homeHeroError, user, isRecoveringPassword, catalogError, isReady, signIn, signUp, resetPassword, updatePassword, signOut, reloadCatalog, updateRelease, addRelease, removeRelease, updateHomeCard, updateHomeHero, addTrack, removeTrack, updateTrack, saveTrackOrder, saveArtwork, removeArtwork, saveTrackAudio, removeTrackAudio, saveVisualMedia, removeVisualMedia, addPlatformLink, updatePlatformLink, removePlatformLink, recordPlay, resetCatalog]);
+  const value = useMemo(() => ({ artist, releases, upcomingReleases: releases.filter((release) => !release.published), homeCardIds, homeHeroId, homeHeroError, user, isRecoveringPassword, catalogError, isReady, isRemote: isSupabaseConfigured, signIn, signUp, resetPassword, updatePassword, signOut, reloadCatalog, updateRelease, addRelease, removeRelease, updateHomeCard, updateHomeHero, addTrack, removeTrack, updateTrack, saveTrackOrder, saveArtwork, removeArtwork, saveTrackAudio, removeTrackAudio, saveVisualMedia, removeVisualMedia, addPlatformLink, updatePlatformLink, removePlatformLink, resetCatalog }), [artist, releases, homeCardIds, homeHeroId, homeHeroError, user, isRecoveringPassword, catalogError, isReady, signIn, signUp, resetPassword, updatePassword, signOut, reloadCatalog, updateRelease, addRelease, removeRelease, updateHomeCard, updateHomeHero, addTrack, removeTrack, updateTrack, saveTrackOrder, saveArtwork, removeArtwork, saveTrackAudio, removeTrackAudio, saveVisualMedia, removeVisualMedia, addPlatformLink, updatePlatformLink, removePlatformLink, resetCatalog]);
   return <CatalogContext.Provider value={value}>{children}</CatalogContext.Provider>;
 }
 

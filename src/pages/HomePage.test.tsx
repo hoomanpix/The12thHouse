@@ -30,7 +30,7 @@ describe('HomePage Hero selection', () => {
     root = createRoot(container);
     mocks.catalog = {
       artist: { id: 'artist-1', name: 'The Artist' }, releases: [featuredMusic, selectedHero],
-      homeHeroId: selectedHero.id, homeCardIds: [], recordPlay: vi.fn(), isReady: true, catalogError: null,
+      homeHeroId: selectedHero.id, homeCardIds: [], isReady: true, catalogError: null,
     };
     mocks.setQueue.mockClear();
     mocks.playTrack.mockClear();

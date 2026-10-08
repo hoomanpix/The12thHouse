@@ -9,6 +9,7 @@ import {
 } from 'react';
 import type { AudioQueueItem, PlayerState } from './types';
 import { isSupabaseConfigured, supabase } from '../../lib/supabase';
+import { advancePlaybackProgress, createPlaybackProgress, type PlaybackProgress } from './qualifiedViewTracking';
 import { eligibleAudioQueue, nextQueueItem, previousQueueItem } from './queue';
 import {
   applyGainVolume,
@@ -45,6 +46,26 @@ type ActiveAudioSource = {
 
 type PlayTrackOrigin = 'selection' | 'refresh' | 'resume';
 
+function createPlaybackSessionId() {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') return crypto.randomUUID();
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (character) => {
+    const random = Math.floor(Math.random() * 16);
+    return (character === 'x' ? random : (random & 0x3) | 0x8).toString(16);
+  });
+}
+
+function recordQualifiedTrackView(trackId: string, sessionId: string) {
+  if (!isSupabaseConfigured || (import.meta.env.DEV && import.meta.env.VITE_USE_MOCK_DATA === 'true')) return;
+  void (async () => {
+    try {
+      const { error } = await supabase.from('track_view_events').insert({ track_id: trackId, session_id: sessionId });
+      if (error) console.warn('Qualified track view could not be recorded.', error.message);
+    } catch (error) {
+      console.warn('Qualified track view could not be recorded.', error);
+    }
+  })();
+}
+
 const initialState: PlayerState = {
   isPlaying: false,
   currentTime: 0,
@@ -74,6 +95,7 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
   const playbackRequestRef = useRef(0);
   const sourceGenerationRef = useRef(0);
   const activeSourceRef = useRef<ActiveAudioSource | null>(null);
+  const playbackProgressRef = useRef<(PlaybackProgress & { trackId: string; sessionId: string }) | null>(null);
   const playbackIntentRef = useRef(false);
   const pendingAutoplayRef = useRef(false);
   const volumeRef = useRef(DEFAULT_VOLUME);
@@ -142,6 +164,20 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
           currentTime: audio.currentTime,
           ...(Number.isFinite(duration) && duration > 0 ? { duration } : {}),
         }));
+        const source = activeSourceRef.current;
+        const progress = playbackProgressRef.current;
+        if (!source || !progress || progress.trackId !== source.trackId) return;
+        const result = advancePlaybackProgress(
+          progress,
+          audio.currentTime,
+          !audio.paused && !audio.seeking && stateRef.current.isPlaying,
+        );
+        playbackProgressRef.current = {
+          ...result.progress,
+          trackId: progress.trackId,
+          sessionId: progress.sessionId,
+        };
+        if (result.qualified) recordQualifiedTrackView(progress.trackId, progress.sessionId);
       };
       const onLoadStart = () => commit((current) => ({ ...current, status: 'loading', isReady: false, error: null }));
       const onLoadedMetadata = () => {
@@ -159,13 +195,18 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
           return;
         }
         pendingAutoplayRef.current = false;
+        if (playbackProgressRef.current) playbackProgressRef.current.lastMediaTime = audio.currentTime;
         commit((current) => ({ ...current, isPlaying: true, status: 'playing', error: null }));
       };
       const onPause = () => {
         if (pendingAutoplayRef.current && playbackIntentRef.current) return;
+        if (playbackProgressRef.current) playbackProgressRef.current.lastMediaTime = null;
         commit((current) => current.status === 'error'
           ? current
           : { ...current, isPlaying: false, status: current.isReady ? 'paused' : current.status });
+      };
+      const onSeeking = () => {
+        if (playbackProgressRef.current) playbackProgressRef.current.lastMediaTime = null;
       };
       const onEnded = () => {
         const current = stateRef.current;
@@ -184,6 +225,7 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
         void refreshAudioRef.current(source);
       };
       audio.addEventListener('timeupdate', onTimeUpdate);
+      audio.addEventListener('seeking', onSeeking);
       audio.addEventListener('loadstart', onLoadStart);
       audio.addEventListener('loadedmetadata', onLoadedMetadata);
       audio.addEventListener('durationchange', onDurationChange);
@@ -193,6 +235,7 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
       audio.addEventListener('error', onError);
       cleanupAudioRef.current = () => {
         audio.removeEventListener('timeupdate', onTimeUpdate);
+        audio.removeEventListener('seeking', onSeeking);
         audio.removeEventListener('loadstart', onLoadStart);
         audio.removeEventListener('loadedmetadata', onLoadedMetadata);
         audio.removeEventListener('durationchange', onDurationChange);
@@ -234,6 +277,7 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
       refreshAttemptRef.current = null;
       refreshInFlightRef.current = null;
       activeSourceRef.current = null;
+      playbackProgressRef.current = null;
       if (audioRef.current) {
         audioRef.current.pause();
         audioRef.current.removeAttribute('src');
@@ -256,6 +300,7 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
     refreshAttemptRef.current = null;
     refreshInFlightRef.current = null;
     activeSourceRef.current = null;
+    playbackProgressRef.current = null;
     const audio = ensureAudio();
     audio.pause();
     audio.removeAttribute('src');
@@ -347,6 +392,16 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
       audio.load();
     } else if (origin !== 'resume') {
       try { audio.currentTime = 0; } catch { /* Metadata may not be ready yet. */ }
+    }
+
+    if (origin === 'selection' || !playbackProgressRef.current || playbackProgressRef.current.trackId !== item.trackId) {
+      playbackProgressRef.current = {
+        ...createPlaybackProgress(audio.currentTime),
+        trackId: item.trackId,
+        sessionId: createPlaybackSessionId(),
+      };
+    } else if (origin === 'refresh') {
+      playbackProgressRef.current.lastMediaTime = null;
     }
 
     if (autoplay) {
