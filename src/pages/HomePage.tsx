@@ -10,7 +10,7 @@ import { releaseTypeLabel } from '../lib/releaseSemantics';
 
 export function HomePage() {
   const { setQueue, playTrack } = useAudioPlayer();
-  const { artist, releases, homeCardIds, homeHeroId, recordPlay, isReady, catalogError } = useCatalog();
+  const { artist, releases, homeCardIds, homeHeroId, isReady, catalogError } = useCatalog();
   if (!isReady) return <div className="page-section"><p className="release-empty" role="status">Loading catalog…</p></div>;
   if (catalogError) return <div className="page-section"><p className="release-empty" role="alert">Catalog unavailable. Please try again later.</p></div>;
   const visibleReleases = releases.filter(isPublished);
@@ -29,7 +29,7 @@ export function HomePage() {
       audioReference: track.audio_reference ?? null, artworkUrl: release.artwork_url, releaseTitle: release.title,
     }));
     setQueue(queue);
-    if (queue[0]) { recordPlay(release.id, queue[0].trackId); playTrack(queue[0]); }
+    if (queue[0]) playTrack(queue[0]);
   };
   if (!featuredRelease && !heroRelease && homeCards.length === 0) return <div className="page-section"><p className="release-empty">No public releases are available yet.</p></div>;
   return (
