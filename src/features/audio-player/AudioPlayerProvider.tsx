@@ -43,7 +43,7 @@ type ActiveAudioSource = {
   audioReference: string | null;
 };
 
-type PlayTrackOrigin = 'selection' | 'refresh';
+type PlayTrackOrigin = 'selection' | 'refresh' | 'resume';
 
 const initialState: PlayerState = {
   isPlaying: false,
@@ -300,16 +300,18 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
       return;
     }
 
-    commit((current) => ({
-      ...current,
-      activeTrackId: item.trackId,
-      isPlaying: false,
-      currentTime: 0,
-      duration: 0,
-      status: 'loading',
-      isReady: false,
-      error: null,
-    }));
+    commit((current) => origin === 'resume'
+      ? { ...current, activeTrackId: item.trackId, isPlaying: false }
+      : {
+        ...current,
+        activeTrackId: item.trackId,
+        isPlaying: false,
+        currentTime: 0,
+        duration: 0,
+        status: 'loading',
+        isReady: false,
+        error: null,
+      });
 
     const sourceChanged = origin === 'refresh'
       || Boolean(audio.error)
@@ -343,7 +345,7 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
     if (audio.src !== item.audioUrl) {
       audio.src = item.audioUrl;
       audio.load();
-    } else {
+    } else if (origin !== 'resume') {
       try { audio.currentTime = 0; } catch { /* Metadata may not be ready yet. */ }
     }
 
@@ -487,7 +489,14 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
       return;
     }
     const active = current.queue.find((item) => item.trackId === current.activeTrackId) ?? current.queue[0];
-    if (active) playTrackRef.current(active, true);
+    if (active) {
+      const source = activeSourceRef.current;
+      const canResume = source?.audio === audio
+        && source.trackId === active.trackId
+        && source.audioUrl === active.audioUrl
+        && !audio.error;
+      playTrackRef.current(active, true, canResume ? 'resume' : 'selection');
+    }
   }, [commit, ensureAudio]);
 
   const seek = useCallback((value: number) => {
