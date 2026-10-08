@@ -390,6 +390,42 @@ describe('AudioPlayerProvider interactions', () => {
     expect(FakeAudio.instances[FakeAudio.instances.length - 1].playCalls).toBe(0);
   });
 
+  it('resumes the active track from its paused playhead', async () => {
+    render();
+    await act(async () => { player!.setQueue(queue); player!.playTrack(queue[0]); await Promise.resolve(); });
+    const audio = FakeAudio.instances[0];
+    audio.currentTime = 42;
+    act(() => audio.dispatchEvent(new Event('loadedmetadata')));
+    act(() => audio.dispatchEvent(new Event('timeupdate')));
+    expect(player!.state.currentTime).toBe(42);
+
+    const playCallsBeforePause = audio.playCalls;
+    act(() => player!.togglePlay());
+    expect(player!.state.isPlaying).toBe(false);
+    expect(audio.paused).toBe(true);
+    expect(audio.currentTime).toBe(42);
+
+    await act(async () => { player!.togglePlay(); await Promise.resolve(); });
+    expect(player!.state.isPlaying).toBe(true);
+    expect(audio.currentTime).toBe(42);
+    expect(player!.state.currentTime).toBe(42);
+    expect(audio.playCalls).toBe(playCallsBeforePause + 1);
+  });
+
+  it('starts at the beginning when the active track is explicitly selected', async () => {
+    render();
+    await act(async () => { player!.setQueue(queue); player!.playTrack(queue[0]); await Promise.resolve(); });
+    const audio = FakeAudio.instances[0];
+    audio.currentTime = 42;
+    act(() => audio.dispatchEvent(new Event('timeupdate')));
+    expect(player!.state.currentTime).toBe(42);
+
+    await act(async () => { player!.playTrack(queue[0]); await Promise.resolve(); });
+    expect(player!.state.activeTrackId).toBe('one');
+    expect(audio.currentTime).toBe(0);
+    expect(player!.state.currentTime).toBe(0);
+  });
+
   it('keeps web volume and mute state across track changes', async () => {
     render();
     act(() => player!.setVolume(0.42));
