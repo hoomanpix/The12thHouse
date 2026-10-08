@@ -63,7 +63,7 @@ export function HomePage() {
             </Link></div>
             <div className="feature-copy"><p className="release-type">{isUpcoming(release) ? 'Coming soon' : releaseTypeLabel(release)}</p><h3>{release.title}</h3>
               <time className="release-date" dateTime={release.release_date ?? undefined}>{formatReleaseDate(shouldShowReleaseDate(release) ? release.release_date : null)}</time><p>{release.description}</p>
-              <div className="home-feature-actions"><Link to={`/releases/${release.slug}`} className="text-link">{release.type === 'album' ? 'View the Tracks' : 'View the Track'}</Link>{release.contentType === 'music' && isPublished(release) && <button type="button" className="text-link home-release-play" onClick={() => playRelease(release)}>Play Now</button>}</div>
+              <div className="home-feature-actions"><Link to={`/releases/${release.slug}`} className="text-link">{release.type === 'album' ? 'View the Tracks' : 'View the Track'}</Link>{release.contentType === 'music' && <button type="button" className="text-link home-release-play" onClick={() => playRelease(release)} disabled={!isPublished(release)} aria-label={isPublished(release) ? `Play ${release.title} now` : `${release.title} is not available to play yet`}>Play Now</button>}</div>
             </div>
           </article>)}
         </div>
