@@ -63,7 +63,7 @@ export function HomePage() {
             </Link></div>
             <div className="feature-copy"><p className="release-type">{isUpcoming(release) ? 'Coming soon' : releaseTypeLabel(release)}</p><h3>{release.title}</h3>
               <time className="release-date" dateTime={release.release_date ?? undefined}>{formatReleaseDate(shouldShowReleaseDate(release) ? release.release_date : null)}</time><p>{release.description}</p>
-              <div className="home-feature-actions"><Link to={`/releases/${release.slug}`} className="text-link">View release</Link>{release.contentType === 'music' && isPublished(release) && <button type="button" className="text-link home-release-play" onClick={() => playRelease(release)}>Play selection</button>}</div>
+              <div className="home-feature-actions"><Link to={`/releases/${release.slug}`} className="text-link">View the Track(s)</Link>{release.contentType === 'music' && isPublished(release) && <button type="button" className="text-link home-release-play" onClick={() => playRelease(release)}>Play Now</button>}</div>
             </div>
           </article>)}
         </div>
