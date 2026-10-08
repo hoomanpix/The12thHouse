@@ -650,6 +650,7 @@
 .home-feature-actions .text-link {
   border-bottom: 0;
   text-decoration-line: underline;
+  text-decoration-color: var(--line);
   text-decoration-thickness: 1px;
   text-underline-offset: 2px;
 }
