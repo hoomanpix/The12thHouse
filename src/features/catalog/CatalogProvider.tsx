@@ -287,10 +287,22 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
 
   const addTrack = useCallback(async (releaseId: string, track: Omit<Track, 'id' | 'release_id' | 'order'>) => {
     const release = releases.find((item) => item.id === releaseId);
-    if (!release || release.contentType !== 'music') return { error: 'Tracks can only be added to music releases.' };
+    if (!isSupabaseConfigured) {
+      if (!release || release.contentType !== 'music') return { error: 'Tracks can only be added to music releases.' };
+      const id = makeId();
+      const order = (release.tracks?.length ?? 0) + 1;
+      setReleases((current) => current.map((item) => item.id === releaseId ? { ...item, tracks: [...(item.tracks ?? []), { ...track, id, release_id: releaseId, order }] } : item));
+      return { id };
+    }
+    if (release && release.contentType !== 'music') return { error: 'Tracks can only be added to music releases.' };
+    let order = (release?.tracks?.length ?? 0) + 1;
+    if (!release) {
+      const lookup = await supabase.from('albums').select('content_type, tracks(id)').eq('id', releaseId).maybeSingle();
+      if (lookup.error) return { error: lookup.error.message };
+      if (lookup.data?.content_type !== 'music') return { error: 'Tracks can only be added to music releases.' };
+      order = (lookup.data.tracks?.length ?? 0) + 1;
+    }
     const id = makeId();
-    const order = (release?.tracks?.length ?? 0) + 1;
-    if (!isSupabaseConfigured) { setReleases((current) => current.map((item) => item.id === releaseId ? { ...item, tracks: [...(item.tracks ?? []), { ...track, id, release_id: releaseId, order }] } : item)); return { id }; }
     const { error } = await supabase.from('tracks').insert({ id, ...trackRow(releaseId, { ...track, order }) });
     if (error) return { error: error.message };
     const reloadError = await loadRemote(Boolean(user));
@@ -362,8 +374,17 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
   }, [loadRemote, releases, user]);
 
   const saveTrackAudio = useCallback(async (releaseId: string, trackId: string, file: File) => {
-    if (releases.find((release) => release.id === releaseId)?.contentType !== 'music') return { error: 'Audio files can only be saved for music releases.' };
-    if (!isSupabaseConfigured) return { error: 'Supabase Storage is not configured.' };
+    const release = releases.find((item) => item.id === releaseId);
+    if (!isSupabaseConfigured) {
+      if (release?.contentType !== 'music') return { error: 'Audio files can only be saved for music releases.' };
+      return { error: 'Supabase Storage is not configured.' };
+    }
+    if (release && release.contentType !== 'music') return { error: 'Audio files can only be saved for music releases.' };
+    if (!release) {
+      const lookup = await supabase.from('albums').select('content_type').eq('id', releaseId).maybeSingle();
+      if (lookup.error) return { error: lookup.error.message };
+      if (lookup.data?.content_type !== 'music') return { error: 'Audio files can only be saved for music releases.' };
+    }
     const extension = file.name.split('.').pop()?.toLowerCase().replace(/[^a-z0-9]/g, '') || 'audio';
     const path = `${releaseId}/${trackId}-${Date.now()}.${extension}`;
     const upload = await supabase.storage.from('audio').upload(path, file, { upsert: false, contentType: file.type || undefined, cacheControl: '3600' });
