@@ -59,7 +59,7 @@
   }
 
   .detail-cover--video {
-    width: min(100%, 720px);
+    width: fit-content;
     max-width: 100%;
   }
 }

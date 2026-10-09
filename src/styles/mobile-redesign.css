@@ -446,7 +446,7 @@
   }
 
   .player-strip {
-    grid-template-columns: auto minmax(0, 1fr) minmax(48px, 74px) auto;
+    grid-template-columns: auto minmax(0, 1fr) minmax(48px, 74px);
     min-height: 48px;
     padding-bottom: 6px;
   }
@@ -462,11 +462,6 @@
   .player-button--primary {
     width: 28px;
     height: 28px;
-  }
-
-  .player-button--compact {
-    min-height: 28px;
-    padding: 0 8px;
   }
 
   .player-detail__topbar {
