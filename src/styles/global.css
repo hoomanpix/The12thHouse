@@ -452,6 +452,10 @@ h3 {
   transition: color 0.2s ease;
 }
 
+.home-latest-release-link__text {
+  font-size: clamp(2rem, 4vw, 3.6rem);
+}
+
 .home-latest-release-link__arrow {
   display: inline-block;
   color: var(--muted);
