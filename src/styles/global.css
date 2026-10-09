@@ -456,6 +456,9 @@ h3 {
 
 .home-latest-release-link__text {
   font-size: clamp(2rem, 4vw, 3.6rem);
+  font-weight: 600;
+  letter-spacing: -0.06em;
+  line-height: 0.95;
   white-space: normal;
 }
 
