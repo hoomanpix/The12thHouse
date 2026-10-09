@@ -40,6 +40,17 @@ a {
   text-decoration: none;
 }
 
+/* Suppress the transient native gray/blue touch highlight without removing keyboard focus styles. */
+a,
+button,
+[role='button'],
+label,
+input,
+select,
+textarea {
+  -webkit-tap-highlight-color: transparent;
+}
+
 img {
   display: block;
   width: 100%;
