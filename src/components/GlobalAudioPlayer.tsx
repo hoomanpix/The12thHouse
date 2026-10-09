@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useAudioPlayer } from '../features/audio-player/AudioPlayerProvider';
 import { formatMediaDuration } from '../features/audio-player/duration';
 
 export function GlobalAudioPlayer() {
   const { state, togglePlay, playPrevious, playNext, seek, setVolume } = useAudioPlayer();
   const [isExpanded, setIsExpanded] = useState(false);
+  const playerRef = useRef<HTMLDivElement>(null);
 
   const activeTrack = useMemo(
     () => state.queue.find((item) => item.trackId === state.activeTrackId) ?? state.queue[0] ?? null,
@@ -17,26 +18,41 @@ export function GlobalAudioPlayer() {
   const artistName = activeTrack?.releaseTitle ?? 'The12thHouse';
 
   useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' && isExpanded) setIsExpanded(false);
+    if (!isExpanded) return;
+
+    const handlePointerDown = (event: PointerEvent) => {
+      if (!playerRef.current?.contains(event.target as Node)) setIsExpanded(false);
     };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setIsExpanded(false);
+    };
+
+    document.addEventListener('pointerdown', handlePointerDown, true);
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('pointerdown', handlePointerDown, true);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
   }, [isExpanded]);
 
   return (
-    <div className={`global-player ${isExpanded ? 'is-expanded' : ''}`}>
+    <div ref={playerRef} className={`global-player ${isExpanded ? 'is-expanded' : ''}`}>
       <div className="player-shell">
-        <div className="player-strip">
-          <div className="player-strip__cover-frame" aria-hidden="true">
+        <button
+          type="button"
+          className="player-strip"
+          aria-label={`${isExpanded ? 'Collapse' : 'Expand'} player: ${trackTitle} — ${artistName}`}
+          aria-expanded={isExpanded}
+          onClick={() => setIsExpanded((current) => !current)}
+        >
+          <span className="player-strip__cover-frame" aria-hidden="true">
             {activeTrack?.artworkUrl
               ? <img className="player-strip__cover" src={activeTrack.artworkUrl} alt="" />
               : <span className="player-strip__cover player-strip__cover--empty" />}
-          </div>
-          <div className="player-strip__meta"><span className="player-strip__title">{trackTitle}</span><span className="player-strip__artist">{artistName}</span></div>
-          <div className="player-strip__progress" aria-hidden="true"><span className="player-strip__progress-bar" style={{ width: `${progress}%` }} /></div>
-          <button type="button" className="player-button player-button--compact" aria-label={isExpanded ? 'Collapse player' : 'Expand player'} aria-expanded={isExpanded} onClick={() => setIsExpanded((current) => !current)}><PlayerIcon name={isExpanded ? 'minus' : 'plus'} /></button>
-        </div>
+          </span>
+          <span className="player-strip__meta"><span className="player-strip__title">{trackTitle}</span><span className="player-strip__artist">{artistName}</span></span>
+          <span className="player-strip__progress" aria-hidden="true"><span className="player-strip__progress-bar" style={{ width: `${progress}%` }} /></span>
+        </button>
         {isExpanded && <div className="player-detail">
           <div className="player-detail__topbar"><span className="eyebrow">Now playing</span></div>
           <div className="player-detail__content">
@@ -71,15 +87,13 @@ export function GlobalAudioPlayer() {
   );
 }
 
-type PlayerIconName = 'play' | 'pause' | 'previous' | 'next' | 'plus' | 'minus';
+type PlayerIconName = 'play' | 'pause' | 'previous' | 'next';
 function PlayerIcon({ name }: { name: PlayerIconName }) {
   const paths = {
     play: <path d="M8 5.2v13.6L19 12 8 5.2Z" />,
     pause: <><path d="M7 5.5h3.5v13H7z" /><path d="M13.5 5.5H17v13h-3.5z" /></>,
     previous: <><path d="M6.5 5.5v13" /><path d="m18 6-8 6 8 6V6Z" /></>,
     next: <><path d="M17.5 5.5v13" /><path d="m6 6 8 6-8 6V6Z" /></>,
-    plus: <><path d="M12 5v14" /><path d="M5 12h14" /></>,
-    minus: <path d="M5 12h14" />,
   };
   return <svg className={`player-icon player-icon--${name}`} viewBox="0 0 24 24" aria-hidden="true" focusable="false">{paths[name]}</svg>;
 }

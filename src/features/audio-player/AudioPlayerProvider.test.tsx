@@ -156,7 +156,7 @@ describe('AudioPlayerProvider interactions', () => {
     expect(context.gainNodes[0].gain.value).toBe(DEFAULT_VOLUME);
     expect(FakeAudio.instances[0].crossOrigin).toBe('anonymous');
 
-    act(() => (container.querySelector('[aria-label="Expand player"]') as HTMLButtonElement).click());
+    act(() => (container.querySelector('button.player-strip') as HTMLButtonElement).click());
     const slider = container.querySelector('#volume-control') as HTMLInputElement;
     expect(slider.min).toBe('0');
     expect(slider.max).toBe('1');
@@ -177,11 +177,11 @@ describe('AudioPlayerProvider interactions', () => {
     act(() => player!.toggleMute());
     expect(context.gainNodes[0].gain.value).toBe(0.42);
 
-    act(() => (container.querySelector('[aria-label="Collapse player"]') as HTMLButtonElement).click());
+    act(() => (container.querySelector('button.player-strip') as HTMLButtonElement).click());
     act(() => player!.setVolume(0.35));
     expect(player!.state.isPlaying).toBe(true);
     expect(context.gainNodes[0].gain.value).toBe(0.35);
-    act(() => (container.querySelector('[aria-label="Expand player"]') as HTMLButtonElement).click());
+    act(() => (container.querySelector('button.player-strip') as HTMLButtonElement).click());
 
     await act(async () => { player!.playNext(); await Promise.resolve(); });
     expect(player!.state.activeTrackId).toBe('two');
@@ -286,7 +286,7 @@ describe('AudioPlayerProvider interactions', () => {
     act(() => nextAudio.dispatchEvent(new Event('timeupdate')));
     expect(player!.state.currentTime).toBe(32);
 
-    act(() => (container.querySelector('[aria-label="Expand player"]') as HTMLButtonElement).click());
+    act(() => (container.querySelector('button.player-strip') as HTMLButtonElement).click());
     const times = [...container.querySelectorAll('.player-progress-block > span')].map((node) => node.textContent);
     expect(times).toEqual(['0:32', '2:08']);
     const progress = container.querySelector('.player-strip__progress-bar') as HTMLElement;
@@ -335,7 +335,7 @@ describe('AudioPlayerProvider interactions', () => {
     audio.duration = 233.496;
     act(() => audio.dispatchEvent(new Event('durationchange')));
     expect(player!.state.duration).toBe(233.496);
-    act(() => (container.querySelector('[aria-label="Expand player"]') as HTMLButtonElement).click());
+    act(() => (container.querySelector('button.player-strip') as HTMLButtonElement).click());
     expect([...container.querySelectorAll('.player-progress-block > span')].map((node) => node.textContent)).toEqual(['0:00', '3:53']);
   });
 
@@ -366,7 +366,7 @@ describe('AudioPlayerProvider interactions', () => {
     act(() => audio.dispatchEvent(new Event('timeupdate')));
     expect(player!.state.duration).toBe(233.496);
     expect(player!.state.currentTime).toBe(17);
-    act(() => (container.querySelector('[aria-label="Expand player"]') as HTMLButtonElement).click());
+    act(() => (container.querySelector('button.player-strip') as HTMLButtonElement).click());
     expect([...container.querySelectorAll('.player-progress-block > span')].map((node) => node.textContent)).toEqual(['0:17', '3:53']);
   });
 
@@ -470,18 +470,18 @@ describe('AudioPlayerProvider interactions', () => {
     act(() => player!.setVolume(0.7));
     expect(player!.state.volume).toBe(0.4);
     expect(player!.state.volumeSupported).toBe(false);
-    act(() => (container.querySelector('[aria-label="Expand player"]') as HTMLButtonElement).click());
+    act(() => (container.querySelector('button.player-strip') as HTMLButtonElement).click());
     expect((container.querySelector('#volume-control') as HTMLInputElement).disabled).toBe(true);
     expect(container.textContent).toContain('Per-player volume adjustment is unavailable in this browser. Use your device’s volume controls.');
     expect(hasMuteButton()).toBe(false);
   });
 
-  it('keeps minimized artwork display-only and exposes explicit player controls', async () => {
+  it('keeps artwork from triggering playback and exposes explicit player controls', async () => {
     render(true);
     const coverFrame = container.querySelector('.player-strip__cover-frame');
-    expect(coverFrame?.tagName).toBe('DIV');
+    expect(coverFrame?.tagName).toBe('SPAN');
     expect(container.querySelector('.player-strip__cover-button')).toBeNull();
-    act(() => (container.querySelector('[aria-label="Expand player"]') as HTMLButtonElement).click());
+    act(() => (container.querySelector('button.player-strip') as HTMLButtonElement).click());
     expect(container.querySelector('.player-icon--previous')).toBeTruthy();
     expect(container.querySelector('.player-icon--next')).toBeTruthy();
     await act(async () => { player!.setQueue(queue); player!.playTrack(queue[0]); await Promise.resolve(); });
@@ -493,7 +493,7 @@ describe('AudioPlayerProvider interactions', () => {
 
   it('keeps an accessible working volume slider without a mute button', () => {
     render(true);
-    act(() => (container.querySelector('[aria-label="Expand player"]') as HTMLButtonElement).click());
+    act(() => (container.querySelector('button.player-strip') as HTMLButtonElement).click());
     const volume = container.querySelector('#volume-control') as HTMLInputElement;
     expect(volume).toBeTruthy();
     expect(volume.min).toBe('0');
