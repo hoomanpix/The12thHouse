@@ -435,22 +435,20 @@ h3 {
 }
 
 .home-latest-release-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
+  display: block;
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
   min-height: 36px;
   padding: 0 0 2px;
-  padding-inline-start: calc(100% - min(100%, 320px));
+  padding-inline-start: calc(100% - min(100%, 320px) + 8px);
   border: 0;
   border-radius: 0;
   background: transparent;
   white-space: normal;
   font-size: 0.78rem;
   letter-spacing: 0.02em;
-  color: var(--muted);
+  color: var(--ink);
   margin-inline-start: 0;
   justify-self: stretch;
   transition: color 0.2s ease;
@@ -463,7 +461,9 @@ h3 {
 
 .home-latest-release-link__arrow {
   display: inline-block;
-  color: var(--muted);
+  margin-inline-start: 8px;
+  white-space: nowrap;
+  color: var(--ink);
   transition: color 0.2s ease, transform 0.2s ease;
 }
 
@@ -485,7 +485,7 @@ h3 {
 
 @media (max-width: 640px) {
   .home-latest-release-link {
-    padding-inline-start: max(0px, calc((100% - min(88%, 320px)) / 2));
+    padding-inline-start: max(0px, calc((100% - min(88%, 320px)) / 2 + 8px));
     min-height: 34px;
     font-size: 0.76rem;
   }
