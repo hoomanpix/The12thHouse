@@ -1,6 +1,7 @@
-/* Visual release cards follow the source video ratio instead of an artwork crop. */
+/* Animated release previews retain the source video's intrinsic ratio. */
 .release-card--video {
   align-self: start;
+  min-width: 0;
 }
 
 .release-card--video .release-cover--video {
@@ -23,22 +24,291 @@
   background: #000;
 }
 
-/* Give the detail player room for both landscape videos and portrait reels. */
+.release-video-fallback {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 4 / 3;
+  object-fit: contain;
+  object-position: center;
+  background: var(--panel-alt);
+}
+
+.release-video-fallback--placeholder {
+  display: grid;
+  align-content: end;
+  gap: 8px;
+  padding: 18px;
+  color: var(--muted);
+}
+
+/* Frame artwork by content, rather than imposing a single crop on every image. */
+.home-hero-card .hero-visual {
+  aspect-ratio: 4 / 3;
+}
+
+.home-hero-card--music .hero-visual {
+  aspect-ratio: 1;
+}
+
+.home-hero-card--placeholder .hero-visual {
+  aspect-ratio: 1;
+}
+
+.home-hero-card--music .hero-visual img,
+.home-hero-card--music .hero-visual .hero-visual-placeholder,
+.home-hero-card--visual-cover .hero-visual img,
+.home-hero-card--visual-cover .hero-visual .hero-visual-placeholder {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  object-fit: contain;
+  object-position: center;
+}
+
+.home-hero-card--animation .hero-visual img,
+.home-hero-card--animation .hero-visual .hero-visual-placeholder {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  object-fit: cover;
+  object-position: center;
+}
+
+.home-hero-card .hero-visual img {
+  border-radius: var(--radius);
+  background: var(--panel-alt);
+}
+
+.home-feature-card.home-feature-card--music .feature-artwork,
+.home-feature-card.home-feature-card--visual-cover .feature-artwork,
+.home-feature-card.home-feature-card--animation .feature-artwork {
+  overflow: hidden;
+  border-radius: var(--radius);
+  background: var(--panel-alt);
+}
+
+.home-feature-card.home-feature-card--music .feature-artwork {
+  aspect-ratio: 1;
+}
+
+.home-feature-card.home-feature-card--visual-cover .feature-artwork,
+.home-feature-card.home-feature-card--animation .feature-artwork {
+  aspect-ratio: 4 / 3;
+}
+
+.home-feature-card .feature-artwork > a {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.home-feature-card.home-feature-card--music .feature-artwork img,
+.home-feature-card.home-feature-card--music .feature-artwork .home-feature-placeholder-artwork,
+.home-feature-card.home-feature-card--visual-cover .feature-artwork img,
+.home-feature-card.home-feature-card--visual-cover .feature-artwork .home-feature-placeholder-artwork {
+  display: block;
+  width: 100%;
+  height: 100%;
+  aspect-ratio: auto;
+  object-fit: contain;
+  object-position: center;
+  background: var(--panel-alt);
+}
+
+.home-feature-card.home-feature-card--animation .feature-artwork img,
+.home-feature-card.home-feature-card--animation .feature-artwork .home-feature-placeholder-artwork {
+  display: block;
+  width: 100%;
+  height: 100%;
+  aspect-ratio: auto;
+  object-fit: cover;
+  object-position: center;
+  background: var(--panel-alt);
+}
+
+.home-feature-card .home-feature-placeholder-artwork {
+  align-content: end;
+  padding: clamp(14px, 2vw, 24px);
+}
+
+/* Releases: square, uncropped music art; full visual art; intentional animation poster frame. */
+.releases-page .release-card .release-cover--music {
+  height: auto;
+  aspect-ratio: 1;
+  background: var(--panel-alt);
+}
+
+.releases-page .release-card .release-cover--music img,
+.releases-page .release-card .release-cover--music .release-card__artwork-fallback {
+  display: block;
+  width: 100%;
+  height: 100%;
+  aspect-ratio: auto;
+  object-fit: contain;
+  object-position: center;
+  background: var(--panel-alt);
+}
+
+.releases-page .release-card .release-cover--visual-cover {
+  height: auto;
+  aspect-ratio: 4 / 3;
+  background: var(--panel-alt);
+}
+
+.releases-page .release-card .release-cover--visual-cover img,
+.releases-page .release-card .release-cover--visual-cover .release-card__artwork-fallback {
+  display: block;
+  width: 100%;
+  height: 100%;
+  aspect-ratio: auto;
+  object-fit: contain;
+  object-position: center;
+  background: var(--panel-alt);
+}
+
+.releases-page .release-card .release-cover--animation-poster {
+  height: auto;
+  aspect-ratio: 4 / 3;
+  background: var(--panel-alt);
+}
+
+.releases-page .release-card .release-cover--animation-poster img,
+.releases-page .release-card .release-cover--animation-poster .release-card__artwork-fallback {
+  display: block;
+  width: 100%;
+  height: 100%;
+  aspect-ratio: auto;
+  object-fit: cover;
+  object-position: center;
+  background: var(--panel-alt);
+}
+
+.release-cover--placeholder > span,
+.release-cover--placeholder > strong {
+  display: block;
+}
+
+/* The square music frame is stable across desktop and mobile breakpoints. */
+.detail-cover--music {
+  width: var(--artwork-detail-size, 220px);
+  aspect-ratio: 1;
+  background: var(--panel-alt);
+}
+
+.detail-cover--music .detail-cover-button,
+.detail-cover--music .detail-cover-artwork-fallback {
+  width: 100%;
+  height: 100%;
+}
+
+.detail-cover--music .detail-cover-artwork,
+.detail-cover--music .detail-cover-artwork-fallback {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+  background: var(--panel-alt);
+}
+
+.detail-header--visual-cover {
+  grid-template-columns: minmax(0, min(520px, 55%)) minmax(0, 1fr);
+  align-items: start;
+}
+
+.detail-cover--visual-cover,
+.detail-cover--animation-poster {
+  width: 100%;
+  max-width: 520px;
+  aspect-ratio: 4 / 3;
+  justify-self: center;
+  background: var(--panel-alt);
+}
+
+.detail-cover--visual-cover .detail-cover-button,
+.detail-cover--animation-poster .detail-cover-button,
+.detail-cover--visual-cover .detail-cover-artwork-fallback,
+.detail-cover--animation-poster .detail-cover-artwork-fallback {
+  width: 100%;
+  height: 100%;
+}
+
+.detail-cover--visual-cover .detail-cover-artwork,
+.detail-cover--visual-cover .detail-cover-artwork-fallback {
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-height: min(72vh, 760px);
+  object-fit: contain;
+  object-position: center;
+  background: var(--panel-alt);
+}
+
+.detail-cover--animation-poster .detail-cover-artwork,
+.detail-cover--animation-poster .detail-cover-artwork-fallback {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  background: var(--panel-alt);
+}
+
+/* Give the detail player room for landscape and portrait videos without cropping either. */
 .detail-header--video {
   grid-template-columns: minmax(0, min(720px, 55%)) minmax(0, 1fr);
   align-items: start;
 }
 
 .detail-cover--video {
-  display: flex;
+  display: grid;
   width: fit-content;
   max-width: 100%;
-  max-height: min(72vh, 760px);
   height: auto;
+  max-height: none;
   aspect-ratio: auto;
   align-self: start;
   justify-self: center;
-  background: #000;
+  overflow: visible;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.visual-animation-player {
+  display: grid;
+  justify-items: start;
+  gap: 12px;
+  width: fit-content;
+  max-width: 100%;
+}
+
+.visual-animation-player__stage {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: fit-content;
+  max-width: 100%;
+  overflow: hidden;
+  border-radius: var(--radius);
+  background: var(--panel-alt);
+}
+
+.visual-animation-player__loading {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  color: var(--muted);
+  background: var(--panel-alt);
+  font-size: 0.84rem;
+  text-align: center;
+  pointer-events: none;
 }
 
 .detail-cover--video .detail-media {
@@ -50,16 +320,201 @@
   aspect-ratio: auto;
   object-fit: contain;
   object-position: center;
-  background: #000;
+  border-radius: var(--radius);
+  background: var(--panel-alt);
+}
+
+.visual-animation-player__poster-fallback {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: min(72vh, 760px);
+  aspect-ratio: auto;
+  object-fit: contain;
+  object-position: center;
+}
+
+.visual-animation-player__poster-placeholder {
+  display: grid;
+  align-content: end;
+  gap: 8px;
+  width: min(100%, 720px);
+  min-width: min(300px, 100%);
+  aspect-ratio: 4 / 3;
+  padding: clamp(18px, 3vw, 28px);
+  color: var(--muted);
+  background: linear-gradient(135deg, var(--panel-alt), #fff);
+}
+
+.visual-animation-player__poster-placeholder strong {
+  color: var(--ink);
+  font-size: clamp(1.1rem, 2vw, 1.5rem);
+}
+
+.visual-animation-player__controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.visual-animation-player__button {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0 16px;
+  border: 1px solid rgba(9, 9, 9, 0.28);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: border-color 0.18s ease, background-color 0.18s ease, color 0.18s ease;
+}
+
+.visual-animation-player__button:hover,
+.visual-animation-player__button:focus-visible {
+  border-color: var(--ink);
+}
+
+.visual-animation-player__button:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+}
+
+.visual-animation-player__button[aria-pressed='true'] {
+  background: var(--ink);
+  color: #fff;
+}
+
+.visual-animation-player__button:disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
+}
+
+.visual-animation-player__status {
+  max-width: min(72ch, 100%);
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.visual-animation-player:fullscreen {
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 12px;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  padding: 16px;
+  background: #080808;
+  color: #fff;
+}
+
+.visual-animation-player:fullscreen .visual-animation-player__stage {
+  max-height: calc(100dvh - 96px);
+  background: #080808;
+}
+
+.visual-animation-player:fullscreen .detail-media {
+  max-height: calc(100dvh - 96px);
+}
+
+.visual-animation-player:fullscreen .visual-animation-player__button {
+  border-color: rgba(255, 255, 255, 0.55);
+  background: #080808;
+  color: #fff;
+}
+
+.visual-animation-player:fullscreen .visual-animation-player__button[aria-pressed='true'] {
+  background: #fff;
+  color: #080808;
 }
 
 @media (max-width: 900px) {
-  .detail-header--video {
+  .detail-header--video,
+  .detail-header--visual-cover {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .detail-cover--video {
+  .detail-cover--video,
+  .detail-cover--visual-cover,
+  .detail-cover--animation-poster {
     width: fit-content;
     max-width: 100%;
+    justify-self: center;
+  }
+}
+
+@media (max-width: 640px) {
+  .detail-header--video,
+  .detail-header--visual-cover {
+    gap: 22px;
+  }
+
+  .detail-cover--video .detail-media,
+  .visual-animation-player__poster-fallback {
+    max-height: min(68dvh, 640px);
+  }
+
+  .detail-cover--music {
+    width: min(var(--artwork-detail-size, 220px), 100%);
+  }
+
+  .visual-animation-player__controls {
+    width: 100%;
+  }
+
+  .visual-animation-player__button {
+    min-height: 44px;
+  }
+}
+
+.home-hero-card .hero-visual .hero-visual-placeholder {
+  display: grid;
+  align-content: end;
+  gap: 8px;
+  padding: clamp(14px, 2vw, 24px);
+}
+
+.home-hero-card .hero-visual .hero-visual-placeholder strong {
+  color: var(--ink);
+}
+
+.release-card__artwork-fallback,
+.cover-lightbox__artwork-fallback {
+  display: grid;
+  align-content: end;
+  gap: 8px;
+  padding: clamp(14px, 2vw, 24px);
+  color: var(--muted);
+}
+
+.release-card__artwork-fallback strong,
+.cover-lightbox__artwork-fallback strong {
+  color: var(--ink);
+}
+
+.detail-cover .detail-cover-artwork-fallback {
+  display: grid;
+  align-content: end;
+  gap: 8px;
+  padding: clamp(16px, 2vw, 24px);
+  color: var(--muted);
+}
+
+.detail-cover .detail-cover-artwork-fallback strong {
+  color: var(--ink);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .visual-animation-player__button {
+    transition: none;
   }
 }

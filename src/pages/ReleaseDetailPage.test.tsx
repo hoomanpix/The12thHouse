@@ -38,6 +38,8 @@ describe('ReleaseDetailPage media metadata', () => {
       return element;
     }) as typeof document.createElement);
     vi.spyOn(HTMLMediaElement.prototype, 'load').mockImplementation(() => undefined);
+    vi.spyOn(HTMLMediaElement.prototype, 'play').mockResolvedValue(undefined);
+    vi.spyOn(HTMLMediaElement.prototype, 'pause').mockImplementation(() => undefined);
     container = document.createElement('div');
     document.body.appendChild(container);
     root = createRoot(container);
@@ -53,7 +55,7 @@ describe('ReleaseDetailPage media metadata', () => {
 
   function render(release: Release) {
     mocks.catalog = { releases: [release], isReady: true, catalogError: null };
-    act(() => root.render(<MemoryRouter initialEntries={[`/releases/${release.slug}`]}><Routes><Route path="/releases/:id" element={<ReleaseDetailPage />} /></Routes></MemoryRouter>));
+    act(() => root.render(<MemoryRouter key={release.slug} initialEntries={[`/releases/${release.slug}`]}><Routes><Route path="/releases/:id" element={<ReleaseDetailPage />} /></Routes></MemoryRouter>));
   }
 
   it('does not show a persisted placeholder duration and uses actual loaded media metadata', () => {
@@ -77,27 +79,44 @@ describe('ReleaseDetailPage media metadata', () => {
     expect(probes).toHaveLength(0);
   });
 
-  it('starts the original visual video muted with native controls and the video layout', () => {
-    render({ ...visualRelease, visual_url: 'https://cdn.example/portrait-reel.mp4' });
+  it('starts an animation muted and inline without native controls and exposes fullscreen', () => {
+    render({ ...visualRelease, visualType: 'animation', artwork_url: 'https://cdn.example/reel-poster.jpg', visual_url: 'https://cdn.example/portrait-reel.mp4' });
     const video = container.querySelector('video.detail-media') as HTMLVideoElement;
     expect(video).toBeTruthy();
     expect(video.getAttribute('src')).toBe('https://cdn.example/portrait-reel.mp4');
     expect(video.autoplay).toBe(true);
     expect(video.muted).toBe(true);
-    expect(video.controls).toBe(true);
+    expect(video.loop).toBe(true);
+    expect(video.controls).toBe(false);
     expect(video.playsInline).toBe(true);
     expect(container.querySelector('.detail-header--video')).toBeTruthy();
     expect(container.querySelector('.detail-cover--video')).toBeTruthy();
+    expect(container.querySelector('[aria-label="Watching Full Screen"]')?.textContent).toBe('Watching Full Screen');
+    expect(container.querySelector('.tracklist-block')).toBeNull();
+    expect(container.querySelector('.detail-actions .button.primary')).toBeNull();
+    expect(probes).toHaveLength(0);
   });
 
-  it('keeps native controls but does not autoplay when reduced motion is preferred', () => {
+  it('does not autoplay or show native controls when reduced motion is preferred', () => {
     vi.stubGlobal('matchMedia', vi.fn().mockReturnValue({ matches: true }));
-    render({ ...visualRelease, visual_url: 'https://cdn.example/portrait-reel.mp4' });
+    render({ ...visualRelease, visualType: 'animation', visual_url: 'https://cdn.example/portrait-reel.mp4' });
     const video = container.querySelector('video.detail-media') as HTMLVideoElement;
     expect(video.autoplay).toBe(false);
     expect(video.muted).toBe(true);
-    expect(video.controls).toBe(true);
+    expect(video.controls).toBe(false);
     expect(video.playsInline).toBe(true);
+    expect(container.querySelector('[aria-label="Play animation"]')).toBeTruthy();
+  });
+
+  it('uses a square, uncropped artwork frame for music and a separate full-art frame for visual covers', () => {
+    render({ ...musicRelease, artwork_url: 'https://cdn.example/music-cover.jpg' });
+    expect(container.querySelector('.detail-cover--music')).toBeTruthy();
+    expect(container.querySelector('.detail-cover-artwork')?.getAttribute('src')).toBe('https://cdn.example/music-cover.jpg');
+
+    render({ ...visualRelease, artwork_url: 'https://cdn.example/visual-cover.jpg' });
+    expect(container.querySelector('.detail-cover--visual-cover')).toBeTruthy();
+    expect(container.querySelector('.detail-cover-artwork')?.getAttribute('src')).toBe('https://cdn.example/visual-cover.jpg');
+    expect(container.querySelector('.tracklist-block')).toBeNull();
   });
 
   it('does not probe or show a playable duration for an unpublished track', () => {

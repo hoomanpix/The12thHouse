@@ -80,6 +80,15 @@ describe('VisualVideoPreview', () => {
     expect(pause).toHaveBeenCalled();
   });
 
+  it('does not request an empty poster and replaces an unsupported preview with an artwork fallback', () => {
+    act(() => root.render(<VisualVideoPreview src="https://cdn.example/unavailable.mp4" poster="  " title="Unavailable Reel" />));
+    const video = container.querySelector('video') as HTMLVideoElement;
+    expect(video.getAttribute('poster')).toBeNull();
+    act(() => video.dispatchEvent(new Event('error')));
+    expect(container.querySelector('video')).toBeNull();
+    expect(container.querySelector('.release-video-fallback--placeholder')?.textContent).toContain('Unavailable Reel');
+  });
+
   it('restarts observation when the source changes while the card remains mounted', () => {
     act(() => root.render(<VisualVideoPreview src="https://cdn.example/old.mp4" />));
     act(() => FakeIntersectionObserver.instances[0].setVisible(true));

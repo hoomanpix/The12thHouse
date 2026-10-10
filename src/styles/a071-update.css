@@ -620,6 +620,31 @@
   border-radius: calc(var(--radius) + 10px);
 }
 
+.home-hero-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  padding: clamp(18px, 3vw, 32px);
+  border: 1px solid var(--line);
+  border-radius: calc(var(--radius) + 10px);
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.home-hero-card .hero-visual {
+  width: 100%;
+  max-width: none;
+  justify-self: stretch;
+  box-shadow: none;
+  border-radius: var(--radius);
+}
+
+.home-hero-card .home-latest-release-link {
+  padding-inline-start: 16px;
+}
+
 .home-feature-card .feature-artwork {
   width: min(100%, 420px);
   box-shadow: none;
@@ -714,6 +739,15 @@
     grid-template-columns: 1fr;
     gap: 20px;
     padding: 18px;
+  }
+
+  .home-hero-card {
+    gap: 12px;
+    padding: 14px;
+  }
+
+  .home-hero-card .home-latest-release-link {
+    padding-inline-start: 16px;
   }
 
   .home-feature-card .feature-artwork {
