@@ -29,9 +29,11 @@ export function VisualAnimationPlayer({ src, poster, title }: VisualAnimationPla
   const [isPlaying, setIsPlaying] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [hasVideoFrame, setHasVideoFrame] = useState(false);
+  const [metadataRatio, setMetadataRatio] = useState<{ source: string; ratio: string } | null>(null);
   const [failedSource, setFailedSource] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState('');
   const hasPlaybackError = !source || failedSource === source;
+  const aspectRatio = metadataRatio?.source === source ? metadataRatio.ratio : undefined;
 
   useEffect(() => {
     const preference = window.matchMedia?.('(prefers-reduced-motion: reduce)');
@@ -175,6 +177,7 @@ export function VisualAnimationPlayer({ src, poster, title }: VisualAnimationPla
             className="detail-media"
             src={source}
             poster={posterSource || undefined}
+            style={aspectRatio ? { aspectRatio } : undefined}
             autoPlay={!prefersReducedMotion}
             muted
             loop
@@ -182,6 +185,12 @@ export function VisualAnimationPlayer({ src, poster, title }: VisualAnimationPla
             playsInline
             controls={false}
             aria-label={`${title} animation`}
+            onLoadedMetadata={(event) => {
+              const { videoWidth, videoHeight } = event.currentTarget;
+              if (videoWidth > 0 && videoHeight > 0) {
+                setMetadataRatio({ source, ratio: `${videoWidth} / ${videoHeight}` });
+              }
+            }}
             onLoadedData={() => { setHasVideoFrame(true); setStatusMessage(''); }}
             onPlay={() => { setIsPlaying(true); setStatusMessage(''); }}
             onPause={() => setIsPlaying(false)}

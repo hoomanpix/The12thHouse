@@ -58,7 +58,7 @@ describe('VisualVideoPreview', () => {
     expect(video.muted).toBe(true);
     expect(video.loop).toBe(true);
     expect(video.playsInline).toBe(true);
-    expect(video.preload).toBe('none');
+    expect(video.preload).toBe('metadata');
     expect(video.getAttribute('aria-hidden')).toBe('true');
     expect(play).not.toHaveBeenCalled();
 
@@ -78,6 +78,30 @@ describe('VisualVideoPreview', () => {
     act(() => FakeIntersectionObserver.instances[0].setVisible(true));
     expect(play).not.toHaveBeenCalled();
     expect(pause).toHaveBeenCalled();
+  });
+
+  it('applies only the valid intrinsic aspect ratio for landscape and portrait sources', () => {
+    act(() => root.render(<VisualVideoPreview src="https://cdn.example/landscape.mp4" />));
+    let video = container.querySelector('video') as HTMLVideoElement;
+    expect(video.style.aspectRatio).toBe('');
+    act(() => video.dispatchEvent(new Event('loadedmetadata')));
+    expect(video.style.aspectRatio).toBe('');
+    Object.defineProperties(video, {
+      videoWidth: { configurable: true, value: 1920 },
+      videoHeight: { configurable: true, value: 1080 },
+    });
+    act(() => video.dispatchEvent(new Event('loadedmetadata')));
+    expect(video.style.aspectRatio).toBe('1920 / 1080');
+
+    act(() => root.render(<VisualVideoPreview src="https://cdn.example/portrait.mp4" />));
+    video = container.querySelector('video') as HTMLVideoElement;
+    expect(video.style.aspectRatio).toBe('');
+    Object.defineProperties(video, {
+      videoWidth: { configurable: true, value: 720 },
+      videoHeight: { configurable: true, value: 1280 },
+    });
+    act(() => video.dispatchEvent(new Event('loadedmetadata')));
+    expect(video.style.aspectRatio).toBe('720 / 1280');
   });
 
   it('does not request an empty poster and replaces an unsupported preview with an artwork fallback', () => {

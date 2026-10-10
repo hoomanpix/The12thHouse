@@ -60,6 +60,30 @@ describe('VisualAnimationPlayer', () => {
     expect(container.querySelector('.visual-animation-player__loading')).toBeNull();
   });
 
+  it('uses the video metadata ratio in the detail player only after valid dimensions load', () => {
+    render({ src: 'https://cdn.example/landscape.mp4' });
+    let video = container.querySelector('video') as HTMLVideoElement;
+    expect(video.style.aspectRatio).toBe('');
+    act(() => video.dispatchEvent(new Event('loadedmetadata')));
+    expect(video.style.aspectRatio).toBe('');
+    Object.defineProperties(video, {
+      videoWidth: { configurable: true, value: 1920 },
+      videoHeight: { configurable: true, value: 1080 },
+    });
+    act(() => video.dispatchEvent(new Event('loadedmetadata')));
+    expect(video.style.aspectRatio).toBe('1920 / 1080');
+
+    render({ src: 'https://cdn.example/portrait.mp4' });
+    video = container.querySelector('video') as HTMLVideoElement;
+    expect(video.style.aspectRatio).toBe('');
+    Object.defineProperties(video, {
+      videoWidth: { configurable: true, value: 720 },
+      videoHeight: { configurable: true, value: 1280 },
+    });
+    act(() => video.dispatchEvent(new Event('loadedmetadata')));
+    expect(video.style.aspectRatio).toBe('720 / 1280');
+  });
+
   it('announces when muted autoplay is blocked and leaves the explicit play action available', async () => {
     play.mockRejectedValueOnce(new Error('autoplay blocked'));
     render();
