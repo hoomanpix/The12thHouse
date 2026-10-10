@@ -734,13 +734,17 @@ input[type='range'] {
   }
 }
 
-/* Desktop hardware should keep the Hero artwork mobile-only, even when browser zoom narrows the CSS viewport. */
-@media (hover: hover) and (pointer: fine) {
-  .hero-block {
-    grid-template-columns: 1fr;
-  }
+/* Keep Hero artwork mobile-only; this avoids treating a zoomed desktop viewport as a phone. */
+.hero-block {
+  grid-template-columns: 1fr;
+}
 
+.hero-visual-group {
+  display: none;
+}
+
+@media (max-width: 640px) and (pointer: coarse) {
   .hero-visual-group {
-    display: none;
+    display: grid;
   }
 }
