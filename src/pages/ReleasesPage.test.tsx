@@ -13,6 +13,19 @@ const visualVideoRelease = {
   show_release_date: true, description: '', artwork_url: 'https://cdn.example/reel-poster.jpg',
   visual_url: 'https://cdn.example/reel.mp4', featured: false, published: true,
 };
+const musicAlbumRelease = {
+  id: 'music-album', artist_id: 'artist-1', title: 'Music Album', slug: 'music-album', type: 'album' as const,
+  contentType: 'music' as const, release_date: null, status: 'published' as const, show_release_date: true,
+  description: '', artwork_url: 'https://cdn.example/album.jpg', featured: false, published: true,
+};
+const visualCoverRelease = {
+  ...visualVideoRelease, id: 'visual-cover', title: 'Visual Cover', slug: 'visual-cover', visualType: 'cover' as const,
+  artwork_url: 'https://cdn.example/visual-cover.jpg', visual_url: null,
+};
+const animationPosterRelease = {
+  ...visualVideoRelease, id: 'animation-poster', title: 'Animation Poster', slug: 'animation-poster',
+  artwork_url: 'https://cdn.example/animation-poster.jpg', visual_url: null,
+};
 
 class NoopIntersectionObserver {
   constructor(_callback: IntersectionObserverCallback) {}
@@ -69,7 +82,17 @@ describe('ReleasesPage header', () => {
     expect(video.muted).toBe(true);
     expect(video.loop).toBe(true);
     expect(video.playsInline).toBe(true);
-    expect(video.preload).toBe('none');
+    expect(video.preload).toBe('metadata');
     expect(container.querySelector('.release-card--video')).toBeTruthy();
+  });
+
+  it('uses square music art and distinct full-art/animation-poster frames in the Visual gallery', () => {
+    mocks.catalog = { releases: [musicAlbumRelease, visualCoverRelease, animationPosterRelease], isReady: true, catalogError: null };
+    act(() => root.render(<MemoryRouter><ReleasesPage /></MemoryRouter>));
+    expect(container.querySelector('.release-card--music .release-cover--music img')?.getAttribute('alt')).toBe('');
+
+    act(() => (container.querySelectorAll<HTMLButtonElement>('[role="tab"]')[1]).click());
+    expect(container.querySelector('.release-card--visual-cover .release-cover--visual-cover img')).toBeTruthy();
+    expect(container.querySelector('.release-card--visual-animation .release-cover--animation-poster img')).toBeTruthy();
   });
 });

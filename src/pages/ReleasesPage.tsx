@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { VisualVideoPreview } from '../components/VisualVideoPreview';
+import { ReleaseArtwork } from '../components/ReleaseArtwork';
 import { useCatalog } from '../features/catalog/CatalogProvider';
 import type { ReleaseContentType, ReleaseType, VisualType } from '../types';
 import { formatReleaseDate, isPublished, isUpcoming, shouldShowReleaseDate } from '../lib/releaseStatus';
@@ -23,12 +24,15 @@ export function ReleasesPage() {
       <div className="release-filter-groups" aria-label={`${category} release filters`}><div className="filter-group"><div className="filter-bar">{(category === 'music' ? ['all', 'single', 'album'] : ['all', 'cover', 'animation']).map((option) => <button key={option} type="button" className={(category === 'music' ? musicFilter : visualFilter) === option ? 'filter-pill active' : 'filter-pill'} onClick={() => category === 'music' ? setMusicFilter(option as 'all' | ReleaseType) : setVisualFilter(option as 'all' | VisualType)} aria-pressed={(category === 'music' ? musicFilter : visualFilter) === option}>{option === 'all' ? 'All' : option === 'cover' ? 'Art Work' : option}</button>)}</div></div></div>
     </div>
     {filteredReleases.length > 0 ? <div className="release-grid">{filteredReleases.map((release) => {
-      const visualUrl = release.contentType === 'visual' ? release.visual_url : null;
+      const visualUrl = release.contentType === 'visual' ? release.visual_url?.trim() || null : null;
+      const artworkUrl = release.artwork_url?.trim() || null;
       const hasVideoPreview = Boolean(visualUrl);
-      const coverClassName = hasVideoPreview ? 'release-cover release-cover--video' : release.artwork_url ? 'release-cover' : 'release-cover release-cover--placeholder';
-      return <article key={release.id} className={hasVideoPreview ? 'release-card release-card--video' : 'release-card'}>
+      const artworkFrameClass = release.contentType === 'music' ? 'release-cover--music' : release.visualType === 'animation' ? 'release-cover--animation-poster' : 'release-cover--visual-cover';
+      const coverClassName = hasVideoPreview ? 'release-cover release-cover--video' : artworkUrl ? `release-cover ${artworkFrameClass}` : 'release-cover release-cover--placeholder';
+      const artworkKindLabel = release.contentType === 'music' ? 'Music' : release.visualType === 'animation' ? 'Visual animation' : 'Visual cover';
+      return <article key={release.id} className={`release-card ${release.contentType === 'music' ? 'release-card--music' : `release-card--visual-${release.visualType ?? 'cover'}`}${hasVideoPreview ? ' release-card--video' : ''}`}>
         <Link to={`/releases/${release.slug}`} className={coverClassName} aria-label={`View ${release.title}`}>
-          {visualUrl ? <VisualVideoPreview src={visualUrl} poster={release.artwork_url ?? undefined} /> : release.artwork_url ? <img src={release.artwork_url} alt={release.title} /> : <><span>{release.contentType}</span><strong>{release.title}</strong></>}
+          {visualUrl ? <VisualVideoPreview src={visualUrl} poster={artworkUrl} title={release.title} /> : artworkUrl ? <ReleaseArtwork src={artworkUrl} title={release.title} kindLabel={artworkKindLabel} alt="" imageClassName="release-card__artwork" placeholderClassName="release-card__artwork-fallback" /> : <><span>{releaseTypeLabel(release)}</span><strong>{release.title}</strong></>}
         </Link>
         <div className="release-card-meta"><div><p className="eyebrow subtle release-type">{isUpcoming(release) ? 'Coming soon' : releaseTypeLabel(release)}</p><h3>{release.title}</h3></div><time dateTime={release.release_date ?? undefined}>{formatReleaseDate(shouldShowReleaseDate(release) ? release.release_date : null)}</time></div>
         {isUpcoming(release) && <p className="release-upcoming-note">Available on release day.</p>}

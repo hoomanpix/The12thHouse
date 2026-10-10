@@ -57,10 +57,21 @@ describe('HomePage Hero selection', () => {
     act(() => root.render(<MemoryRouter><HomePage /></MemoryRouter>));
     const group = container.querySelector('.hero-visual-group');
     const link = group?.querySelector('.home-latest-release-link');
+    expect(group?.classList.contains('home-hero-card')).toBe(true);
+    expect(group?.contains(container.querySelector('.hero-visual'))).toBe(true);
     expect(link?.querySelector('.home-latest-release-link__text')?.textContent).toBe('Listen to the Latest Release');
     expect(link?.querySelector('.home-latest-release-link__arrow')?.getAttribute('aria-hidden')).toBe('true');
     expect(link?.getAttribute('href')).toBe('/releases/latest-release');
     expect(group?.lastElementChild).toBe(link);
+  });
+
+  it('assigns distinct artwork presentations to music, visual covers, and animation posters', () => {
+    const animation = { ...selectedHero, id: 'visual-animation', title: 'Visual Animation', slug: 'visual-animation', visualType: 'animation' };
+    mocks.catalog = { ...mocks.catalog, releases: [featuredMusic, selectedHero, animation], homeCardIds: [featuredMusic.id, selectedHero.id, animation.id] };
+    act(() => root.render(<MemoryRouter><HomePage /></MemoryRouter>));
+    expect(container.querySelector('.home-feature-card--music .feature-artwork img')?.getAttribute('alt')).toBe('');
+    expect(container.querySelector('.home-feature-card--visual-cover .feature-artwork img')).toBeTruthy();
+    expect(container.querySelector('.home-feature-card--animation .feature-artwork img')).toBeTruthy();
   });
 
   it('does not silently fall back to Featured artwork when no Hero is configured', () => {

@@ -1,16 +1,24 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { ReleaseArtwork } from './ReleaseArtwork';
 
 interface VisualVideoPreviewProps {
   src: string;
-  poster?: string;
+  poster?: string | null;
+  title?: string;
 }
 
-export function VisualVideoPreview({ src, poster }: VisualVideoPreviewProps) {
+export function VisualVideoPreview({ src, poster, title = 'Visual animation' }: VisualVideoPreviewProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const source = typeof src === 'string' ? src.trim() : '';
+  const posterSource = typeof poster === 'string' ? poster.trim() : '';
+  const [failedSource, setFailedSource] = useState<string | null>(null);
+  const [metadataRatio, setMetadataRatio] = useState<{ source: string; ratio: string } | null>(null);
+  const hasPlaybackError = !source || failedSource === source;
+  const aspectRatio = metadataRatio?.source === source ? metadataRatio.ratio : undefined;
 
   useEffect(() => {
     const video = videoRef.current;
-    if (!video) return undefined;
+    if (!video || hasPlaybackError) return undefined;
 
     const motionPreference = window.matchMedia?.('(prefers-reduced-motion: reduce)');
     let isNearViewport = false;
@@ -49,20 +57,39 @@ export function VisualVideoPreview({ src, poster }: VisualVideoPreviewProps) {
       motionPreference?.removeEventListener?.('change', handleMotionPreferenceChange);
       video.pause();
     };
-  }, [src]);
+  }, [source, hasPlaybackError]);
+
+  if (hasPlaybackError) {
+    return <ReleaseArtwork
+      src={posterSource || null}
+      title={title}
+      kindLabel="Visual animation"
+      alt=""
+      imageClassName="release-video-fallback"
+      placeholderClassName="release-video-fallback release-video-fallback--placeholder"
+    />;
+  }
 
   return (
     <video
       ref={videoRef}
       className="release-video-preview"
-      src={src}
-      poster={poster}
+      src={source}
+      poster={posterSource || undefined}
+      style={aspectRatio ? { aspectRatio } : undefined}
       muted
       loop
       playsInline
-      preload="none"
+      preload="metadata"
       aria-hidden="true"
       tabIndex={-1}
+      onLoadedMetadata={(event) => {
+        const { videoWidth, videoHeight } = event.currentTarget;
+        if (videoWidth > 0 && videoHeight > 0) {
+          setMetadataRatio({ source, ratio: `${videoWidth} / ${videoHeight}` });
+        }
+      }}
+      onError={() => setFailedSource(source)}
     />
   );
 }

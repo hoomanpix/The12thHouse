@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
+import { ReleaseArtwork } from '../components/ReleaseArtwork';
+import { VisualAnimationPlayer } from '../components/VisualAnimationPlayer';
 import { useCatalog } from '../features/catalog/CatalogProvider';
 import { recordPlatformLinkClick } from '../features/analytics/analytics';
 import { useAudioPlayer } from '../features/audio-player/AudioPlayerProvider';
@@ -19,7 +21,6 @@ export function ReleaseDetailPage() {
   const [isCoverOpen, setIsCoverOpen] = useState(false);
   const [trackDurations, setTrackDurations] = useState<Record<string, number>>({});
   const release = releases.find((item) => item.slug === id);
-  const prefersReducedMotion = typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true;
   useEffect(() => {
     if (!isCoverOpen) return undefined;
     const close = (event: KeyboardEvent) => { if (event.key === 'Escape') setIsCoverOpen(false); };
@@ -88,6 +89,18 @@ export function ReleaseDetailPage() {
   if (catalogError) return <div className="page-section"><p className="release-empty" role="alert">Release catalog unavailable. Please try again later.</p></div>;
   if (!release) return <div className="page-section"><p className="release-empty" role="status">Release not found.</p><Link to={publicRoutes.releases} className="button secondary">Back to releases</Link></div>;
   const isMusic = release.contentType === 'music';
+  const artworkUrl = release.artwork_url?.trim() || null;
+  const visualUrl = release.visual_url?.trim() || null;
+  const hasAnimationVideo = !isMusic && release.visualType === 'animation' && Boolean(visualUrl);
+  const artworkKindLabel = isMusic ? 'Music' : release.visualType === 'animation' ? 'Visual animation' : 'Visual cover';
+  const detailHeaderClassName = hasAnimationVideo ? 'detail-header detail-header--video' : isMusic ? 'detail-header' : 'detail-header detail-header--visual-cover';
+  const detailCoverClassName = hasAnimationVideo
+    ? 'detail-cover detail-cover--video'
+    : isMusic
+      ? 'detail-cover detail-cover--music'
+      : release.visualType === 'animation'
+        ? 'detail-cover detail-cover--animation-poster'
+        : 'detail-cover detail-cover--visual-cover';
   const playableTracks = isMusic ? (release.tracks ?? []).filter((track) => isPlayableTrack(track, release)) : [];
   const handlePlayTrack = (trackIndex: number) => {
     if (!isMusic) return;
@@ -102,9 +115,13 @@ export function ReleaseDetailPage() {
     setQueue(filteredQueue); playTrack(activeTrack);
   };
   return <div className="page-section release-detail">
-    <div className={release.contentType === 'visual' && release.visual_url ? 'detail-header detail-header--video' : 'detail-header'}>
-      <div className={release.contentType === 'visual' && release.visual_url ? 'detail-cover detail-cover--video' : 'detail-cover'}>
-        {release.contentType === 'visual' && release.visual_url ? <video className="detail-media" src={release.visual_url} poster={release.artwork_url ?? undefined} autoPlay={!prefersReducedMotion} muted preload="metadata" controls playsInline aria-label={`${release.title} video`} /> : release.artwork_url ? <button type="button" className="detail-cover-button" onClick={() => setIsCoverOpen(true)} aria-label={`View ${release.title} artwork full size`}><img src={release.artwork_url} alt={release.title} /></button> : <div className="release-cover--placeholder" aria-label={`${release.title} has no artwork yet`}><span>{release.contentType}</span><strong>{release.title}</strong></div>}
+    <div className={detailHeaderClassName}>
+      <div className={detailCoverClassName}>
+        {hasAnimationVideo && visualUrl
+          ? <VisualAnimationPlayer src={visualUrl} poster={artworkUrl} title={release.title} />
+          : artworkUrl
+            ? <button type="button" className="detail-cover-button" onClick={() => setIsCoverOpen(true)} aria-label={`View ${release.title} artwork full size`}><ReleaseArtwork src={artworkUrl} title={release.title} kindLabel={artworkKindLabel} alt="" imageClassName="detail-cover-artwork" placeholderClassName="detail-cover-artwork-fallback" /></button>
+            : <ReleaseArtwork src={null} title={release.title} kindLabel={artworkKindLabel} alt="" imageClassName="detail-cover-artwork" placeholderClassName="detail-cover-artwork-fallback" />}
       </div>
       <div className="detail-copy"><p className="eyebrow">{releaseTypeLabel(release)}</p><h1>{release.title}</h1><p className="detail-date">{isUpcoming(release) ? `Coming soon · ${formatReleaseDate(shouldShowReleaseDate(release) ? release.release_date : null)}` : formatReleaseDate(shouldShowReleaseDate(release) ? release.release_date : null)}</p><p>{release.description}</p>
         <div className="detail-actions">{isMusic && <button type="button" className="button primary" onClick={() => { const firstPlayable = playableTracks[0]; if (firstPlayable) handlePlayTrack((release.tracks ?? []).findIndex((track) => track.id === firstPlayable.id)); }} disabled={playableTracks.length === 0}>Play {release.type === 'album' ? 'album' : 'single'}</button>}<Link to={publicRoutes.releases} className="button secondary">Back to releases</Link></div>
@@ -112,6 +129,6 @@ export function ReleaseDetailPage() {
       </div>
     </div>
     {isMusic && <section className="tracklist-block"><div className="section-heading"><p className="eyebrow">Tracklist</p><h2>{release.title}</h2></div><ol className="tracklist">{(release.tracks ?? []).map((track, index) => { const playable = isPlayableTrack(track, release); return <li key={track.id} className={`track-row ${playable ? '' : 'track-row--disabled'}`}><button type="button" className="track-play" onClick={() => handlePlayTrack(index)} aria-label={`Play ${track.title}`} disabled={!playable}>{playable ? '▶' : '•'}</button><div className="track-info"><span className="track-index">{String(index + 1).padStart(2, '0')}</span><span>{track.title}</span></div><span>{formatMediaDuration(trackDurations[track.id]) ?? '—:—'}</span></li>; })}</ol></section>}
-    {isCoverOpen && release.artwork_url && <div className="cover-lightbox" role="dialog" aria-modal="true" aria-labelledby="cover-lightbox-title"><button type="button" className="cover-lightbox__backdrop" aria-label="Close artwork viewer" onClick={() => setIsCoverOpen(false)} /><div className="cover-lightbox__content"><div id="cover-lightbox-title" className="visually-hidden">Full-size artwork for {release.title}</div><img src={release.artwork_url} alt={release.title} /><button type="button" className="button secondary cover-lightbox__close" onClick={() => setIsCoverOpen(false)}>Close</button></div></div>}
+    {isCoverOpen && artworkUrl && <div className="cover-lightbox" role="dialog" aria-modal="true" aria-labelledby="cover-lightbox-title"><button type="button" className="cover-lightbox__backdrop" aria-label="Close artwork viewer" onClick={() => setIsCoverOpen(false)} /><div className="cover-lightbox__content"><div id="cover-lightbox-title" className="visually-hidden">Full-size artwork for {release.title}</div><ReleaseArtwork src={artworkUrl} title={release.title} kindLabel={artworkKindLabel} alt={release.title} imageClassName="cover-lightbox__artwork" placeholderClassName="cover-lightbox__artwork-fallback" loading="eager" /><button type="button" className="button secondary cover-lightbox__close" onClick={() => setIsCoverOpen(false)}>Close</button></div></div>}
   </div>;
 }
