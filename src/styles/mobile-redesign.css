@@ -605,8 +605,12 @@ input[type='range'] {
 
 @media (min-width: 641px) {
   .hero-block {
-    grid-template-columns: minmax(0, 1fr) minmax(260px, 320px);
+    grid-template-columns: 1fr;
     align-items: center;
+  }
+
+  .hero-visual-group {
+    display: none;
   }
 
   .hero-visual {
