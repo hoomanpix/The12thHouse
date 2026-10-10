@@ -78,7 +78,8 @@ button {
   overflow: hidden;
   touch-action: none;
   overscroll-behavior: none;
-  transition: opacity 0.8s ease, visibility 0.8s ease;
+  transform: translateY(0);
+  transition: transform 2.5s cubic-bezier(0.76, 0, 0.24, 1), opacity 2.5s ease, visibility 0s linear 2.5s;
 }
 
 .intro-screen--revealing {
@@ -86,6 +87,7 @@ button {
 }
 
 .intro-screen--hidden {
+  transform: translateY(-100%);
   opacity: 0;
   visibility: hidden;
   pointer-events: none;

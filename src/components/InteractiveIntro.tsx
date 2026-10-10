@@ -5,8 +5,10 @@ type IntroCharacter = { id: number; char: string; x: number; y: number; angle: n
 const BASE_PLACEMENT_DISTANCE = 42;
 const CHARACTER_CLEARANCE = 6;
 const COMPLETION_PAUSE_DURATION = 2500;
+const INTRO_EXIT_TRANSITION_DURATION = 2500;
 const NO_MOTION_FALLBACK_DURATION = 8000;
 const REDUCED_MOTION_FALLBACK_DURATION = 160;
+const REDUCED_MOTION_EXIT_DURATION = 1;
 
 export function InteractiveIntro({ artistName, onComplete }: InteractiveIntroProps) {
   const [isDismissed, setIsDismissed] = useState(false);
@@ -22,6 +24,7 @@ export function InteractiveIntro({ artistName, onComplete }: InteractiveIntroPro
   const prefersReducedMotionRef = useRef(false);
   const onCompleteRef = useRef(onComplete);
   const safetyTimerRef = useRef<number | null>(null);
+  const transitionTimerRef = useRef<number | null>(null);
 
   useEffect(() => { onCompleteRef.current = onComplete; }, [onComplete]);
 
@@ -34,7 +37,10 @@ export function InteractiveIntro({ artistName, onComplete }: InteractiveIntroPro
     if (dismissedRef.current) return;
     dismissedRef.current = true;
     setIsDismissed(true);
-    onCompleteRef.current?.();
+    transitionTimerRef.current = window.setTimeout(
+      () => onCompleteRef.current?.(),
+      prefersReducedMotionRef.current ? REDUCED_MOTION_EXIT_DURATION : INTRO_EXIT_TRANSITION_DURATION,
+    );
   }, []);
 
   const resetSafetyTimer = useCallback((duration = NO_MOTION_FALLBACK_DURATION) => {
@@ -49,6 +55,7 @@ export function InteractiveIntro({ artistName, onComplete }: InteractiveIntroPro
     resetSafetyTimer(prefersReducedMotionRef.current ? REDUCED_MOTION_FALLBACK_DURATION : NO_MOTION_FALLBACK_DURATION);
     return () => {
       if (safetyTimerRef.current !== null) window.clearTimeout(safetyTimerRef.current);
+      if (transitionTimerRef.current !== null) window.clearTimeout(transitionTimerRef.current);
     };
   }, [resetSafetyTimer]);
 

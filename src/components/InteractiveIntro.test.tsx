@@ -38,6 +38,11 @@ describe('InteractiveIntro', () => {
     act(() => vi.advanceTimersByTime(2499));
     expect(onComplete).not.toHaveBeenCalled();
     act(() => vi.advanceTimersByTime(1));
+    expect(container.querySelector('.intro-screen--hidden')).not.toBeNull();
+    expect(onComplete).not.toHaveBeenCalled();
+    act(() => vi.advanceTimersByTime(2499));
+    expect(onComplete).not.toHaveBeenCalled();
+    act(() => vi.advanceTimersByTime(1));
     expect(onComplete).toHaveBeenCalledTimes(1);
   });
 
@@ -47,6 +52,9 @@ describe('InteractiveIntro', () => {
     act(() => vi.advanceTimersByTime(7999));
     expect(onComplete).not.toHaveBeenCalled();
     act(() => vi.advanceTimersByTime(1));
+    expect(container.querySelector('.intro-screen--hidden')).not.toBeNull();
+    expect(onComplete).not.toHaveBeenCalled();
+    act(() => vi.advanceTimersByTime(2500));
     expect(onComplete).toHaveBeenCalledTimes(1);
   });
 
@@ -71,6 +79,9 @@ describe('InteractiveIntro', () => {
       for (let i = 0; i < 12; i += 1) window.dispatchEvent(new MouseEvent('pointermove', { clientX: 220 + i * 90, clientY: 200 + (i % 4) * 26 }));
     });
     act(() => vi.advanceTimersByTime(160));
+    expect(container.querySelector('.intro-screen--hidden')).not.toBeNull();
+    expect(onComplete).not.toHaveBeenCalled();
+    act(() => vi.advanceTimersByTime(1));
     expect(onComplete).toHaveBeenCalledTimes(1);
   });
 
@@ -82,6 +93,9 @@ describe('InteractiveIntro', () => {
     })));
     act(() => root.render(<InteractiveIntro artistName="THE12THHOUSE" onComplete={onComplete} />));
     act(() => vi.advanceTimersByTime(159));
+    expect(onComplete).not.toHaveBeenCalled();
+    act(() => vi.advanceTimersByTime(1));
+    expect(container.querySelector('.intro-screen--hidden')).not.toBeNull();
     expect(onComplete).not.toHaveBeenCalled();
     act(() => vi.advanceTimersByTime(1));
     expect(onComplete).toHaveBeenCalledTimes(1);
