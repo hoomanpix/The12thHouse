@@ -743,7 +743,7 @@ input[type='range'] {
   display: none;
 }
 
-@media (max-width: 640px) and (pointer: coarse) {
+@media (max-width: 480px) {
   .hero-visual-group {
     display: grid;
   }
