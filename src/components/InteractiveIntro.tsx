@@ -110,6 +110,7 @@ export function InteractiveIntro({ artistName, onComplete }: InteractiveIntroPro
     const handlePointerMove = (event: PointerEvent) => handleMotion(event.clientX, event.clientY, event.movementX, event.movementY);
     const handleMouseMoveFallback = (event: MouseEvent) => handleMotion(event.clientX, event.clientY, event.movementX, event.movementY);
     const handleTouchMove = (event: TouchEvent) => {
+      event.preventDefault();
       const touch = event.touches[0] ?? event.changedTouches[0];
       if (!touch) return;
       handleMotion(touch.clientX, touch.clientY, touch.clientX - (pointerRef.current?.x ?? touch.clientX), touch.clientY - (pointerRef.current?.y ?? touch.clientY));
@@ -117,7 +118,7 @@ export function InteractiveIntro({ artistName, onComplete }: InteractiveIntroPro
 
     window.addEventListener('pointermove', handlePointerMove);
     if (typeof window.PointerEvent === 'undefined') window.addEventListener('mousemove', handleMouseMoveFallback);
-    window.addEventListener('touchmove', handleTouchMove, { passive: true });
+    window.addEventListener('touchmove', handleTouchMove, { passive: false });
     return () => {
       window.removeEventListener('pointermove', handlePointerMove);
       window.removeEventListener('mousemove', handleMouseMoveFallback);

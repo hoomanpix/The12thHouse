@@ -89,10 +89,16 @@ describe('InteractiveIntro', () => {
 
   it('reveals characters along a touch path', () => {
     act(() => root.render(<InteractiveIntro artistName="THE12THHOUSE" />));
+    const firstTouchMove = new TouchEvent('touchmove', {
+      bubbles: true,
+      touches: [{ clientX: 100, clientY: 100 } as Touch],
+    });
+    const preventDefault = vi.spyOn(firstTouchMove, 'preventDefault');
     act(() => {
-      window.dispatchEvent(new TouchEvent('touchmove', { bubbles: true, touches: [{ clientX: 100, clientY: 100 } as Touch] }));
+      window.dispatchEvent(firstTouchMove);
       window.dispatchEvent(new TouchEvent('touchmove', { bubbles: true, touches: [{ clientX: 700, clientY: 100 } as Touch] }));
     });
+    expect(preventDefault).toHaveBeenCalledTimes(1);
     expect(container.querySelectorAll('.intro-character').length).toBeGreaterThan(0);
   });
 });

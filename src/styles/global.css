@@ -76,6 +76,8 @@ button {
   z-index: 200;
   background: #ffffff;
   overflow: hidden;
+  touch-action: none;
+  overscroll-behavior: none;
   transition: opacity 0.8s ease, visibility 0.8s ease;
 }
 
