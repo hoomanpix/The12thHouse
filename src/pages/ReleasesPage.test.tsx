@@ -1,6 +1,6 @@
 import { act } from 'react';
 import { createRoot } from 'react-dom/client';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ReleasesPage } from './ReleasesPage';
 
@@ -39,6 +39,8 @@ describe('ReleasesPage header', () => {
 
   beforeEach(() => {
     vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
+    vi.spyOn(HTMLMediaElement.prototype, 'play').mockResolvedValue(undefined);
+    vi.spyOn(HTMLMediaElement.prototype, 'pause').mockImplementation(() => undefined);
     container = document.createElement('div');
     document.body.appendChild(container);
     root = createRoot(container);
@@ -84,6 +86,15 @@ describe('ReleasesPage header', () => {
     expect(video.playsInline).toBe(true);
     expect(video.preload).toBe('metadata');
     expect(container.querySelector('.release-card--video')).toBeTruthy();
+  });
+
+  it('restores the Visual tab when returning to a URL that records the category', () => {
+    mocks.catalog = { releases: [visualVideoRelease], isReady: true, catalogError: null };
+    act(() => root.render(<MemoryRouter initialEntries={['/releases?category=visual']}><Routes><Route path="/releases" element={<ReleasesPage />} /></Routes></MemoryRouter>));
+    const tabs = container.querySelectorAll<HTMLButtonElement>('[role="tab"]');
+    expect(tabs[0].getAttribute('aria-selected')).toBe('false');
+    expect(tabs[1].getAttribute('aria-selected')).toBe('true');
+    expect(container.querySelector('.release-card--visual-animation')).toBeTruthy();
   });
 
   it('uses square music art and distinct full-art/animation-poster frames in the Visual gallery', () => {

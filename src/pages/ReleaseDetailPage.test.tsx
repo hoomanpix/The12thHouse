@@ -1,6 +1,6 @@
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ReleaseDetailPage } from './ReleaseDetailPage';
 import type { Release } from '../types';
@@ -21,6 +21,10 @@ const visualRelease = {
   contentType: 'visual' as const, visualType: 'cover' as const, release_date: null, status: 'published' as const,
   show_release_date: true, description: '', artwork_url: null, featured: false, published: true,
 };
+function LocationProbe() {
+  const location = useLocation();
+  return <output data-testid="location">{location.pathname}{location.search}</output>;
+}
 
 describe('ReleaseDetailPage media metadata', () => {
   let container: HTMLDivElement;
@@ -77,6 +81,22 @@ describe('ReleaseDetailPage media metadata', () => {
     render(visualRelease);
     expect(container.querySelector('.tracklist-block')).toBeNull();
     expect(probes).toHaveLength(0);
+  });
+
+  it('returns to the previous Visual releases route with the category preserved', () => {
+    mocks.catalog = { releases: [visualRelease], isReady: true, catalogError: null };
+    act(() => root.render(
+      <MemoryRouter initialEntries={['/releases?category=visual', '/releases/visual']} initialIndex={1}>
+        <Routes>
+          <Route path="/releases/:id" element={<><ReleaseDetailPage /><LocationProbe /></>} />
+          <Route path="/releases" element={<LocationProbe />} />
+        </Routes>
+      </MemoryRouter>,
+    ));
+    const backButton = container.querySelector('.detail-actions .button.secondary') as HTMLButtonElement;
+    expect(backButton?.textContent).toBe('Back');
+    act(() => backButton.click());
+    expect(container.querySelector('[data-testid="location"]')?.textContent).toBe('/releases?category=visual');
   });
 
   it('starts an animation muted and inline without native controls and exposes fullscreen', () => {

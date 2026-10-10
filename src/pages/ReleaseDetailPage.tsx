@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ReleaseArtwork } from '../components/ReleaseArtwork';
 import { VisualAnimationPlayer } from '../components/VisualAnimationPlayer';
 import { useCatalog } from '../features/catalog/CatalogProvider';
@@ -16,6 +16,7 @@ const DURATION_PROBE_TIMEOUT_MS = 15_000;
 
 export function ReleaseDetailPage() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const { releases, isReady, catalogError } = useCatalog();
   const { setQueue, playTrack } = useAudioPlayer();
   const [isCoverOpen, setIsCoverOpen] = useState(false);
@@ -124,7 +125,7 @@ export function ReleaseDetailPage() {
             : <ReleaseArtwork src={null} title={release.title} kindLabel={artworkKindLabel} alt="" imageClassName="detail-cover-artwork" placeholderClassName="detail-cover-artwork-fallback" />}
       </div>
       <div className="detail-copy"><p className="eyebrow">{releaseTypeLabel(release)}</p><h1>{release.title}</h1><p className="detail-date">{isUpcoming(release) ? `Coming soon · ${formatReleaseDate(shouldShowReleaseDate(release) ? release.release_date : null)}` : formatReleaseDate(shouldShowReleaseDate(release) ? release.release_date : null)}</p><p>{release.description}</p>
-        <div className="detail-actions">{isMusic && <button type="button" className="button primary" onClick={() => { const firstPlayable = playableTracks[0]; if (firstPlayable) handlePlayTrack((release.tracks ?? []).findIndex((track) => track.id === firstPlayable.id)); }} disabled={playableTracks.length === 0}>Play {release.type === 'album' ? 'album' : 'single'}</button>}<Link to={publicRoutes.releases} className="button secondary">Back to releases</Link></div>
+        <div className="detail-actions">{isMusic && <button type="button" className="button primary" onClick={() => { const firstPlayable = playableTracks[0]; if (firstPlayable) handlePlayTrack((release.tracks ?? []).findIndex((track) => track.id === firstPlayable.id)); }} disabled={playableTracks.length === 0}>Play {release.type === 'album' ? 'album' : 'single'}</button>}<button type="button" className="button secondary" onClick={() => navigate(-1)}>Back</button></div>
         {isMusic && (release.platform_links ?? []).length > 0 && <ul className="platform-list">{(release.platform_links ?? []).map((platform) => <li key={platform.id}><a href={platform.url} target="_blank" rel="noreferrer" onClick={() => { void recordPlatformLinkClick(platform.id); }}>{platform.label}</a></li>)}</ul>}
       </div>
     </div>

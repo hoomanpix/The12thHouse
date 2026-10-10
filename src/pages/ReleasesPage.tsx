@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { VisualVideoPreview } from '../components/VisualVideoPreview';
 import { ReleaseArtwork } from '../components/ReleaseArtwork';
 import { useCatalog } from '../features/catalog/CatalogProvider';
@@ -8,9 +8,11 @@ import { formatReleaseDate, isPublished, isUpcoming, shouldShowReleaseDate } fro
 import { releaseTypeLabel } from '../lib/releaseSemantics';
 
 export function ReleasesPage() {
-  const [category, setCategory] = useState<ReleaseContentType>('music');
   const [musicFilter, setMusicFilter] = useState<'all' | ReleaseType>('all');
   const [visualFilter, setVisualFilter] = useState<'all' | VisualType>('all');
+  const location = useLocation();
+  const navigate = useNavigate();
+  const category: ReleaseContentType = new URLSearchParams(location.search).get('category') === 'visual' ? 'visual' : 'music';
   const { releases: allReleases, isReady, catalogError } = useCatalog();
   const releases = allReleases.filter((release) => isPublished(release) || isUpcoming(release));
   const filteredReleases = useMemo(() => category === 'music'
@@ -19,8 +21,12 @@ export function ReleasesPage() {
   if (!isReady) return <div className="page-section"><p className="release-empty" role="status">Loading catalog…</p></div>;
   if (catalogError) return <div className="page-section"><p className="release-empty" role="alert">Catalog unavailable. Please try again later.</p></div>;
   const categoryTabs: Array<{ value: ReleaseContentType; label: string }> = [{ value: 'music', label: 'Music' }, { value: 'visual', label: 'Visual' }];
+  const selectCategory = (nextCategory: ReleaseContentType) => {
+    if (nextCategory === category) return;
+    navigate({ pathname: location.pathname, search: nextCategory === 'visual' ? '?category=visual' : '' });
+  };
   return <div className="page-section releases-page">
-    <div className="section-heading split releases-heading"><div className="releases-heading__copy"><div className="releases-heading__topline"><h1 className="eyebrow">Releases</h1><div className="release-categories" role="tablist" aria-label="Release categories">{categoryTabs.map((tab) => <button key={tab.value} type="button" role="tab" aria-selected={category === tab.value} className={category === tab.value ? 'release-category is-active' : 'release-category'} onClick={() => setCategory(tab.value)}>{tab.label}</button>)}</div></div></div>
+    <div className="section-heading split releases-heading"><div className="releases-heading__copy"><div className="releases-heading__topline"><h1 className="eyebrow">Releases</h1><div className="release-categories" role="tablist" aria-label="Release categories">{categoryTabs.map((tab) => <button key={tab.value} type="button" role="tab" aria-selected={category === tab.value} className={category === tab.value ? 'release-category is-active' : 'release-category'} onClick={() => selectCategory(tab.value)}>{tab.label}</button>)}</div></div></div>
       <div className="release-filter-groups" aria-label={`${category} release filters`}><div className="filter-group"><div className="filter-bar">{(category === 'music' ? ['all', 'single', 'album'] : ['all', 'cover', 'animation']).map((option) => <button key={option} type="button" className={(category === 'music' ? musicFilter : visualFilter) === option ? 'filter-pill active' : 'filter-pill'} onClick={() => category === 'music' ? setMusicFilter(option as 'all' | ReleaseType) : setVisualFilter(option as 'all' | VisualType)} aria-pressed={(category === 'music' ? musicFilter : visualFilter) === option}>{option === 'all' ? 'All' : option === 'cover' ? 'Art Work' : option}</button>)}</div></div></div>
     </div>
     {filteredReleases.length > 0 ? <div className="release-grid">{filteredReleases.map((release) => {
