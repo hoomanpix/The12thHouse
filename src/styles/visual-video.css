@@ -152,18 +152,32 @@
   background: var(--panel-alt);
 }
 
+.releases-page .release-card--visual-cover {
+  align-content: start;
+}
+
 .releases-page .release-card .release-cover--visual-cover {
+  align-self: start;
   height: auto;
-  aspect-ratio: 4 / 3;
+  aspect-ratio: auto;
   background: var(--panel-alt);
 }
 
-.releases-page .release-card .release-cover--visual-cover img,
-.releases-page .release-card .release-cover--visual-cover .release-card__artwork-fallback {
+.releases-page .release-card .release-cover--visual-cover img {
   display: block;
   width: 100%;
-  height: 100%;
+  height: auto;
   aspect-ratio: auto;
+  object-fit: contain;
+  object-position: center;
+  background: var(--panel-alt);
+}
+
+.releases-page .release-card .release-cover--visual-cover .release-card__artwork-fallback {
+  display: grid;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 4 / 3;
   object-fit: contain;
   object-position: center;
   background: var(--panel-alt);
