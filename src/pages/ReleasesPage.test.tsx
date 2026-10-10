@@ -82,7 +82,7 @@ describe('ReleasesPage header', () => {
     expect(video.muted).toBe(true);
     expect(video.loop).toBe(true);
     expect(video.playsInline).toBe(true);
-    expect(video.preload).toBe('none');
+    expect(video.preload).toBe('metadata');
     expect(container.querySelector('.release-card--video')).toBeTruthy();
   });
 
