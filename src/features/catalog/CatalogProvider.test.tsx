@@ -11,6 +11,8 @@ const database = vi.hoisted(() => ({
   onAuthStateChange: vi.fn(),
   getUser: vi.fn(),
   signOut: vi.fn(),
+  channel: vi.fn(),
+  removeChannel: vi.fn(),
 }));
 
 vi.mock('../../lib/supabase', () => ({
@@ -24,6 +26,8 @@ vi.mock('../../lib/supabase', () => ({
       signOut: database.signOut,
     },
     storage: { from: () => ({ createSignedUrl: vi.fn() }) },
+    channel: database.channel,
+    removeChannel: database.removeChannel,
     rpc: vi.fn(),
   },
 }));
@@ -87,6 +91,11 @@ describe('CatalogProvider Home Hero persistence', () => {
     unsubscribe = vi.fn();
     database.onAuthStateChange.mockReturnValue({ data: { subscription: { unsubscribe } } });
     database.signOut.mockResolvedValue({ error: null });
+    database.channel.mockReturnValue({
+      on: vi.fn().mockReturnThis(),
+      subscribe: vi.fn(),
+    });
+    database.removeChannel.mockResolvedValue({ status: 'ok' });
   });
 
   afterEach(() => {
@@ -122,5 +131,19 @@ describe('CatalogProvider Home Hero persistence', () => {
     await act(async () => { result = await currentCatalog!.updateHomeHero('not-a-published-release'); });
     expect(result?.error).toContain('published release with artwork');
     expect(database.upserts).toHaveLength(0);
+  });
+
+  it('revalidates the catalog when a hidden page becomes visible again', async () => {
+    mountProvider();
+    await settleCatalog();
+    const initialQueryCount = database.from.mock.calls.length;
+
+    await act(async () => {
+      document.dispatchEvent(new Event('visibilitychange'));
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+
+    expect(database.from.mock.calls.length).toBeGreaterThan(initialQueryCount);
+    expect(currentCatalog?.isReady).toBe(true);
   });
 });

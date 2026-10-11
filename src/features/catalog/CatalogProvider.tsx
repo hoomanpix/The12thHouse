@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { mockArtist, mockReleases } from '../../data/mock';
 import { siteConfig } from '../../config/site';
 import { isSupabaseConfigured, supabase } from '../../lib/supabase';
@@ -124,6 +124,13 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
     return hashParams.get('type') === 'recovery' || new URLSearchParams(window.location.search).get('type') === 'recovery';
   });
   const [isReady, setIsReady] = useState(!isSupabaseConfigured);
+  const currentUserRef = useRef(user);
+  const loadRequestRef = useRef(0);
+  const lastLifecycleRefreshRef = useRef(0);
+
+  useEffect(() => {
+    currentUserRef.current = user;
+  }, [user]);
 
   const resolveAudioReferences = useCallback(async (items: Release[], authenticated: boolean) => {
     if (!isSupabaseConfigured) return items;
@@ -143,19 +150,23 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
 
   const loadRemote = useCallback(async (authenticated = false): Promise<MutationResult> => {
     if (!isSupabaseConfigured) { setIsReady(true); return {}; }
+    const requestId = ++loadRequestRef.current;
+    const isCurrentRequest = () => requestId === loadRequestRef.current;
     try {
       let albumsQuery = supabase.from('albums').select('*, tracks(*), platform_links(*)').order('release_date', { ascending: false, nullsFirst: false });
       if (!authenticated) albumsQuery = albumsQuery.in('status', ['published', 'upcoming']);
       const { data, error } = await albumsQuery;
-      if (error) { setReleases([]); setHomeCardIds([]); setHomeHeroId(null); setHomeHeroError(null); setCatalogError(error.message); setIsReady(true); return { error: error.message }; }
+      if (error) { if (!isCurrentRequest()) return {}; setReleases([]); setHomeCardIds([]); setHomeHeroId(null); setHomeHeroError(null); setCatalogError(error.message); setIsReady(true); return { error: error.message }; }
       const normalized = await resolveAudioReferences((data ?? []).map(normalizeRelease), authenticated);
+      if (!isCurrentRequest()) return {};
       setReleases(normalized);
       setCatalogError(null);
       const [cards, hero] = await Promise.all([
         supabase.from('home_cards').select('slot, album_id').order('slot'),
         supabase.from('home_hero').select('release_id').eq('id', 1).maybeSingle(),
       ]);
-      if (cards.error) { setReleases([]); setHomeCardIds([]); setHomeHeroId(null); setHomeHeroError(null); setCatalogError(cards.error.message); setIsReady(true); return { error: cards.error.message }; }
+      if (cards.error) { if (!isCurrentRequest()) return {}; setReleases([]); setHomeCardIds([]); setHomeHeroId(null); setHomeHeroError(null); setCatalogError(cards.error.message); setIsReady(true); return { error: cards.error.message }; }
+      if (!isCurrentRequest()) return {};
       const slots = Array.from({ length: 3 }, () => '');
       (cards.data ?? []).forEach((card) => { if (card.slot >= 0 && card.slot < slots.length && normalized.some((release) => release.id === card.album_id)) slots[card.slot] = card.album_id ?? ''; });
       setHomeCardIds(slots);
@@ -164,12 +175,14 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
       setHomeHeroId(!hero.error && heroId && normalized.some((release) => release.id === heroId && isPublished(release) && Boolean(release.artwork_url)) ? heroId : null);
       if (authenticated) {
         const current = await supabase.auth.getUser();
-        if (current.error) { setIsReady(true); return { error: current.error.message }; }
+        if (current.error) { if (!isCurrentRequest()) return {}; setIsReady(true); return { error: current.error.message }; }
+        if (!isCurrentRequest()) return {};
         if (current.data.user) setUser({ id: current.data.user.id, email: current.data.user.email });
       }
       setIsReady(true);
       return {};
     } catch (error) {
+      if (!isCurrentRequest()) return {};
       const message = errorMessage(error);
       setReleases([]); setHomeCardIds([]); setHomeHeroId(null); setHomeHeroError(null); setCatalogError(message); setIsReady(true);
       return { error: message };
@@ -179,6 +192,13 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!isSupabaseConfigured) return;
     let mounted = true;
+    const refreshFromLifecycle = () => {
+      if (document.visibilityState === 'hidden') return;
+      const now = Date.now();
+      if (now - lastLifecycleRefreshRef.current < 750) return;
+      lastLifecycleRefreshRef.current = now;
+      void loadRemote(Boolean(currentUserRef.current));
+    };
     supabase.auth.getSession().then(({ data, error }) => {
       if (!mounted) return;
       if (!error && data.session?.user) setUser({ id: data.session.user.id, email: data.session.user.email });
@@ -189,7 +209,27 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
       if (session?.user) { setUser({ id: session.user.id, email: session.user.email }); void loadRemote(true); }
       else setUser(null);
     });
-    return () => { mounted = false; listener.subscription.unsubscribe(); };
+    const catalogChannel = supabase
+      .channel('the12thhouse-catalog-sync')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'albums' }, refreshFromLifecycle)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'tracks' }, refreshFromLifecycle)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'platform_links' }, refreshFromLifecycle)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'home_cards' }, refreshFromLifecycle)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'home_hero' }, refreshFromLifecycle)
+      .subscribe();
+    window.addEventListener('focus', refreshFromLifecycle);
+    window.addEventListener('online', refreshFromLifecycle);
+    window.addEventListener('pageshow', refreshFromLifecycle);
+    document.addEventListener('visibilitychange', refreshFromLifecycle);
+    return () => {
+      mounted = false;
+      listener.subscription.unsubscribe();
+      void supabase.removeChannel(catalogChannel);
+      window.removeEventListener('focus', refreshFromLifecycle);
+      window.removeEventListener('online', refreshFromLifecycle);
+      window.removeEventListener('pageshow', refreshFromLifecycle);
+      document.removeEventListener('visibilitychange', refreshFromLifecycle);
+    };
   }, [loadRemote]);
 
   const signIn = useCallback(async (email: string, password: string) => {
