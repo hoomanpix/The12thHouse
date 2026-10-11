@@ -6,6 +6,7 @@ export function GlobalAudioPlayer() {
   const { state, togglePlay, playPrevious, playNext, seek, setVolume } = useAudioPlayer();
   const [isExpanded, setIsExpanded] = useState(false);
   const playerRef = useRef<HTMLDivElement>(null);
+  const detailRef = useRef<HTMLDivElement>(null);
 
   const activeTrack = useMemo(
     () => state.queue.find((item) => item.trackId === state.activeTrackId) ?? state.queue[0] ?? null,
@@ -35,6 +36,10 @@ export function GlobalAudioPlayer() {
     };
   }, [isExpanded]);
 
+  useEffect(() => {
+    if (detailRef.current) detailRef.current.inert = !isExpanded;
+  }, [isExpanded]);
+
   return (
     <div ref={playerRef} className={`global-player ${isExpanded ? 'is-expanded' : ''}`}>
       <div className="player-shell">
@@ -53,7 +58,7 @@ export function GlobalAudioPlayer() {
           <span className="player-strip__meta"><span className="player-strip__title">{trackTitle}</span><span className="player-strip__artist">{artistName}</span></span>
           <span className="player-strip__progress" aria-hidden="true"><span className="player-strip__progress-bar" style={{ width: `${progress}%` }} /></span>
         </button>
-        {isExpanded && <div className="player-detail">
+        <div ref={detailRef} className="player-detail" aria-hidden={!isExpanded}>
           <div className="player-detail__topbar"><span className="eyebrow">Now playing</span></div>
           <div className="player-detail__content">
             <div className="player-detail__artwork">
@@ -81,7 +86,7 @@ export function GlobalAudioPlayer() {
             </div>
           </div>
           {state.error && <p className="player-error" role="status">{state.error}</p>}
-        </div>}
+        </div>
       </div>
     </div>
   );

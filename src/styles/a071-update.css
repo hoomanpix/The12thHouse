@@ -810,6 +810,44 @@
 
 .player-error { margin: 0; padding: 0 18px 14px; color: #a33b2f; font-size: 0.82rem; }
 
+/* Desktop-only Home card and player motion refinements. */
+@media (min-width: 901px) {
+  .home-page .home-feature-card {
+    grid-template-columns: minmax(0, 0.4725fr) minmax(0, 1fr);
+    align-items: center;
+  }
+
+  .home-page .home-feature-card .feature-artwork {
+    width: 100%;
+    max-width: none;
+    align-self: center;
+  }
+
+  .home-page .home-feature-card .feature-artwork img {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1;
+    object-fit: cover;
+  }
+
+  .global-player .player-detail {
+    transition: max-height 280ms cubic-bezier(0.32, 0.72, 0, 1), opacity 180ms ease-out, transform 280ms cubic-bezier(0.32, 0.72, 0, 1);
+  }
+}
+
+@media (max-width: 640px) {
+  .global-player .player-detail {
+    transition: none;
+  }
+}
+
+@media (min-width: 901px) and (prefers-reduced-motion: reduce) {
+  .global-player .player-detail {
+    transition: opacity 120ms ease-out;
+    transform: none;
+  }
+}
+
 /* Home Hero artwork is a phone-only element; keep desktop output text-only even at high zoom. */
 .home-page .hero-visual-group {
   display: none !important;

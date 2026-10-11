@@ -73,11 +73,13 @@ describe('GlobalAudioPlayer expand and dismiss behavior', () => {
     expect(strip?.getAttribute('aria-expanded')).toBe('false');
     expect(strip?.getAttribute('aria-label')).toBe('Expand player: No track selected — The12thHouse');
     expect(container.querySelector('.player-icon--plus, .player-icon--minus')).toBeNull();
+    expect(container.querySelector('.player-detail')?.getAttribute('aria-hidden')).toBe('true');
 
     dispatchClick(container.querySelector('.player-strip__title')!);
     expect(strip?.getAttribute('aria-expanded')).toBe('true');
     expect(strip?.getAttribute('aria-label')).toBe('Collapse player: No track selected — The12thHouse');
     expect(container.querySelector('.player-icon--plus, .player-icon--minus')).toBeNull();
+    expect(container.querySelector('.player-detail')?.getAttribute('aria-hidden')).toBe('false');
   });
 
   it('stays open for interaction inside the player and closes on a pointer outside it', () => {
