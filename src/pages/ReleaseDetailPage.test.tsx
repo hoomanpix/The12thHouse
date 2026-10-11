@@ -83,6 +83,13 @@ describe('ReleaseDetailPage media metadata', () => {
     expect(probes).toHaveLength(0);
   });
 
+  it('shows the persisted album track count when public track rows are unavailable', () => {
+    render({ ...musicRelease, tracks: [], track_count: 16 });
+    expect(container.querySelector('.tracklist-count')?.textContent).toBe('16 tracks');
+    expect(container.querySelectorAll('.track-row')).toHaveLength(0);
+    expect(probes).toHaveLength(0);
+  });
+
   it('returns to the previous Visual releases route with the category preserved', () => {
     mocks.catalog = { releases: [visualRelease], isReady: true, catalogError: null };
     act(() => root.render(

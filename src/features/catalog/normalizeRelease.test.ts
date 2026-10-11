@@ -24,11 +24,13 @@ describe('normalizeRelease', () => {
     const music = normalizeRelease({
       id: 'music-1', title: 'Existing music', artist_id: 'artist-1', slug: 'existing-music',
       content_type: 'music', release_type: 'album', status: 'published', published: true,
+      track_count: 16,
       tracks: [{ id: 'track-1', album_id: 'music-1', title: 'Track', audio_url: '/track.mp3', track_order: 1, duration: 0 }],
       platform_links: [],
     });
     expect(music.contentType).toBe('music');
     expect(music.type).toBe('album');
+    expect(music.track_count).toBe(16);
     expect(music.tracks?.[0].duration).toBeUndefined();
   });
 });

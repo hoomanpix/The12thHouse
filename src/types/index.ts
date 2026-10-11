@@ -49,6 +49,7 @@ export interface Release {
   visual_url?: string | null;
   featured: boolean;
   published: boolean;
+  track_count?: number;
   created_at?: string;
   updated_at?: string;
   tracks?: Track[];

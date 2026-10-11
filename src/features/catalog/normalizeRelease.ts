@@ -51,6 +51,7 @@ export function normalizeRelease(row: Record<string, any>): Release {
   return {
     ...common,
     type: storedReleaseType ?? legacyReleaseType ?? 'album',
+    track_count: Number.isInteger(row.track_count) ? row.track_count : tracks.length,
     tracks,
     platform_links,
   } as Release;
