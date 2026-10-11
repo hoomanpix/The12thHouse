@@ -6,6 +6,7 @@ import { CatalogProvider, useCatalog } from './CatalogProvider';
 const database = vi.hoisted(() => ({
   heroReleaseId: null as string | null,
   upserts: [] as Array<Record<string, unknown>>,
+  publicTrackMetadata: [] as Array<Record<string, unknown>>,
   from: vi.fn(),
   getSession: vi.fn(),
   onAuthStateChange: vi.fn(),
@@ -43,6 +44,7 @@ function CaptureCatalog() { currentCatalog = useCatalog(); return null; }
 
 function queryResult(table: string) {
   if (table === 'albums') return { data: [publishedRelease], error: null };
+  if (table === 'public_track_metadata') return { data: database.publicTrackMetadata, error: null };
   if (table === 'home_cards') return { data: [], error: null };
   return { data: [], error: null };
 }
@@ -85,6 +87,7 @@ describe('CatalogProvider Home Hero persistence', () => {
     vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
     database.heroReleaseId = null;
     database.upserts = [];
+    database.publicTrackMetadata = [];
     database.from.mockImplementation((table: string) => makeQuery(table));
     database.getSession.mockResolvedValue({ data: { session: null }, error: null });
     database.getUser.mockResolvedValue({ data: { user: null }, error: null });
@@ -145,5 +148,17 @@ describe('CatalogProvider Home Hero persistence', () => {
 
     expect(database.from.mock.calls.length).toBeGreaterThan(initialQueryCount);
     expect(currentCatalog?.isReady).toBe(true);
+  });
+
+  it('merges public track metadata while keeping unpublished audio unavailable', async () => {
+    database.publicTrackMetadata = [{
+      id: 'hidden-track', album_id: publishedRelease.id, title: 'Hidden track title', track_order: 1, published: false,
+    }];
+    mountProvider();
+    await settleCatalog();
+
+    expect(currentCatalog?.releases[0].tracks).toEqual([expect.objectContaining({
+      id: 'hidden-track', title: 'Hidden track title', published: false, audio_url: null,
+    })]);
   });
 });

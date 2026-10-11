@@ -155,9 +155,34 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
     try {
       let albumsQuery = supabase.from('albums').select('*, tracks(*), platform_links(*)').order('release_date', { ascending: false, nullsFirst: false });
       if (!authenticated) albumsQuery = albumsQuery.in('status', ['published', 'upcoming']);
-      const { data, error } = await albumsQuery;
+      const trackMetadataQuery = authenticated
+        ? Promise.resolve({ data: null, error: null })
+        : supabase.from('public_track_metadata').select('id, album_id, title, track_order, published').order('track_order');
+      const [{ data, error }, trackMetadataResult] = await Promise.all([albumsQuery, trackMetadataQuery]);
       if (error) { if (!isCurrentRequest()) return {}; setReleases([]); setHomeCardIds([]); setHomeHeroId(null); setHomeHeroError(null); setCatalogError(error.message); setIsReady(true); return { error: error.message }; }
-      const normalized = await resolveAudioReferences((data ?? []).map(normalizeRelease), authenticated);
+      const publicTrackMetadata = !authenticated && !trackMetadataResult.error ? (trackMetadataResult.data ?? []) : [];
+      const metadataByAlbum = new Map<string, Array<Record<string, unknown>>>();
+      publicTrackMetadata.forEach((track) => {
+        const albumId = String(track.album_id ?? '');
+        if (!albumId) return;
+        const current = metadataByAlbum.get(albumId) ?? [];
+        current.push(track as Record<string, unknown>);
+        metadataByAlbum.set(albumId, current);
+      });
+      const publicRows = (data ?? []).map((row) => {
+        const metadata = metadataByAlbum.get(String(row.id)) ?? [];
+        if (metadata.length === 0) return row;
+        const existingTracks = new Map<string, Record<string, unknown>>((row.tracks ?? []).map((track: Record<string, unknown>) => [String(track.id), track] as const));
+        return {
+          ...row,
+          tracks: metadata.map((track) => ({
+            ...(existingTracks.get(String(track.id)) ?? {}),
+            ...track,
+            audio_url: existingTracks.get(String(track.id))?.audio_url ?? null,
+          })),
+        };
+      });
+      const normalized = await resolveAudioReferences(publicRows.map(normalizeRelease), authenticated);
       if (!isCurrentRequest()) return {};
       setReleases(normalized);
       setCatalogError(null);
