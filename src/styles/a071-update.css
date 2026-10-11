@@ -810,6 +810,13 @@
 
 .player-error { margin: 0; padding: 0 18px 14px; color: #a33b2f; font-size: 0.82rem; }
 
+/* Desktop player controls use the existing emoji language only; mobile keeps its current controls. */
+@media (min-width: 901px) {
+  .global-player .player-detail__controls .player-icon {
+    display: none;
+  }
+}
+
 /* Desktop-only Home card and player motion refinements. */
 @media (min-width: 901px) {
   .home-page .home-feature-card {
