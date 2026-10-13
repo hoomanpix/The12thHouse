@@ -26,7 +26,7 @@ interface CatalogContextValue {
   signUp: (email: string, password: string) => Promise<MutationResult>;
   resetPassword: (email: string) => Promise<MutationResult>;
   updatePassword: (password: string) => Promise<MutationResult>;
-  signOut: () => Promise<void>;
+  signOut: () => Promise<MutationResult>;
   reloadCatalog: () => Promise<MutationResult>;
   updateRelease: (releaseId: string, update: Partial<Release>) => Promise<MutationResult>;
   addRelease: (release: ReleaseInput) => Promise<CreateReleaseResult>;
@@ -127,6 +127,10 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
   const currentUserRef = useRef(user);
   const loadRequestRef = useRef(0);
   const lastLifecycleRefreshRef = useRef(0);
+  const anonymousReloadTimerRef = useRef<number | null>(null);
+  const authenticatedReloadTimerRef = useRef<number | null>(null);
+  const bootstrapLoadTimerRef = useRef<number | null>(null);
+  const bootstrapLoadStartedRef = useRef(false);
 
   useEffect(() => {
     currentUserRef.current = user;
@@ -202,7 +206,11 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
         const current = await supabase.auth.getUser();
         if (current.error) { if (!isCurrentRequest()) return {}; setIsReady(true); return { error: current.error.message }; }
         if (!isCurrentRequest()) return {};
-        if (current.data.user) setUser({ id: current.data.user.id, email: current.data.user.email });
+        if (current.data.user) {
+          const nextUser = { id: current.data.user.id, email: current.data.user.email };
+          currentUserRef.current = nextUser;
+          setUser(nextUser);
+        }
       }
       setIsReady(true);
       return {};
@@ -214,9 +222,52 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
     }
   }, [resolveAudioReferences]);
 
+  const clearAuthenticatedCatalog = useCallback(() => {
+    loadRequestRef.current += 1;
+    currentUserRef.current = null;
+    setUser(null);
+    setReleases(localMockMode ? fallbackReleases : []);
+    setHomeCardIds([]);
+    setHomeHeroId(null);
+    setHomeHeroError(null);
+    setCatalogError(null);
+    setIsReady(false);
+  }, []);
+
   useEffect(() => {
     if (!isSupabaseConfigured) return;
     let mounted = true;
+    const cancelTimer = (timerRef: { current: number | null }) => {
+      if (timerRef.current !== null) {
+        window.clearTimeout(timerRef.current);
+        timerRef.current = null;
+      }
+    };
+    const scheduleBootstrapLoad = (authenticated: boolean) => {
+      if (bootstrapLoadStartedRef.current || bootstrapLoadTimerRef.current !== null) return;
+      bootstrapLoadTimerRef.current = window.setTimeout(() => {
+        bootstrapLoadTimerRef.current = null;
+        if (!mounted || bootstrapLoadStartedRef.current) return;
+        bootstrapLoadStartedRef.current = true;
+        void loadRemote(authenticated);
+      }, 0);
+    };
+    const scheduleAnonymousReload = () => {
+      if (anonymousReloadTimerRef.current !== null) return;
+      anonymousReloadTimerRef.current = window.setTimeout(() => {
+        anonymousReloadTimerRef.current = null;
+        if (!mounted || currentUserRef.current) return;
+        void loadRemote(false);
+      }, 0);
+    };
+    const scheduleAuthenticatedReload = () => {
+      if (authenticatedReloadTimerRef.current !== null) return;
+      authenticatedReloadTimerRef.current = window.setTimeout(() => {
+        authenticatedReloadTimerRef.current = null;
+        if (!mounted || !currentUserRef.current) return;
+        void loadRemote(true);
+      }, 0);
+    };
     const refreshFromLifecycle = () => {
       if (document.visibilityState === 'hidden') return;
       const now = Date.now();
@@ -226,13 +277,40 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
     };
     supabase.auth.getSession().then(({ data, error }) => {
       if (!mounted) return;
-      if (!error && data.session?.user) setUser({ id: data.session.user.id, email: data.session.user.email });
-      void loadRemote(Boolean(data.session?.user));
+      const authenticated = !error && Boolean(data.session?.user);
+      if (authenticated && data.session?.user) {
+        const nextUser = { id: data.session.user.id, email: data.session.user.email };
+        currentUserRef.current = nextUser;
+        setUser(nextUser);
+      } else {
+        currentUserRef.current = null;
+      }
+      scheduleBootstrapLoad(authenticated);
     });
     const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'PASSWORD_RECOVERY') setIsRecoveringPassword(true);
-      if (session?.user) { setUser({ id: session.user.id, email: session.user.email }); void loadRemote(true); }
-      else setUser(null);
+      if (event === 'INITIAL_SESSION') {
+        if (session?.user) {
+          const nextUser = { id: session.user.id, email: session.user.email };
+          currentUserRef.current = nextUser;
+          setUser(nextUser);
+        } else {
+          currentUserRef.current = null;
+        }
+        scheduleBootstrapLoad(Boolean(session?.user));
+        return;
+      }
+      if (session?.user) {
+        cancelTimer(anonymousReloadTimerRef);
+        const nextUser = { id: session.user.id, email: session.user.email };
+        currentUserRef.current = nextUser;
+        setUser(nextUser);
+        if (event === 'SIGNED_IN' || event === 'USER_UPDATED' || event === 'PASSWORD_RECOVERY') scheduleAuthenticatedReload();
+      } else if (event === 'SIGNED_OUT') {
+        cancelTimer(authenticatedReloadTimerRef);
+        clearAuthenticatedCatalog();
+        scheduleAnonymousReload();
+      }
     });
     const catalogChannel = supabase
       .channel('the12thhouse-catalog-sync')
@@ -248,6 +326,9 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
     document.addEventListener('visibilitychange', refreshFromLifecycle);
     return () => {
       mounted = false;
+      cancelTimer(anonymousReloadTimerRef);
+      cancelTimer(authenticatedReloadTimerRef);
+      cancelTimer(bootstrapLoadTimerRef);
       listener.subscription.unsubscribe();
       void supabase.removeChannel(catalogChannel);
       window.removeEventListener('focus', refreshFromLifecycle);
@@ -255,15 +336,15 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
       window.removeEventListener('pageshow', refreshFromLifecycle);
       document.removeEventListener('visibilitychange', refreshFromLifecycle);
     };
-  }, [loadRemote]);
+  }, [clearAuthenticatedCatalog, loadRemote]);
 
   const signIn = useCallback(async (email: string, password: string) => {
     const normalizedEmail = email.trim().toLowerCase();
     if (normalizedEmail !== approvedAdminEmail) return { error: 'Only the approved artist email can access the admin panel.' };
     const { error } = await supabase.auth.signInWithPassword({ email: normalizedEmail, password });
     if (error) return { error: error.message };
-    return loadRemote(true);
-  }, [loadRemote]);
+    return {};
+  }, []);
 
   const signUp = useCallback(async (email: string, password: string) => {
     const normalizedEmail = email.trim().toLowerCase();
@@ -288,7 +369,19 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
     return error ? { error: error.message } : {};
   }, []);
 
-  const signOut = useCallback(async () => { await supabase.auth.signOut(); setUser(null); }, []);
+  const signOut = useCallback(async () => {
+    clearAuthenticatedCatalog();
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      if (anonymousReloadTimerRef.current !== null) {
+        window.clearTimeout(anonymousReloadTimerRef.current);
+        anonymousReloadTimerRef.current = null;
+      }
+      await loadRemote(true);
+      return { error: error.message };
+    }
+    return {};
+  }, [clearAuthenticatedCatalog, loadRemote]);
   const reloadCatalog = useCallback(() => loadRemote(Boolean(user)), [loadRemote, user]);
 
   const updateRelease = useCallback(async (releaseId: string, update: Partial<Release>) => {
@@ -402,14 +495,8 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
   const saveTrackOrder = useCallback(async (releaseId: string, trackIds: string[]) => {
     if (releases.find((release) => release.id === releaseId)?.contentType !== 'music') return { error: 'Track order only applies to music releases.' };
     if (!isSupabaseConfigured) return {};
-    for (const [index, trackId] of trackIds.entries()) {
-      const { error } = await supabase.from('tracks').update({ track_order: -(index + 1) }).eq('id', trackId).eq('album_id', releaseId);
-      if (error) return { error: error.message };
-    }
-    for (const [index, trackId] of trackIds.entries()) {
-      const { error } = await supabase.from('tracks').update({ track_order: index + 1 }).eq('id', trackId).eq('album_id', releaseId);
-      if (error) return { error: error.message };
-    }
+    const { error } = await supabase.rpc('reorder_album_tracks', { p_album_id: releaseId, p_track_ids: trackIds });
+    if (error) return { error: error.message };
     return loadRemote(Boolean(user));
   }, [loadRemote, releases, user]);
 
