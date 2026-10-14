@@ -140,6 +140,29 @@ describe('AudioPlayerProvider interactions', () => {
     expect(backend.insertTrackView).toHaveBeenCalledTimes(1);
   });
 
+  it('resumes intended playback after a background visibility suspension', async () => {
+    vi.stubGlobal('AudioContext', FakeAudioContext);
+    render();
+    await act(async () => { player!.setQueue(queue); player!.playTrack(queue[0]); await Promise.resolve(); });
+
+    const audio = FakeAudio.instances[0];
+    const context = FakeAudioContext.instances[0];
+    expect(player!.state.isPlaying).toBe(true);
+    expect(context).toBeTruthy();
+
+    context.state = 'suspended';
+    audio.paused = true;
+    await act(async () => {
+      document.dispatchEvent(new Event('visibilitychange'));
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(context.resumeCalls).toBeGreaterThan(0);
+    expect(audio.playCalls).toBe(2);
+    expect(player!.state.isPlaying).toBe(true);
+  });
+
   it('keeps the volume slider operational through a Web Audio gain node when native volume is unavailable', async () => {
     FakeAudio.nativeVolumeWorks = false;
     vi.stubGlobal('AudioContext', FakeAudioContext);

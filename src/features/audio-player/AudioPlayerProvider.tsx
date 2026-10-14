@@ -248,6 +248,38 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
     return audioRef.current;
   }, [commit]);
 
+  const resumePlaybackAfterVisibilityChange = useCallback(() => {
+    if (!playbackIntentRef.current) return;
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    void (async () => {
+      const context = audioContextRef.current;
+      if (context && context.state !== 'running') {
+        try {
+          await context.resume();
+        } catch {
+          return;
+        }
+      }
+      if (!playbackIntentRef.current || audioRef.current !== audio || !audio.paused) return;
+      try {
+        await audio.play();
+      } catch {
+        // The browser may require a fresh user gesture after a background suspension.
+      }
+    })();
+  }, []);
+
+  useEffect(() => {
+    document.addEventListener('visibilitychange', resumePlaybackAfterVisibilityChange);
+    window.addEventListener('pageshow', resumePlaybackAfterVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', resumePlaybackAfterVisibilityChange);
+      window.removeEventListener('pageshow', resumePlaybackAfterVisibilityChange);
+    };
+  }, [resumePlaybackAfterVisibilityChange]);
+
   useEffect(() => () => {
     playbackIntentRef.current = false;
     pendingAutoplayRef.current = false;
