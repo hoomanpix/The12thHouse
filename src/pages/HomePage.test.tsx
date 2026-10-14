@@ -49,6 +49,13 @@ describe('HomePage Hero selection', () => {
     expect(container.textContent).toContain('Play latest');
   });
 
+  it('renders the same canonical introductory copy for every responsive layout', () => {
+    act(() => root.render(<MemoryRouter><HomePage /></MemoryRouter>));
+    expect(container.querySelector('.hero-copy .lede')?.textContent).toBe(
+      'Start digging into House Productions. Here you can listen to songs, watch the visuals, and analyze the works for further tasks.',
+    );
+  });
+
   it('links beneath the Hero artwork to the latest published release', () => {
     const latestRelease = { ...featuredMusic, id: 'latest-release', title: 'Latest', slug: 'latest-release', release_date: '2025-04-04', featured: false };
     const olderRelease = { ...selectedHero, release_date: '2025-03-04' };
