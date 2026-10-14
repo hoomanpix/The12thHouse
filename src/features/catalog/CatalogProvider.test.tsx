@@ -91,7 +91,9 @@ describe('CatalogProvider Home Hero persistence', () => {
   }
 
   async function settleCatalog() {
-    await act(async () => { await new Promise((resolve) => setTimeout(resolve, 0)); });
+    await vi.waitFor(() => {
+      expect(currentCatalog?.isReady).toBe(true);
+    });
   }
 
   beforeEach(() => {
